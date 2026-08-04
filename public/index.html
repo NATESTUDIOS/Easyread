@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-  <title>EasyRead | Turn Complex Topics into Simple Stories</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>EasyRead | Turn Complex Topics into Simple Stories</title>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -130,7 +130,11 @@
 }
 </script>
 
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Google Font & Font Awesome 6 (free icons) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
   <style>
     * {
       margin: 0;
@@ -138,354 +142,560 @@
       box-sizing: border-box;
     }
 
-    html, body {
-      width: 100%;
-      height: 100%;
-      overflow-x: hidden;
-      overflow-y: auto;
-      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-      background: #f8f6ff;
-      scroll-behavior: smooth;
-      -webkit-overflow-scrolling: touch;
+    body {
+      background: #f6f0e9; /* warm cream */
+      font-family: 'Quicksand', sans-serif;
+      color: #1f2a36;
+      line-height: 1.6;
+      padding: 2rem 1rem;
     }
 
-    /* full screen immersive stages — no boxes, edge to edge */
-    .panel {
-      min-height: 100vh;
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      overflow: hidden;
-      padding: 2rem 1.5rem;
-      background: transparent;
+    .container {
+      max-width: 1320px;
+      margin: 0 auto;
+      background: rgba(255, 252, 248, 0.85);
+      backdrop-filter: blur(2px);
+      border-radius: 48px 48px 32px 32px;
+      box-shadow: 0 30px 50px -30px rgba(0,0,0,0.08), 0 8px 28px rgba(0,0,0,0.02);
+      padding: 2.8rem 2.5rem 2rem;
+      background: #fdfaf6;
     }
 
-    /* blurred background images covering full panel */
-    .bg-blur-image {
-      position: absolute;
-      inset: 0;
-      background-size: cover;
-      background-position: center;
-      filter: blur(22px) brightness(1.1);
-      transform: scale(1.08);
-      z-index: 0;
-      opacity: 0.5;
-      transition: filter 0.5s;
-    }
-
-    .panel:nth-child(1) .bg-blur-image {
-      background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=2073&auto=format&fit=crop');
-    }
-    .panel:nth-child(2) .bg-blur-image {
-      background-image: url('https://images.unsplash.com/photo-1518837695005-2083093ee35b?q=80&w=2070&auto=format&fit=crop');
-    }
-    .panel:nth-child(3) .bg-blur-image {
-      background-image: url('https://images.unsplash.com/photo-1504805572947-34fad45aed93?q=80&w=2070&auto=format&fit=crop');
-    }
-    .panel:nth-child(4) .bg-blur-image {
-      background-image: url('https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=2070&auto=format&fit=crop');
-    }
-
-    /* glass morphic content - spread across full width, soft edges */
-    .glass-content {
-      position: relative;
-      z-index: 5;
-      width: 100%;
-      max-width: 1200px;
-      background: rgba(255, 255, 255, 0.35);
-      backdrop-filter: blur(30px);
-      -webkit-backdrop-filter: blur(30px);
-      border-radius: 4rem;
-      padding: 2.8rem 2.2rem;
-      border: 1px solid rgba(255, 255, 255, 0.7);
-      box-shadow: 0 35px 70px -25px rgba(25, 15, 50, 0.15);
-      display: flex;
-      flex-direction: column;
-      gap: 2rem;
-      transition: all 0.3s;
-    }
-
-    /* flexible row for larger screens */
-    .story-row {
-      display: flex;
-      align-items: center;
-      gap: 2.5rem;
-      flex-wrap: wrap;
-    }
-
-    .story-row.reverse {
-      flex-direction: row-reverse;
-    }
-
-    .image-area {
-      flex: 1 1 300px;
-      border-radius: 3rem;
-      overflow: hidden;
-      aspect-ratio: 4/3;
-      background-size: cover;
-      background-position: center;
-      box-shadow: 0 25px 45px -15px rgba(0,0,0,0.25);
-      border: 1px solid rgba(255,255,255,0.6);
-      filter: brightness(1.05);
-      transition: transform 0.4s;
-      animation: softDrift 12s infinite alternate;
-    }
-
-    @keyframes softDrift {
-      0% { object-position: 20% 20%; }
-      100% { object-position: 75% 70%; }
-    }
-
-    .img1 { background-image: url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071&auto=format&fit=crop'); }
-    .img2 { background-image: url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1000&auto=format&fit=crop'); }
-    .img3 { background-image: url('https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=1000&auto=format&fit=crop'); }
-    .img4 { background-image: url('https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=1000&auto=format&fit=crop'); }
-
-    .text-col {
-      flex: 1 1 300px;
-      color: #131022;
-    }
-
-    .chapter-badge {
+    h1, h2, h3 {
       font-weight: 600;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: #4b379b;
-      font-size: 0.8rem;
-      margin-bottom: 0.5rem;
-      background: rgba(255,255,255,0.45);
-      backdrop-filter: blur(8px);
-      display: inline-block;
-      padding: 0.3rem 1.2rem;
-      border-radius: 2rem;
+      letter-spacing: -0.01em;
+      color: #1f2a36;
+    }
+
+    h1 {
+      font-size: 3.2rem;
+      line-height: 1.2;
     }
 
     h2 {
-      font-size: clamp(2.2rem, 6vw, 3.2rem);
-      font-weight: 700;
-      letter-spacing: -1px;
-      line-height: 1.15;
-      margin-bottom: 1rem;
-      color: #0d0824;
+      font-size: 2.4rem;
+      margin-bottom: 0.75rem;
     }
 
-    .marketing-copy {
-      font-size: 1.15rem;
-      line-height: 1.65;
-      color: #27223a;
-      margin-bottom: 1.8rem;
+    .subhead {
+      font-size: 1.3rem;
+      color: #3f4d5c;
       font-weight: 400;
+      max-width: 700px;
     }
 
-    .glass-tag {
-      background: rgba(255,255,255,0.5);
-      backdrop-filter: blur(10px);
+    .text-amber { color: #b86b3c; }
+    .text-deepblue { color: #1f2a36; }
+
+    /* ---- buttons ---- */
+    .btn-primary {
+      display: inline-block;
+      background: #b86b3c;
+      color: #fdfaf6;
+      padding: 0.9rem 2.6rem;
+      border-radius: 60px;
+      font-weight: 600;
+      font-size: 1.15rem;
+      border: none;
+      box-shadow: 0 10px 20px -10px rgba(184, 107, 60, 0.2);
+      transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+      text-decoration: none;
+      cursor: pointer;
+      font-family: 'Quicksand', sans-serif;
+    }
+
+    .btn-primary:hover {
+      background: #a45a30;
+      transform: translateY(-3px);
+      box-shadow: 0 16px 28px -12px rgba(184, 107, 60, 0.3);
+    }
+
+    .btn-secondary {
+      display: inline-block;
+      background: transparent;
+      color: #3f4d5c;
+      padding: 0.7rem 2rem;
+      border-radius: 60px;
+      font-weight: 600;
+      border: 2px solid #dccfc2;
+      transition: 0.15s ease;
+      text-decoration: none;
+      font-family: 'Quicksand', sans-serif;
+    }
+
+    .btn-secondary:hover {
+      background: #e8d9cd;
+      border-color: #b86b3c;
+      transform: scale(0.97);
+    }
+
+    /* ---- cards & surfaces ---- */
+    .card-soft {
+      background: #ffffffec;
+      border-radius: 32px;
+      padding: 2rem 2.2rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.02), 0 2px 8px rgba(0,0,0,0.02);
+      border: 1px solid #ece0d5;
+      transition: 0.2s ease;
+    }
+
+    .card-soft:hover {
+      border-color: #dccfc2;
+      background: #fffcf8;
+    }
+
+    /* ---- image & icon replacements (no emojis) ---- */
+    .img-rounded {
+      border-radius: 28px;
+      object-fit: cover;
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .icon-lg {
+      font-size: 2.8rem;
+      color: #b86b3c;
+      opacity: 0.85;
+      transition: 0.2s;
+    }
+
+    .icon-md {
+      font-size: 1.8rem;
+      color: #3f4d5c;
+    }
+
+    .icon-badge {
+      background: #f2ede6;
+      border-radius: 60px;
       padding: 0.5rem 1.4rem;
-      border-radius: 3rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 500;
+    }
+
+    /* ---- demo / animation friendly ---- */
+    .demo-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.2rem;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .demo-step {
+      flex: 1 1 140px;
+      min-width: 120px;
+      text-align: center;
+      background: #f8f2ea;
+      border-radius: 48px;
+      padding: 1.8rem 0.8rem;
+      border: 2px dashed #dccfc2;
+      transition: 0.2s;
+    }
+
+    .demo-step:hover {
+      border-color: #b86b3c;
+      background: #fdfaf5;
+      transform: scale(1.02);
+    }
+
+    .demo-arrow {
+      font-size: 2.2rem;
+      color: #b86b3c;
+      opacity: 0.6;
+      animation: floatArrow 2s infinite ease-in-out;
+    }
+
+    @keyframes floatArrow {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(6px); }
+    }
+
+    .magic-card {
+      background: #fdfaf5;
+      border-radius: 32px;
+      padding: 2rem 2rem;
+      border-left: 8px solid #b86b3c;
+      box-shadow: 0 16px 32px -16px rgba(0,0,0,0.04);
+      max-width: 380px;
+      transition: 0.2s;
+    }
+
+    .magic-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 36px -18px rgba(0,0,0,0.08);
+    }
+
+    /* style selector (modern) */
+    .style-selector {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin: 1.5rem 0;
+    }
+
+    .style-card {
+      background: #f2ede6;
+      border-radius: 40px;
+      padding: 0.7rem 1.8rem;
+      border: 2px solid transparent;
+      transition: 0.15s;
+      font-weight: 500;
+      color: #1f2a36;
       display: inline-flex;
       align-items: center;
       gap: 0.6rem;
-      font-weight: 500;
-      border: 1px solid rgba(255,255,255,0.8);
-      margin-top: 0.4rem;
     }
 
-    .hero-cta {
-      background: white;
-      backdrop-filter: blur(14px);
-      background: rgba(255,255,255,0.8);
-      border: none;
-      padding: 1rem 2.2rem;
-      border-radius: 3.5rem;
-      font-weight: 650;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.7rem;
-      font-size: 1.1rem;
-      color: #1a142e;
-      box-shadow: 0 22px 35px -14px rgba(75, 55, 140, 0.25);
-      cursor: pointer;
-      transition: 0.2s;
-      margin-top: 0.8rem;
+    .style-card:hover {
+      background: #e8d9cd;
+      border-color: #b86b3c;
+      transform: translateY(-2px);
     }
 
-    .hero-cta i {
-      color: #4b379b;
+    /* blog shelf */
+    .blog-shelf {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      justify-content: center;
+      margin: 2rem 0;
     }
 
-    .final-message {
+    .blog-card {
+      background: #fcf8f2;
+      border-radius: 28px;
+      padding: 1.8rem 1.5rem;
+      width: 200px;
+      flex: 1 1 170px;
+      border: 1px solid #ede3d8;
+      box-shadow: 0 8px 16px -10px rgba(0,0,0,0.02);
+      transition: 0.2s ease;
       text-align: center;
     }
 
-    /* navigation floating dots */
-    .nav-dots {
-      position: fixed;
-      right: 1.2rem;
-      top: 50%;
-      transform: translateY(-50%);
+    .blog-card:hover {
+      transform: translateY(-6px);
+      border-color: #dccfc2;
+      box-shadow: 0 16px 24px -14px rgba(0,0,0,0.04);
+    }
+
+    .blog-card .icon-lg {
+      font-size: 2.4rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .testimonial-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      margin: 2rem 0;
+    }
+
+    .testimonial-item {
+      background: #f8f2ea;
+      border-radius: 40px;
+      padding: 2rem 2rem;
+      flex: 1 1 200px;
+      border: 1px solid #ede3d8;
+      font-style: italic;
+      transition: 0.15s;
+    }
+
+    .testimonial-item:hover {
+      background: #fdfaf5;
+      border-color: #b86b3c;
+    }
+
+    .footer-cta {
+      background: #f2ede6;
+      border-radius: 60px;
+      padding: 3rem 2.5rem;
+      text-align: center;
+      margin-top: 2.5rem;
+    }
+
+    .input-demo {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin: 1.8rem 0 0.8rem;
+    }
+
+    .input-demo input {
+      flex: 1 1 300px;
+      padding: 1rem 1.8rem;
+      border-radius: 60px;
+      border: 2px solid #dccfc2;
+      background: white;
+      font-size: 1rem;
+      font-family: 'Quicksand', sans-serif;
+      outline: none;
+      transition: 0.1s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    }
+
+    .input-demo input:focus {
+      border-color: #b86b3c;
+      box-shadow: 0 0 0 4px #f2ded7;
+    }
+
+    .footer-note {
+      margin-top: 2.5rem;
+      font-size: 0.95rem;
+      color: #5b6f7e;
+      text-align: center;
+      border-top: 1px solid #ede3d8;
+      padding-top: 2.2rem;
+    }
+
+    /* split visual */
+    .split-demo {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.2rem;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .split-left, .split-right {
+      flex: 1 1 160px;
+      border-radius: 48px;
+      padding: 1.5rem;
+      min-height: 180px;
       display: flex;
       flex-direction: column;
-      gap: 1rem;
-      z-index: 30;
+      align-items: center;
+      justify-content: center;
+      transition: 0.2s;
     }
 
-    .dot {
-      width: 10px;
-      height: 10px;
-      background: rgba(50, 35, 90, 0.35);
-      border-radius: 50%;
-      backdrop-filter: blur(6px);
-      border: 1px solid rgba(255,255,255,0.6);
-      cursor: pointer;
-      transition: 0.25s;
+    .split-left {
+      background: #f0e6dc;
+      border: 2px dashed #c0b0a0;
     }
 
-    .dot.active {
-      background: #4e3a9c;
-      transform: scale(1.6);
-      box-shadow: 0 0 14px #b7a8f0;
+    .split-right {
+      background: #fdfaf5;
+      border: 2px solid #b86b3c;
+      box-shadow: 0 8px 0 #e8d9cd;
     }
 
-    /* mobile optimization */
+    .split-left img, .split-right img {
+      border-radius: 24px;
+      max-width: 100%;
+      height: auto;
+      margin-bottom: 0.6rem;
+    }
+
+    .img-wrap {
+      border-radius: 32px;
+      overflow: hidden;
+    }
+
     @media (max-width: 650px) {
-      .glass-content {
-        padding: 2rem 1.5rem;
-        border-radius: 2.8rem;
-      }
-      .story-row {
-        gap: 1.8rem;
-      }
-      .nav-dots {
-        right: 0.6rem;
-      }
+      .container { padding: 1.5rem; }
+      h1 { font-size: 2.3rem; }
+      .demo-grid { flex-direction: column; }
+    }
+
+    /* extra modern touches */
+    .pill-icon {
+      background: #e8d9cd;
+      border-radius: 40px;
+      padding: 0.4rem 1.2rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .glow-soft {
+      box-shadow: 0 0 40px -12px rgba(184, 107, 60, 0.08);
     }
   </style>
 </head>
 <body>
-  <!-- floating navigation dots -->
-  <div class="nav-dots" id="navDots">
-    <div class="dot active" data-index="0"></div>
-    <div class="dot" data-index="1"></div>
-    <div class="dot" data-index="2"></div>
-    <div class="dot" data-index="3"></div>
+<div class="container">
+
+  <!-- HERO with actual images -->
+  <section style="margin-bottom: 3.5rem;">
+    <div style="display: flex; flex-wrap: wrap; gap: 2rem; align-items: center;">
+      <div style="flex: 2 1 320px;">
+        <span class="pill-icon"><i class="fas fa-feather-alt"></i> your friend who reads the hard stuff</span>
+        <h1 style="margin: 1rem 0 0.4rem;">Your friend who reads the complicated stuff so you don't have to.</h1>
+        <p class="subhead" style="margin: 0.8rem 0 1.8rem;">EasyRead takes articles, topics, or random curiosities and turns them into warm, story-filled explanations that feel like they were written just for you.</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
+          <button class="btn-primary"><i class="fas fa-paper-plane" style="margin-right: 0.5rem;"></i> Try It — Give Me Something Hard</button>
+          <a href="#" class="btn-secondary"><i class="fas fa-compass"></i> explore the blog</a>
+        </div>
+        <div style="margin-top: 2rem; display: flex; gap: 0.8rem; flex-wrap: wrap;">
+          <span class="pill-icon"><i class="fas fa-lamp"></i> warm lamp · cozy desk</span>
+          <span class="pill-icon"><i class="fas fa-pencil-alt"></i> hand-drawn notes</span>
+        </div>
+      </div>
+      <div style="flex: 1 1 200px; min-width: 150px;">
+        <!-- split-screen visual: messy vs clear (with images) -->
+        <div class="split-demo">
+          <div class="split-left">
+            <img src="https://images.unsplash.com/photo-1544717297-fa95b6ee9643?w=200&h=150&fit=crop&auto=format" alt="messy papers" style="border-radius: 24px; width: 100%; height: auto;" />
+            <span style="font-weight: 500; color: #5b4a3a; margin-top: 0.3rem;"><i class="fas fa-circle-exclamation"></i> dense · confusing</span>
+          </div>
+          <div style="font-size: 2.2rem; color: #b86b3c; animation: floatArrow 2s infinite;">→</div>
+          <div class="split-right">
+            <img src="https://images.unsplash.com/photo-1519682337058-a94d519337bc?w=200&h=150&fit=crop&auto=format" alt="clear card" style="border-radius: 24px; width: 100%; height: auto;" />
+            <span style="font-weight: 500; color: #1f2a36; margin-top: 0.3rem;"><i class="fas fa-lightbulb"></i> ah, now I get it</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 2: Research Friend (on-demand) with more copy -->
+  <section style="margin: 4rem 0;">
+    <div style="display: flex; flex-wrap: wrap; gap: 2rem; align-items: flex-start;">
+      <div style="flex: 1.5 1 300px;">
+        <h2><i class="fas fa-magnifying-glass" style="color: #b86b3c; margin-right: 0.5rem;"></i> You bring the confusion. We bring the clarity.</h2>
+        <p style="font-size: 1.1rem; margin: 0.8rem 0 1.2rem; color: #3f4d5c;">Paste any article link, or just name a topic. Our research friend reads everything, connects the dots, and comes back with a story that makes sense to <strong>you</strong>. Analogies from your world. Examples you relate to. Zero jargon.</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.6rem;">
+          <span class="pill-icon"><i class="fas fa-link"></i> works with links</span>
+          <span class="pill-icon"><i class="fas fa-brain"></i> adjusts to your level</span>
+          <span class="pill-icon"><i class="fas fa-pizza-slice"></i> memorable analogies</span>
+        </div>
+        <div style="margin-top: 1.5rem; background: #f8f2ea; border-radius: 32px; padding: 1.2rem 1.8rem;">
+          <i class="fas fa-quote-left" style="color: #b86b3c; opacity: 0.4;"></i>
+          <p style="font-style: italic; margin: 0.4rem 0;">“I used to dread reading dense articles. Now I look forward to seeing what story EasyRead will tell me.”</p>
+        </div>
+      </div>
+      <div style="flex: 1.2 1 260px;">
+        <div class="demo-grid">
+          <div class="demo-step">
+            <i class="fas fa-file-lines icon-lg"></i>
+            <div style="font-weight: 500;">paste any link<br>or topic</div>
+          </div>
+          <span class="demo-arrow"><i class="fas fa-arrow-right"></i></span>
+          <div class="demo-step" style="background: #f2ded7; border: 2px solid #b86b3c;">
+            <i class="fas fa-robot icon-lg" style="color: #b86b3c;"></i>
+            <div>“Ghibli machine”</div>
+          </div>
+          <span class="demo-arrow"><i class="fas fa-arrow-right"></i></span>
+          <div class="demo-step" style="background: #fdfaf5; border: 2px solid #b86b3c;">
+            <i class="fas fa-book-open icon-lg"></i>
+            <div>story card</div>
+          </div>
+        </div>
+        <!-- example output card -->
+        <div class="magic-card" style="margin: 2rem auto 0; max-width: 380px;">
+          <div style="display: flex; align-items: center; gap: 0.8rem;">
+            <i class="fas fa-lemon icon-lg" style="font-size: 2.2rem;"></i>
+            <span style="font-weight: 700; font-size: 1.3rem;">The Digital Lemonade Stand</span>
+          </div>
+          <p style="margin: 0.6rem 0; font-size: 1.05rem;"><em>“Imagine every lemonade stand in the world sharing one giant recipe book that nobody owns...”</em></p>
+          <a href="#" style="color: #b86b3c; font-weight: 600; text-decoration: underline 2px dotted #dccfc2;">Read Full Story <i class="fas fa-arrow-right"></i></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 3: The Blog That Knows You (more copy) -->
+  <section style="margin: 4rem 0;">
+    <h2><i class="fas fa-rss" style="color: #b86b3c; margin-right: 0.5rem;"></i> A blog that does the homework for you.</h2>
+    <div style="display: flex; flex-wrap: wrap; gap: 2.5rem;">
+      <div style="flex: 1 1 260px;">
+        <p style="font-size: 1.1rem; background: #f8f2ea; padding: 1.8rem; border-radius: 32px;">
+          <i class="fas fa-feather" style="color: #b86b3c;"></i> Most blogs: someone writes, you hope it's good. <br><br>
+          <strong>EasyRead blog:</strong> quietly researches fascinating corners of football, music, movies, science — whatever genres you're into — and leaves beautifully simple articles waiting for you. Like a friend who reads 50 things and tells you the 3 that matter.
+        </p>
+        <div style="display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 1rem;">
+          <span class="pill-icon"><i class="fas fa-clock"></i> always fresh</span>
+          <span class="pill-icon"><i class="fas fa-heart"></i> your genres</span>
+          <span class="pill-icon"><i class="fas fa-bookmark"></i> ready when you are</span>
+        </div>
+      </div>
+      <div style="flex: 2 1 320px;">
+        <div class="blog-shelf">
+          <div class="blog-card">
+            <i class="fas fa-futbol icon-lg"></i>
+            <strong>Why Football Formations Changed</strong>
+            <div style="font-size: 0.9rem; color: #5b6f7e;">The Pizza Slice Theory</div>
+          </div>
+          <div class="blog-card">
+            <i class="fas fa-film icon-lg"></i>
+            <strong>Movie Soundtracks</strong>
+            <div style="font-size: 0.9rem; color: #5b6f7e;">How composers control your tears</div>
+          </div>
+          <div class="blog-card">
+            <i class="fas fa-atom icon-lg"></i>
+            <strong>Quantum Computing</strong>
+            <div style="font-size: 0.9rem; color: #5b6f7e;">A coin that's heads AND tails</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 4: Taught the way YOU learn (more context) -->
+  <section style="margin: 4rem 0;">
+    <div style="display: flex; flex-wrap: wrap; gap: 2.5rem;">
+      <div style="flex: 1.5 1 280px;">
+        <h2><i class="fas fa-chalkboard-user" style="color: #b86b3c; margin-right: 0.5rem;"></i> Finally, explanations that speak your language.</h2>
+        <p style="font-size: 1.1rem; margin: 0.5rem 0 1.2rem;">Everyone learns differently. Some need sports analogies. Others need cooking metaphors. Some want the historical backstory. Others want the bullet-point version. Most content is written for a generic “average reader” — so it connects with no one deeply.</p>
+        <p style="font-weight: 500; background: #f2ede6; padding: 1rem 1.5rem; border-radius: 40px;"><i class="fas fa-gem" style="color: #b86b3c;"></i> EasyRead learns how <strong>YOU</strong> understand things. Prefer football comparisons? Every complex topic becomes a match analysis. Think in cooking terms? Quantum physics becomes a recipe.</p>
+        <div class="style-selector">
+          <span class="style-card"><i class="fas fa-futbol"></i> Explain with sports</span>
+          <span class="style-card"><i class="fas fa-utensils"></i> Explain with cooking</span>
+          <span class="style-card"><i class="fas fa-film"></i> Explain with movies</span>
+          <span class="style-card"><i class="fas fa-leaf"></i> Explain with nature</span>
+          <span class="style-card"><i class="fas fa-face-smile-wink"></i> Make it funny</span>
+        </div>
+        <p style="font-weight: 600; color: #b86b3c; font-size: 1.1rem;">The explanations don't just become simpler. They become YOURS.</p>
+      </div>
+      <div style="flex: 1 1 180px; background: #f2ede6; border-radius: 48px; padding: 1.8rem; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <img src="https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=200&h=150&fit=crop&auto=format" alt="cooking metaphor" style="border-radius: 32px; width: 100%; height: auto;" />
+        <span style="font-weight: 600; text-align: center; margin-top: 0.8rem;">“quantum physics<br>as a recipe”</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 5: Testimonials (emotional proof) -->
+  <section style="margin: 4rem 0;">
+    <h2><i class="fas fa-heart" style="color: #b86b3c; margin-right: 0.5rem;"></i> What people are saying</h2>
+    <div class="testimonial-grid">
+      <div class="testimonial-item"><i class="fas fa-quote-left" style="color: #b86b3c; opacity: 0.5;"></i> “I finally understand blockchain. My friend tried explaining it for 2 years. EasyRead did it with a story about a neighborhood potluck.”</div>
+      <div class="testimonial-item"><i class="fas fa-quote-left" style="color: #b86b3c; opacity: 0.5;"></i> “Sent my mom the article on how WiFi works. She called me excited instead of confused. That's never happened before.”</div>
+      <div class="testimonial-item"><i class="fas fa-quote-left" style="color: #b86b3c; opacity: 0.5;"></i> “The blog is dangerous. I went to read one article and surfaced three hours later knowing about music theory, black holes, and4rem 0;">
+    <h2><i class="fas fa-heart" style="color: #b86b3c; margin-right: 0.5rem;"></i> What people are saying</h2>
+    <div class="testimonial-grid">
+      <div class="testimonial-item"><i class="fas fa-quote-left" style="color: #b86b3c; opacity: 0.5;"></i> “I finally understand blockchain. My friend tried explaining it for 2 years. EasyRead did it with a story about a neighborhood potluck.”</div>
+      <div class="testimonial-item"><i class="fas fa-quote-left" style="color: #b86b3c; opacity: 0.5;"></i> “Sent my mom the article on how WiFi works. She called me excited instead of confused. That's never happened before.”</div>
+      <div class="testimonial-item"><i class="fas fa-quote-left" style="color: #b86b3c; opacity: 0.5;"></i> “The blog is dangerous. I went to read one article and surfaced three hours later knowing about music theory, black holes, and why footballers dive.”</div>
+    </div>
+  </section>
+
+  <!-- FOOTER / CTA -->
+  <div class="footer-cta">
+    <h3 style="font-size: 2rem; margin-bottom: 0.5rem;">Got something you've always wanted to understand but were too afraid to ask?</h3>
+    <p style="font-size: 1.1rem; color: #3f4d5c;">Drop it here. We'll turn it into a story you'll actually remember.</p>
+    <div class="input-demo">
+      <input type="text" placeholder="Quantum physics? The offside rule? Why we dream?" value="How does cryptocurrency actually work?" />
+      <button class="btn-primary" style="padding: 0.9rem 2.2rem;"><i class="fas fa-wand-magic-sparkles"></i> Make It Make Sense</button>
+    </div>
+    <div style="margin-top: 1.5rem;">
+      <a href="#" class="btn-secondary"><i class="fas fa-compass"></i> Or explore the blog — we've already explained some cool stuff.</a>
+    </div>
   </div>
 
-  <!-- Panel 1: The researching friend -->
-  <section class="panel" id="panel1">
-    <div class="bg-blur-image"></div>
-    <div class="glass-content">
-      <div class="story-row">
-        <div class="image-area img1"></div>
-        <div class="text-col">
-          <div class="chapter-badge">Chapter one</div>
-          <h2>Your researching friend has arrived</h2>
-          <p class="marketing-copy">
-            Not a search engine. Not another chatbot. A curious companion who reads every article you care about and returns with a story that fits in your pocket.
-          </p>
-          <div class="glass-tag">
-            <i class="fas fa-user-astronaut"></i> always learning, always simplifying
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+  <!-- tiny footer note -->
+  <div class="footer-note">
+    <i class="fas fa-feather-alt" style="color: #b86b3c;"></i> EasyRead — Your friend who reads the hard stuff.
+    <div style="margin-top: 0.5rem; font-size: 0.85rem; color: #9aabbb;">✻ no robots · just warmth ✻</div>
+  </div>
 
-  <!-- Panel 2: turns articles into narratives -->
-  <section class="panel" id="panel2">
-    <div class="bg-blur-image"></div>
-    <div class="glass-content">
-      <div class="story-row reverse">
-        <div class="image-area img2"></div>
-        <div class="text-col">
-          <div class="chapter-badge">Chapter two</div>
-          <h2>Drop a link. Get a story.</h2>
-          <p class="marketing-copy">
-            Any dense article, any confusing topic. Our engine reads, filters noise, and weaves it into a narrative with analogies you already understand.
-          </p>
-          <div class="glass-tag">
-            <i class="fas fa-feather-alt"></i> complexity, rewritten
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Panel 3: The blog that never sleeps -->
-  <section class="panel" id="panel3">
-    <div class="bg-blur-image"></div>
-    <div class="glass-content">
-      <div class="story-row">
-        <div class="image-area img3"></div>
-        <div class="text-col">
-          <div class="chapter-badge">Chapter three</div>
-          <h2>A blog with the juiciest happenings</h2>
-          <p class="marketing-copy">
-            While you sleep, we curate fascinating stories across music, science, sports. Every morning you wake up to fresh, effortless reads.
-          </p>
-          <div class="glass-tag">
-            <i class="fas fa-newspaper"></i> auto-fresh, always relevant
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Panel 4: call to action / finale -->
-  <section class="panel" id="panel4">
-    <div class="bg-blur-image"></div>
-    <div class="glass-content final-message">
-      <div class="image-area img4" style="max-width: 400px; margin: 0 auto 1.5rem;"></div>
-      <div class="chapter-badge" style="margin:0 auto;">the next chapter</div>
-      <h2 style="font-size: 2.5rem;">Ready for stories that stick?</h2>
-      <p class="marketing-copy" style="max-width: 500px; margin: 1rem auto;">
-        Your friend is already reading. The blog is humming. All that's missing is your curiosity.
-      </p>
-      <div class="hero-cta" id="finalCta">
-        <i class="fas fa-sparkle"></i> Begin the story
-      </div>
-    </div>
-  </section>
-
-  <script>
-    (function() {
-      const panels = document.querySelectorAll('.panel');
-      const dots = document.querySelectorAll('.dot');
-      
-      function updateActiveDot() {
-        let current = 0;
-        panels.forEach((panel, idx) => {
-          const rect = panel.getBoundingClientRect();
-          if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) {
-            current = idx;
-          }
-        });
-        dots.forEach((dot, i) => {
-          dot.classList.toggle('active', i === current);
-        });
-      }
-
-      dots.forEach(dot => {
-        dot.addEventListener('click', (e) => {
-          const index = parseInt(dot.getAttribute('data-index'), 10);
-          if (panels[index]) {
-            panels[index].scrollIntoView({ behavior: 'smooth' });
-          }
-        });
-      });
-
-      window.addEventListener('scroll', updateActiveDot);
-      window.addEventListener('resize', updateActiveDot);
-      updateActiveDot();
-
-      const finalCta = document.getElementById('finalCta');
-      if (finalCta) {
-        finalCta.addEventListener('click', () => {
-          alert('Welcome to EasyRead. Your researching friend is ready.');
-        });
-      }
-    })();
-  </script>
+</div> <!-- end container -->
 </body>
 </html>
