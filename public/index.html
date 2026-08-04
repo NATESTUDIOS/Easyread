@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>EasyRead | Turn Complex Topics into Simple Stories</title>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+<meta name="description" content="EasyRead transforms difficult articles into engaging stories anyone can understand. Explore science, technology, history, finance, sports, psychology, health, AI, and more—explained in simple language with real-life examples.">
+
+<meta name="keywords" content="EasyRead, simple explanations, explain like I'm five, easy articles, storytelling blog, AI summaries, science explained, technology explained, history explained, finance explained, educational blog, learn faster, easy learning, knowledge blog">
+
+<meta name="author" content="EasyRead">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+
+<meta name="theme-color" content="#4b3b9e">
+<meta name="application-name" content="EasyRead">
+<meta name="apple-mobile-web-app-title" content="EasyRead">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+<meta name="googlebot" content="index,follow">
+<meta name="bingbot" content="index,follow">
+
+<meta name="google-adsense-account" content="ca-pub-8952114436232718">
+
+<link rel="canonical" href="https://easyread.example/">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="EasyRead">
+<meta property="og:title" content="EasyRead | Knowledge That Reads Like a Story">
+<meta property="og:description" content="Complicated topics become enjoyable stories. Learn science, AI, history, psychology, business, sports, and more through simple storytelling.">
+<meta property="og:url" content="https://easyread.example/">
+<meta property="og:image" content="https://easyread.example/images/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en_US">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="EasyRead | Knowledge That Reads Like a Story">
+<meta name="twitter:description" content="Discover complex ideas explained through stories, analogies, and easy language.">
+<meta name="twitter:image" content="https://easyread.example/images/og-image.jpg">
+
+<link rel="icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+
+<meta name="format-detection" content="telephone=no">
+
+<!-- Preconnect -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://images.unsplash.com" crossorigin>
+
+<!-- SEO -->
+<meta name="rating" content="General">
+<meta name="language" content="English">
+<meta name="revisit-after" content="7 days">
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@graph":[
+    {
+      "@type":"Organization",
+      "name":"EasyRead",
+      "url":"https://easyread.example",
+      "logo":"https://easyread.example/logo.png",
+      "sameAs":[]
+    },
+    {
+      "@type":"WebSite",
+      "url":"https://easyread.example",
+      "name":"EasyRead",
+      "description":"EasyRead makes complicated topics easy through storytelling.",
+      "potentialAction":{
+        "@type":"SearchAction",
+        "target":"https://easyread.example/search?q={search_term_string}",
+        "query-input":"required name=search_term_string"
+      }
+    },
+    {
+      "@type":"WebPage",
+      "name":"EasyRead Home",
+      "url":"https://easyread.example",
+      "description":"Knowledge explained through stories and analogies."
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+ "@context":"https://schema.org",
+ "@type":"FAQPage",
+ "mainEntity":[
+ {
+ "@type":"Question",
+ "name":"What is EasyRead?",
+ "acceptedAnswer":{
+ "@type":"Answer",
+ "text":"EasyRead transforms difficult articles into simple, engaging stories that anyone can understand."
+ }
+ },
+ {
+ "@type":"Question",
+ "name":"Is EasyRead free?",
+ "acceptedAnswer":{
+ "@type":"Answer",
+ "text":"Yes. EasyRead provides free educational content in an easy-to-read storytelling format."
+ }
+ },
+ {
+ "@type":"Question",
+ "name":"What topics are covered?",
+ "acceptedAnswer":{
+ "@type":"Answer",
+ "text":"EasyRead covers science, AI, technology, history, psychology, finance, sports, health, business, and more."
+ }
+ },
+ {
+ "@type":"Question",
+ "name":"Who is EasyRead for?",
+ "acceptedAnswer":{
+ "@type":"Answer",
+ "text":"EasyRead is for students, professionals, and curious readers who enjoy learning through simple explanations."
+ }
+ }
+ ]
+}
+</script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow-x: hidden;
+      overflow-y: auto;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      background: #f8f6ff;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* full screen immersive stages — no boxes, edge to edge */
+    .panel {
+      min-height: 100vh;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      padding: 2rem 1.5rem;
+      background: transparent;
+    }
+
+    /* blurred background images covering full panel */
+    .bg-blur-image {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      filter: blur(22px) brightness(1.1);
+      transform: scale(1.08);
+      z-index: 0;
+      opacity: 0.5;
+      transition: filter 0.5s;
+    }
+
+    .panel:nth-child(1) .bg-blur-image {
+      background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=2073&auto=format&fit=crop');
+    }
+    .panel:nth-child(2) .bg-blur-image {
+      background-image: url('https://images.unsplash.com/photo-1518837695005-2083093ee35b?q=80&w=2070&auto=format&fit=crop');
+    }
+    .panel:nth-child(3) .bg-blur-image {
+      background-image: url('https://images.unsplash.com/photo-1504805572947-34fad45aed93?q=80&w=2070&auto=format&fit=crop');
+    }
+    .panel:nth-child(4) .bg-blur-image {
+      background-image: url('https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=2070&auto=format&fit=crop');
+    }
+
+    /* glass morphic content - spread across full width, soft edges */
+    .glass-content {
+      position: relative;
+      z-index: 5;
+      width: 100%;
+      max-width: 1200px;
+      background: rgba(255, 255, 255, 0.35);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border-radius: 4rem;
+      padding: 2.8rem 2.2rem;
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      box-shadow: 0 35px 70px -25px rgba(25, 15, 50, 0.15);
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      transition: all 0.3s;
+    }
+
+    /* flexible row for larger screens */
+    .story-row {
+      display: flex;
+      align-items: center;
+      gap: 2.5rem;
+      flex-wrap: wrap;
+    }
+
+    .story-row.reverse {
+      flex-direction: row-reverse;
+    }
+
+    .image-area {
+      flex: 1 1 300px;
+      border-radius: 3rem;
+      overflow: hidden;
+      aspect-ratio: 4/3;
+      background-size: cover;
+      background-position: center;
+      box-shadow: 0 25px 45px -15px rgba(0,0,0,0.25);
+      border: 1px solid rgba(255,255,255,0.6);
+      filter: brightness(1.05);
+      transition: transform 0.4s;
+      animation: softDrift 12s infinite alternate;
+    }
+
+    @keyframes softDrift {
+      0% { object-position: 20% 20%; }
+      100% { object-position: 75% 70%; }
+    }
+
+    .img1 { background-image: url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071&auto=format&fit=crop'); }
+    .img2 { background-image: url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1000&auto=format&fit=crop'); }
+    .img3 { background-image: url('https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=1000&auto=format&fit=crop'); }
+    .img4 { background-image: url('https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=1000&auto=format&fit=crop'); }
+
+    .text-col {
+      flex: 1 1 300px;
+      color: #131022;
+    }
+
+    .chapter-badge {
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #4b379b;
+      font-size: 0.8rem;
+      margin-bottom: 0.5rem;
+      background: rgba(255,255,255,0.45);
+      backdrop-filter: blur(8px);
+      display: inline-block;
+      padding: 0.3rem 1.2rem;
+      border-radius: 2rem;
+    }
+
+    h2 {
+      font-size: clamp(2.2rem, 6vw, 3.2rem);
+      font-weight: 700;
+      letter-spacing: -1px;
+      line-height: 1.15;
+      margin-bottom: 1rem;
+      color: #0d0824;
+    }
+
+    .marketing-copy {
+      font-size: 1.15rem;
+      line-height: 1.65;
+      color: #27223a;
+      margin-bottom: 1.8rem;
+      font-weight: 400;
+    }
+
+    .glass-tag {
+      background: rgba(255,255,255,0.5);
+      backdrop-filter: blur(10px);
+      padding: 0.5rem 1.4rem;
+      border-radius: 3rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-weight: 500;
+      border: 1px solid rgba(255,255,255,0.8);
+      margin-top: 0.4rem;
+    }
+
+    .hero-cta {
+      background: white;
+      backdrop-filter: blur(14px);
+      background: rgba(255,255,255,0.8);
+      border: none;
+      padding: 1rem 2.2rem;
+      border-radius: 3.5rem;
+      font-weight: 650;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.7rem;
+      font-size: 1.1rem;
+      color: #1a142e;
+      box-shadow: 0 22px 35px -14px rgba(75, 55, 140, 0.25);
+      cursor: pointer;
+      transition: 0.2s;
+      margin-top: 0.8rem;
+    }
+
+    .hero-cta i {
+      color: #4b379b;
+    }
+
+    .final-message {
+      text-align: center;
+    }
+
+    /* navigation floating dots */
+    .nav-dots {
+      position: fixed;
+      right: 1.2rem;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      z-index: 30;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      background: rgba(50, 35, 90, 0.35);
+      border-radius: 50%;
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,255,255,0.6);
+      cursor: pointer;
+      transition: 0.25s;
+    }
+
+    .dot.active {
+      background: #4e3a9c;
+      transform: scale(1.6);
+      box-shadow: 0 0 14px #b7a8f0;
+    }
+
+    /* mobile optimization */
+    @media (max-width: 650px) {
+      .glass-content {
+        padding: 2rem 1.5rem;
+        border-radius: 2.8rem;
+      }
+      .story-row {
+        gap: 1.8rem;
+      }
+      .nav-dots {
+        right: 0.6rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- floating navigation dots -->
+  <div class="nav-dots" id="navDots">
+    <div class="dot active" data-index="0"></div>
+    <div class="dot" data-index="1"></div>
+    <div class="dot" data-index="2"></div>
+    <div class="dot" data-index="3"></div>
+  </div>
+
+  <!-- Panel 1: The researching friend -->
+  <section class="panel" id="panel1">
+    <div class="bg-blur-image"></div>
+    <div class="glass-content">
+      <div class="story-row">
+        <div class="image-area img1"></div>
+        <div class="text-col">
+          <div class="chapter-badge">Chapter one</div>
+          <h2>Your researching friend has arrived</h2>
+          <p class="marketing-copy">
+            Not a search engine. Not another chatbot. A curious companion who reads every article you care about and returns with a story that fits in your pocket.
+          </p>
+          <div class="glass-tag">
+            <i class="fas fa-user-astronaut"></i> always learning, always simplifying
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Panel 2: turns articles into narratives -->
+  <section class="panel" id="panel2">
+    <div class="bg-blur-image"></div>
+    <div class="glass-content">
+      <div class="story-row reverse">
+        <div class="image-area img2"></div>
+        <div class="text-col">
+          <div class="chapter-badge">Chapter two</div>
+          <h2>Drop a link. Get a story.</h2>
+          <p class="marketing-copy">
+            Any dense article, any confusing topic. Our engine reads, filters noise, and weaves it into a narrative with analogies you already understand.
+          </p>
+          <div class="glass-tag">
+            <i class="fas fa-feather-alt"></i> complexity, rewritten
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Panel 3: The blog that never sleeps -->
+  <section class="panel" id="panel3">
+    <div class="bg-blur-image"></div>
+    <div class="glass-content">
+      <div class="story-row">
+        <div class="image-area img3"></div>
+        <div class="text-col">
+          <div class="chapter-badge">Chapter three</div>
+          <h2>A blog with the juiciest happenings</h2>
+          <p class="marketing-copy">
+            While you sleep, we curate fascinating stories across music, science, sports. Every morning you wake up to fresh, effortless reads.
+          </p>
+          <div class="glass-tag">
+            <i class="fas fa-newspaper"></i> auto-fresh, always relevant
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Panel 4: call to action / finale -->
+  <section class="panel" id="panel4">
+    <div class="bg-blur-image"></div>
+    <div class="glass-content final-message">
+      <div class="image-area img4" style="max-width: 400px; margin: 0 auto 1.5rem;"></div>
+      <div class="chapter-badge" style="margin:0 auto;">the next chapter</div>
+      <h2 style="font-size: 2.5rem;">Ready for stories that stick?</h2>
+      <p class="marketing-copy" style="max-width: 500px; margin: 1rem auto;">
+        Your friend is already reading. The blog is humming. All that's missing is your curiosity.
+      </p>
+      <div class="hero-cta" id="finalCta">
+        <i class="fas fa-sparkle"></i> Begin the story
+      </div>
+    </div>
+  </section>
+
+  <script>
+    (function() {
+      const panels = document.querySelectorAll('.panel');
+      const dots = document.querySelectorAll('.dot');
+      
+      function updateActiveDot() {
+        let current = 0;
+        panels.forEach((panel, idx) => {
+          const rect = panel.getBoundingClientRect();
+          if (rect.top <= window.innerHeight/2 && rect.bottom >= window.innerHeight/2) {
+            current = idx;
+          }
+        });
+        dots.forEach((dot, i) => {
+          dot.classList.toggle('active', i === current);
+        });
+      }
+
+      dots.forEach(dot => {
+        dot.addEventListener('click', (e) => {
+          const index = parseInt(dot.getAttribute('data-index'), 10);
+          if (panels[index]) {
+            panels[index].scrollIntoView({ behavior: 'smooth' });
+          }
+        });
+      });
+
+      window.addEventListener('scroll', updateActiveDot);
+      window.addEventListener('resize', updateActiveDot);
+      updateActiveDot();
+
+      const finalCta = document.getElementById('finalCta');
+      if (finalCta) {
+        finalCta.addEventListener('click', () => {
+          alert('Welcome to EasyRead. Your researching friend is ready.');
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
