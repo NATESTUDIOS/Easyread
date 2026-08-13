@@ -24,7 +24,7 @@ const router = Router();
 
 const PROCESSOR_URL = 'https://my-fcm-server.onrender.com/api/processor';
 const ADMIN_API_KEY = process.env.ADMIN_API_KEY;
-const SCRAPER_INTERVAL = parseInt(process.env.SCRAPER_INTERVAL) || 10000;
+const SCRAPER_INTERVAL = parseInt(process.env.SCRAPER_INTERVAL) || 20000;
 const BATCH_SIZE = parseInt(process.env.SCRAPER_BATCH_SIZE) || 3;
 const MAX_RETRIES = parseInt(process.env.SCRAPER_MAX_RETRIES) || 3;
 const MIN_WORD_COUNT = 200;
