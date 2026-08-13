@@ -1,10 +1,13 @@
-// scraper.js
-// EasyRead Scraper - Complete standalone service for Render
+// api/scraper.js
+// EasyRead Scraper - Scraping Route
 
-import { createClient } from '@supabase/supabase-js';
-import fetch from 'node-fetch';
-import * as cheerio from 'cheerio';
-import crypto from 'crypto';
+import { Router } from "express";
+import { createClient } from "@supabase/supabase-js";
+import fetch from "node-fetch";
+import * as cheerio from "cheerio";
+import crypto from "crypto";
+
+const router = Router();
 
 // ============================================
 // CONFIGURATION
@@ -12,18 +15,13 @@ import crypto from 'crypto';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const PROCESSOR_URL = process.env.PROCESSOR_URL || 'http://localhost:3000/api/processor';
+const PROCESSOR_URL = process.env.PROCESSOR_URL || "http://localhost:3001/api/processor";
 const ADMIN_API_KEY = process.env.ADMIN_API_KEY;
-const SCRAPER_INTERVAL = parseInt(process.env.SCRAPER_INTERVAL) || 10000; // 10 seconds
+const SCRAPER_INTERVAL = parseInt(process.env.SCRAPER_INTERVAL) || 10000;
 const BATCH_SIZE = parseInt(process.env.SCRAPER_BATCH_SIZE) || 3;
 const MAX_RETRIES = parseInt(process.env.SCRAPER_MAX_RETRIES) || 3;
 const MIN_WORD_COUNT = 200;
-const MAX_WORD_COUNT = 10000;
 const REFRESH_INTERVAL_DAYS = 14;
-
-// ============================================
-// SUPABASE CLIENT
-// ============================================
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false }
@@ -33,191 +31,322 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
 // LOGGING
 // ============================================
 
-function log(message, type = 'info') {
+function log(message, type = "info") {
   const timestamp = new Date().toISOString();
   const prefix = {
-    info: '📘',
-    success: '✅',
-    error: '❌',
-    warn: '⚠️',
-    fetch: '🌐',
-    extract: '📄',
-    save: '💾',
-    process: '⚙️'
-  }[type] || '📘';
+    info: "📘",
+    success: "✅",
+    error: "❌",
+    warn: "⚠️",
+    fetch: "🌐",
+    extract: "📄",
+    save: "💾",
+    process: "⚙️"
+  }[type] || "📘";
   console.log(`${timestamp} ${prefix} ${message}`);
 }
 
 // ============================================
-// MAIN SCRAPER LOOP
+// SCRAPER STATE
 // ============================================
 
-async function main() {
-  log('🕷️ EasyRead Scraper Started', 'info');
-  log(`📦 Batch Size: ${BATCH_SIZE}`, 'info');
-  log(`⏱️ Interval: ${SCRAPER_INTERVAL}ms`, 'info');
-  log(`🔄 Max Retries: ${MAX_RETRIES}`, 'info');
-  log(`📤 Processor: ${PROCESSOR_URL}`, 'info');
+let isRunning = false;
+let pollInterval = null;
+let stats = {
+  totalProcessed: 0,
+  totalFailed: 0,
+  lastRun: null,
+  jobsInProgress: 0
+};
 
-  while (true) {
-    try {
+// ============================================
+// ROUTES
+// ============================================
+
+router.post("/start", async (req, res) => {
+  const apiKey = req.headers["x-admin-key"];
+
+  if (apiKey !== ADMIN_API_KEY) {
+    return res.status(401).json({
+      success: false,
+      error: "Unauthorized"
+    });
+  }
+
+  if (isRunning) {
+    return res.json({
+      success: true,
+      message: "Scraper already running",
+      status: "running"
+    });
+  }
+
+  await startScraper();
+  res.json({
+    success: true,
+    message: "Scraper started",
+    status: "running"
+  });
+});
+
+router.post("/stop", async (req, res) => {
+  const apiKey = req.headers["x-admin-key"];
+
+  if (apiKey !== ADMIN_API_KEY) {
+    return res.status(401).json({
+      success: false,
+      error: "Unauthorized"
+    });
+  }
+
+  await stopScraper();
+  res.json({
+    success: true,
+    message: "Scraper stopped",
+    status: "stopped"
+  });
+});
+
+router.get("/status", async (req, res) => {
+  const status = await getStatus();
+  res.json({
+    success: true,
+    ...status
+  });
+});
+
+router.post("/run-once", async (req, res) => {
+  const apiKey = req.headers["x-admin-key"];
+
+  if (apiKey !== ADMIN_API_KEY) {
+    return res.status(401).json({
+      success: false,
+      error: "Unauthorized"
+    });
+  }
+
+  const result = await processPendingJobs();
+  res.json({
+    success: true,
+    message: "Scraper run completed",
+    jobs_processed: result.processed || 0,
+    jobs_failed: result.failed || 0,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// ============================================
+// SCRAPER FUNCTIONS
+// ============================================
+
+export async function startScraper() {
+  if (isRunning) return;
+
+  isRunning = true;
+  log("🕷️ Scraper started", "info");
+  log(`📦 Batch Size: ${BATCH_SIZE}`, "info");
+  log(`⏱️ Interval: ${SCRAPER_INTERVAL}ms`, "info");
+
+  await processPendingJobs();
+
+  pollInterval = setInterval(async () => {
+    if (isRunning) {
       await processPendingJobs();
-    } catch (error) {
-      log(`Scraper loop error: ${error.message}`, 'error');
     }
-    await sleep(SCRAPER_INTERVAL);
-  }
+  }, SCRAPER_INTERVAL);
 }
 
-// ============================================
-// PROCESS PENDING JOBS
-// ============================================
+export async function stopScraper() {
+  isRunning = false;
 
-async function processPendingJobs() {
-  // Get pending jobs from database
-  const { data: jobs, error } = await supabase
-    .from('processing_jobs')
-    .select('*')
-    .eq('status', 'pending')
-    .order('started_at', { ascending: true })
-    .limit(BATCH_SIZE);
-
-  if (error) {
-    log(`Failed to fetch jobs: ${error.message}`, 'error');
-    return;
+  if (pollInterval) {
+    clearInterval(pollInterval);
+    pollInterval = null;
   }
 
-  if (!jobs || jobs.length === 0) {
-    return;
-  }
-
-  log(`📋 Found ${jobs.length} pending jobs`, 'info');
-
-  for (const job of jobs) {
-    await processJob(job);
-  }
+  log("🕷️ Scraper stopped", "info");
 }
 
-// ============================================
-// PROCESS SINGLE JOB
-// ============================================
+export async function getStatus() {
+  const { count: pending, error: pendingError } = await supabase
+    .from("processing_jobs")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "pending");
+
+  const { count: processing, error: processingError } = await supabase
+    .from("processing_jobs")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "processing");
+
+  const { count: failed, error: failedError } = await supabase
+    .from("processing_jobs")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "failed");
+
+  return {
+    isRunning,
+    stats,
+    queue: {
+      pending: pending || 0,
+      processing: processing || 0,
+      failed: failed || 0
+    },
+    config: {
+      batchSize: BATCH_SIZE,
+      interval: SCRAPER_INTERVAL,
+      maxRetries: MAX_RETRIES
+    }
+  };
+}
+
+export async function processPendingJobs() {
+  let processed = 0;
+  let failed = 0;
+
+  try {
+    const { data: jobs, error } = await supabase
+      .from("processing_jobs")
+      .select("*")
+      .eq("status", "pending")
+      .order("started_at", { ascending: true })
+      .limit(BATCH_SIZE);
+
+    if (error) {
+      log(`Failed to fetch jobs: ${error.message}`, "error");
+      return { processed, failed };
+    }
+
+    if (!jobs || jobs.length === 0) {
+      return { processed, failed };
+    }
+
+    log(`📋 Found ${jobs.length} pending jobs`, "info");
+
+    for (const job of jobs) {
+      stats.jobsInProgress++;
+      const success = await processJob(job);
+
+      if (success) {
+        processed++;
+        stats.totalProcessed++;
+      } else {
+        failed++;
+        stats.totalFailed++;
+      }
+
+      stats.jobsInProgress--;
+    }
+
+    stats.lastRun = new Date().toISOString();
+
+  } catch (error) {
+    log(`Scraper error: ${error.message}`, "error");
+  }
+
+  return { processed, failed };
+}
 
 async function processJob(job) {
   const jobId = job.job_id;
-  log(`🔄 Processing job ${jobId}: ${job.url || 'No URL'}`, 'info');
+  log(`🔄 Processing job ${jobId}: ${job.url || "No URL"}`, "info");
 
   try {
-    // === STAGE 1: FETCH ===
-    await updateJobStage(jobId, 'fetch', 'pending');
+    // STAGE 1: FETCH
+    await updateJobStage(jobId, "fetch", "pending");
     const fetchResult = await fetchContent(job.url);
-    
+
     if (!fetchResult.success) {
-      await failJob(jobId, 'fetch', fetchResult.error);
-      return;
+      await failJob(jobId, "fetch", fetchResult.error);
+      return false;
     }
-    await updateJobStage(jobId, 'fetch', 'success');
-    log(`✅ Fetch successful: ${job.url}`, 'fetch');
+    await updateJobStage(jobId, "fetch", "success");
 
-    // === STAGE 2: EXTRACT ===
-    await updateJobStage(jobId, 'extract', 'pending');
+    // STAGE 2: EXTRACT
+    await updateJobStage(jobId, "extract", "pending");
     const extractResult = await extractContent(fetchResult.html, job.url);
-    
+
     if (!extractResult.success) {
-      await failJob(jobId, 'extract', extractResult.error);
-      return;
+      await failJob(jobId, "extract", extractResult.error);
+      return false;
     }
-    await updateJobStage(jobId, 'extract', 'success');
-    log(`✅ Extracted: ${extractResult.wordCount} words, "${extractResult.title}"`, 'extract');
+    await updateJobStage(jobId, "extract", "success");
 
-    // === STAGE 3: QUALITY ===
-    await updateJobStage(jobId, 'quality', 'pending');
+    // STAGE 3: QUALITY
+    await updateJobStage(jobId, "quality", "pending");
     const qualityResult = checkQuality(extractResult);
-    
+
     if (!qualityResult.success) {
-      await failJob(jobId, 'quality', qualityResult.error);
-      return;
+      await failJob(jobId, "quality", qualityResult.error);
+      return false;
     }
-    await updateJobStage(jobId, 'quality', 'success');
-    log(`✅ Quality check passed: ${extractResult.wordCount} words`, 'info');
+    await updateJobStage(jobId, "quality", "success");
 
-    // === STAGE 4: DUPLICATE ===
-    await updateJobStage(jobId, 'duplicate_check', 'pending');
+    // STAGE 4: DUPLICATE
+    await updateJobStage(jobId, "duplicate_check", "pending");
     const duplicateResult = await checkDuplicate(extractResult.textContent);
-    
+
     if (!duplicateResult.success) {
-      await failJob(jobId, 'duplicate_check', duplicateResult.error);
-      return;
+      await failJob(jobId, "duplicate_check", duplicateResult.error);
+      return false;
     }
-    await updateJobStage(jobId, 'duplicate_check', 'success');
+    await updateJobStage(jobId, "duplicate_check", "success");
 
-    if (duplicateResult.isDuplicate) {
-      log(`⚠️ Duplicate content found: ${duplicateResult.existingArticle.canonical_title}`, 'warn');
-      // Still save but mark as duplicate? Or skip? We'll save with a note.
-    }
-
-    // === STAGE 5: STORAGE ===
-    await updateJobStage(jobId, 'storage', 'pending');
+    // STAGE 5: STORAGE
+    await updateJobStage(jobId, "storage", "pending");
     const article = await saveArticle(job, extractResult, duplicateResult);
-    
+
     if (!article) {
-      await failJob(jobId, 'storage', 'Failed to save article');
-      return;
+      await failJob(jobId, "storage", "Failed to save article");
+      return false;
     }
-    await updateJobStage(jobId, 'storage', 'success');
-    log(`✅ Article saved: ${article.article_id}`, 'save');
+    await updateJobStage(jobId, "storage", "success");
 
-    // === STAGE 6: PROCESSING ===
-    await updateJobStage(jobId, 'processing', 'pending');
+    // STAGE 6: PROCESSING
+    await updateJobStage(jobId, "processing", "pending");
     const processResult = await sendToProcessor(article, job);
-    
+
     if (!processResult.success) {
-      await failJob(jobId, 'processing', processResult.error);
-      return;
+      await failJob(jobId, "processing", processResult.error);
+      return false;
     }
-    await updateJobStage(jobId, 'processing', 'success');
-    log(`✅ Sent to processor: ${article.article_id}`, 'process');
+    await updateJobStage(jobId, "processing", "success");
 
-    // === STAGE 7: EMBEDDING ===
-    // (Handled by processor, but we track it)
-    await updateJobStage(jobId, 'embedding', 'pending');
+    // STAGE 7: EMBEDDING (tracking only)
+    await updateJobStage(jobId, "embedding", "pending");
 
-    // === STAGE 8: COMPLETE ===
+    // STAGE 8: COMPLETE
     await completeJob(jobId, article.article_id);
-    log(`✅ Job ${jobId} completed successfully`, 'success');
+    log(`✅ Job ${jobId} completed successfully`, "success");
+
+    return true;
 
   } catch (error) {
-    log(`❌ Job ${jobId} failed: ${error.message}`, 'error');
-    await failJob(jobId, 'error', error.message);
+    log(`❌ Job ${jobId} failed: ${error.message}`, "error");
+    await failJob(jobId, "error", error.message);
+    return false;
   }
 }
 
 // ============================================
-// STAGE 1: FETCH CONTENT
+// FETCH CONTENT
 // ============================================
 
 async function fetchContent(url) {
-  if (!url) {
-    return { success: false, error: 'No URL provided' };
-  }
+  if (!url) return { success: false, error: "No URL provided" };
 
-  // Validate URL
-  try {
-    new URL(url);
-  } catch {
-    return { success: false, error: 'Invalid URL format' };
+  try { new URL(url); } catch {
+    return { success: false, error: "Invalid URL format" };
   }
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      log(`🌐 Fetching: ${url} (attempt ${attempt}/${MAX_RETRIES})`, 'fetch');
-
       const response = await fetch(url, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.5',
-          'Accept-Encoding': 'gzip, deflate',
-          'Connection': 'keep-alive'
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Accept-Language": "en-US,en;q=0.5",
+          "Accept-Encoding": "gzip, deflate",
+          "Connection": "keep-alive"
         },
         timeout: 30000
       });
@@ -227,77 +356,60 @@ async function fetchContent(url) {
       }
 
       const html = await response.text();
-      const contentType = response.headers.get('content-type') || '';
+      const contentType = response.headers.get("content-type") || "";
 
-      // Check if it's HTML
-      if (!contentType.includes('text/html') && !html.trim().startsWith('<!DOCTYPE')) {
-        return { success: false, error: 'Not an HTML page' };
+      if (!contentType.includes("text/html") && !html.trim().startsWith("<!DOCTYPE")) {
+        return { success: false, error: "Not an HTML page" };
       }
 
       return { success: true, html, url, statusCode: response.status };
 
     } catch (error) {
-      log(`Fetch attempt ${attempt} failed: ${error.message}`, 'warn');
+      log(`Fetch attempt ${attempt} failed: ${error.message}`, "warn");
       if (attempt === MAX_RETRIES) {
         return { success: false, error: error.message };
       }
-      await sleep(2000 * attempt); // Exponential backoff
+      await sleep(2000 * attempt);
     }
   }
 }
 
 // ============================================
-// STAGE 2: EXTRACT CONTENT
+// EXTRACT CONTENT
 // ============================================
 
 async function extractContent(html, url) {
   try {
     const $ = cheerio.load(html);
 
-    // --- Extract Title ---
-    let title = $('title').first().text().trim();
-    if (!title) {
-      title = $('h1').first().text().trim() || 'Untitled';
-    }
+    // Title
+    let title = $("title").first().text().trim() || $("h1").first().text().trim() || "Untitled";
 
-    // --- Extract Meta Description ---
-    let description = $('meta[name="description"]').attr('content') || '';
-    description = description.trim();
-
-    // --- Remove Noise Elements ---
+    // Remove noise
     const noiseSelectors = [
-      'script', 'style', 'noscript', 'iframe',
-      'nav', 'header', 'footer',
-      '.ad', '.ads', '.advertisement', '.adsbygoogle',
-      '.social-share', '.share-buttons', '.sharing',
-      '.comments', '.comment-section', '.comment-list',
-      '.sidebar', '.side-bar', '.widget-area',
-      '.newsletter', '.subscribe', '.subscription',
-      '.cookie-banner', '.cookie-consent', '.cookie-notice',
-      '.popup', '.modal', '.overlay',
-      '.related-posts', '.similar-posts', '.recommended',
-      '.author-bio', '.about-author', '.about-the-author',
-      '.breadcrumb', '.breadcrumbs'
+      "script", "style", "noscript", "iframe",
+      "nav", "header", "footer",
+      ".ad", ".ads", ".advertisement", ".adsbygoogle",
+      ".social-share", ".share-buttons", ".sharing",
+      ".comments", ".comment-section", ".comment-list",
+      ".sidebar", ".side-bar", ".widget-area",
+      ".newsletter", ".subscribe", ".subscription",
+      ".cookie-banner", ".cookie-consent", ".cookie-notice",
+      ".popup", ".modal", ".overlay",
+      ".related-posts", ".similar-posts", ".recommended",
+      ".author-bio", ".about-author", ".about-the-author"
     ];
-    $(noiseSelectors.join(',')).remove();
+    $(noiseSelectors.join(",")).remove();
 
-    // Remove empty elements
-    $('*').each((i, el) => {
-      if ($(el).text().trim() === '' && $(el).children().length === 0) {
-        $(el).remove();
-      }
-    });
-
-    // --- Find Main Content ---
+    // Find main content
     let mainContent = null;
     const contentSelectors = [
-      'article', '.article', '.post',
-      '.post-content', '.post-content-area',
-      '.entry-content', '.entry-content-area',
-      '.content-main', '.content',
-      '.read-content-box', '.center-sec',
-      '.single-content', '.page-content',
-      'main', '#main-content', '#content'
+      "article", ".article", ".post",
+      ".post-content", ".post-content-area",
+      ".entry-content", ".entry-content-area",
+      ".content-main", ".content",
+      ".read-content-box", ".center-sec",
+      "main", "#main-content", "#content"
     ];
 
     for (const selector of contentSelectors) {
@@ -309,60 +421,50 @@ async function extractContent(html, url) {
     }
 
     if (!mainContent || mainContent.text().trim().length < 100) {
-      mainContent = $('body');
+      mainContent = $("body");
     }
 
-    // --- Extract Text ---
+    // Extract text
     let textContent = mainContent.text()
-      .replace(/\s+/g, ' ')
-      .replace(/\n\s*\n/g, '\n\n')
+      .replace(/\s+/g, " ")
+      .replace(/\n\s*\n/g, "\n\n")
       .trim();
 
     if (textContent.length < 100) {
-      textContent = $('body').text()
-        .replace(/\s+/g, ' ')
-        .replace(/\n\s*\n/g, '\n\n')
+      textContent = $("body").text()
+        .replace(/\s+/g, " ")
+        .replace(/\n\s*\n/g, "\n\n")
         .trim();
     }
 
-    // --- Extract HTML ---
-    let htmlContent = mainContent.html() || '';
-
-    // Clean up HTML
-    htmlContent = htmlContent
-      .replace(/\s+/g, ' ')
-      .replace(/>\s+</g, '><')
+    // HTML content
+    let htmlContent = (mainContent.html() || "")
+      .replace(/\s+/g, " ")
+      .replace(/>\s+</g, "><")
       .trim();
 
-    // --- Calculate Word Count ---
+    // Word count
     const wordCount = textContent.split(/\s+/).filter(w => w.length > 0).length;
 
-    // --- Extract Domain ---
-    let domain = '';
-    try {
-      const urlObj = new URL(url);
-      domain = urlObj.hostname.replace('www.', '');
-    } catch {
-      domain = '';
-    }
+    // Domain
+    let domain = "";
+    try { domain = new URL(url).hostname.replace("www.", ""); } catch {}
 
-    // --- Extract Published Date ---
+    // Published date
     let publishedAt = null;
     const dateSelectors = [
       'meta[property="article:published_time"]',
       'meta[name="article.published"]',
       'meta[name="pubdate"]',
-      'meta[name="publish_date"]',
       'time[datetime]',
-      '.published-date',
-      '.post-date',
-      '.entry-date'
+      ".published-date",
+      ".post-date"
     ];
 
     for (const selector of dateSelectors) {
       const el = $(selector);
       if (el.length > 0) {
-        const dateAttr = el.attr('content') || el.attr('datetime') || '';
+        const dateAttr = el.attr("content") || el.attr("datetime") || "";
         if (dateAttr) {
           const parsedDate = new Date(dateAttr);
           if (!isNaN(parsedDate)) {
@@ -370,32 +472,12 @@ async function extractContent(html, url) {
             break;
           }
         }
-        const dateText = el.text().trim();
-        if (dateText) {
-          const parsedDate = new Date(dateText);
-          if (!isNaN(parsedDate)) {
-            publishedAt = parsedDate.toISOString();
-          }
-        }
-      }
-    }
-
-    // If no date found, use current date
-    if (!publishedAt) {
-      // Try to find any date pattern in the content
-      const dateMatch = textContent.match(/(\d{1,2}\s+\w+\s+\d{4}|\d{4}-\d{2}-\d{2}|\w+\s+\d{1,2},?\s+\d{4})/i);
-      if (dateMatch) {
-        const parsedDate = new Date(dateMatch[0]);
-        if (!isNaN(parsedDate)) {
-          publishedAt = parsedDate.toISOString();
-        }
       }
     }
 
     return {
       success: true,
       title,
-      description,
       textContent,
       htmlContent: htmlContent.substring(0, 50000),
       wordCount,
@@ -410,13 +492,12 @@ async function extractContent(html, url) {
 }
 
 // ============================================
-// STAGE 3: QUALITY CHECK
+// QUALITY CHECK
 // ============================================
 
 function checkQuality(extractResult) {
-  const { wordCount, textContent, title } = extractResult;
+  const { wordCount, textContent } = extractResult;
 
-  // Check minimum words
   if (wordCount < MIN_WORD_COUNT) {
     return {
       success: false,
@@ -424,53 +505,25 @@ function checkQuality(extractResult) {
     };
   }
 
-  // Check for meaningful content (not just gibberish)
   const words = textContent.split(/\s+/).filter(w => w.length > 2);
   const uniqueWords = new Set(words);
-  
+
   if (uniqueWords.size < 10) {
     return {
       success: false,
-      error: 'Content lacks meaningful vocabulary (too few unique words)'
+      error: "Content lacks meaningful vocabulary (too few unique words)"
     };
-  }
-
-  // Check for duplicate content (repetitive text)
-  const wordFrequency = {};
-  let totalWords = 0;
-  for (const word of words) {
-    wordFrequency[word] = (wordFrequency[word] || 0) + 1;
-    totalWords++;
-  }
-
-  // If a single word appears too often (>30% of content), might be spam
-  const maxFrequency = Math.max(...Object.values(wordFrequency));
-  if (maxFrequency / totalWords > 0.3) {
-    return {
-      success: false,
-      error: 'Content appears to be spam or keyword-stuffed'
-    };
-  }
-
-  // Determine processing mode
-  let processingMode = 'normal';
-  if (wordCount > 10000 && wordCount <= 50000) {
-    processingMode = 'inspect';
-  } else if (wordCount > 50000) {
-    processingMode = 'chunk';
   }
 
   return {
     success: true,
     wordCount,
-    processingMode,
-    quality: wordCount >= 1000 ? 'high' : 'medium',
-    uniqueWords: uniqueWords.size
+    processingMode: wordCount > 10000 ? (wordCount > 50000 ? "chunk" : "inspect") : "normal"
   };
 }
 
 // ============================================
-// STAGE 4: DUPLICATE CHECK
+// DUPLICATE CHECK
 // ============================================
 
 async function checkDuplicate(textContent) {
@@ -478,9 +531,9 @@ async function checkDuplicate(textContent) {
     const contentHash = generateHash(textContent);
 
     const { data: existing, error } = await supabase
-      .from('articles')
-      .select('article_id, canonical_title, slug, content_hash, version, retrieved_at')
-      .eq('content_hash', contentHash)
+      .from("articles")
+      .select("article_id, canonical_title, slug, content_hash, version, retrieved_at")
+      .eq("content_hash", contentHash)
       .limit(1);
 
     if (error) throw error;
@@ -506,7 +559,7 @@ async function checkDuplicate(textContent) {
 }
 
 // ============================================
-// STAGE 5: SAVE ARTICLE
+// SAVE ARTICLE
 // ============================================
 
 async function saveArticle(job, extractResult, duplicateResult) {
@@ -514,17 +567,15 @@ async function saveArticle(job, extractResult, duplicateResult) {
     const { title, textContent, htmlContent, domain, url, publishedAt, wordCount } = extractResult;
     const { contentHash, isDuplicate, existingArticle } = duplicateResult;
 
-    // Generate slug
     const slug = generateSlug(title);
 
-    // Check if slug exists
     let finalSlug = slug;
     let counter = 1;
     while (true) {
       const { data: existing } = await supabase
-        .from('articles')
-        .select('slug')
-        .eq('slug', finalSlug)
+        .from("articles")
+        .select("slug")
+        .eq("slug", finalSlug)
         .limit(1);
       
       if (!existing || existing.length === 0) break;
@@ -532,27 +583,15 @@ async function saveArticle(job, extractResult, duplicateResult) {
       counter++;
     }
 
-    // Determine processing mode
-    let processingMode = 'normal';
-    if (wordCount > 10000 && wordCount <= 50000) {
-      processingMode = 'inspect';
-    } else if (wordCount > 50000) {
-      processingMode = 'chunk';
-    }
-
-    // Detect categories
     const categories = await detectCategories(title, textContent);
 
-    // If duplicate, check if content has changed
     if (isDuplicate && existingArticle) {
-      log(`📋 Updating existing article ${existingArticle.article_id} (version ${existingArticle.version})`, 'warn');
+      log(`📋 Updating existing article ${existingArticle.article_id}`, "warn");
 
-      // Check if content has changed (simple check - if word count differs significantly)
-      const existingWordCount = (textContent.split(/\s+/).length);
+      const existingWordCount = textContent.split(/\s+/).length;
       if (Math.abs(existingWordCount - wordCount) > 500) {
-        // Content changed, create new version
         await supabase
-          .from('article_versions')
+          .from("article_versions")
           .insert({
             article_id: existingArticle.article_id,
             content: textContent,
@@ -561,12 +600,11 @@ async function saveArticle(job, extractResult, duplicateResult) {
               url: url,
               scraped_at: new Date().toISOString()
             },
-            change_reason: 'Content updated'
+            change_reason: "Content updated"
           });
 
-        // Update article
         const { data: updated, error: updateError } = await supabase
-          .from('articles')
+          .from("articles")
           .update({
             base_content: textContent,
             word_count: wordCount,
@@ -574,7 +612,7 @@ async function saveArticle(job, extractResult, duplicateResult) {
             updated_at: new Date().toISOString(),
             next_refresh_at: new Date(Date.now() + REFRESH_INTERVAL_DAYS * 24 * 60 * 60 * 1000).toISOString()
           })
-          .eq('article_id', existingArticle.article_id)
+          .eq("article_id", existingArticle.article_id)
           .select()
           .single();
 
@@ -582,33 +620,31 @@ async function saveArticle(job, extractResult, duplicateResult) {
         return updated;
       }
 
-      // No changes, just update refresh date
       await supabase
-        .from('articles')
+        .from("articles")
         .update({
           retrieved_at: new Date().toISOString(),
           next_refresh_at: new Date(Date.now() + REFRESH_INTERVAL_DAYS * 24 * 60 * 60 * 1000).toISOString()
         })
-        .eq('article_id', existingArticle.article_id);
+        .eq("article_id", existingArticle.article_id);
 
       return existingArticle;
     }
 
-    // Create new article
     const { data: article, error: insertError } = await supabase
-      .from('articles')
+      .from("articles")
       .insert({
         canonical_title: title,
         slug: finalSlug,
         base_content: textContent,
-        summary: '', // Will be filled by processor
+        summary: "",
         source_url: url,
         source_domain: domain,
         categories: categories,
         content_hash: contentHash,
         word_count: wordCount,
         version: 1,
-        status: 'processing',
+        status: "processing",
         source_title: title,
         source_published_at: publishedAt,
         retrieved_at: new Date().toISOString(),
@@ -619,9 +655,8 @@ async function saveArticle(job, extractResult, duplicateResult) {
 
     if (insertError) throw insertError;
 
-    // Save version
     await supabase
-      .from('article_versions')
+      .from("article_versions")
       .insert({
         article_id: article.article_id,
         content: textContent,
@@ -630,37 +665,35 @@ async function saveArticle(job, extractResult, duplicateResult) {
           url: url,
           scraped_at: new Date().toISOString()
         },
-        change_reason: 'Initial scrape'
+        change_reason: "Initial scrape"
       });
 
-    // Update job with article_id
     await supabase
-      .from('processing_jobs')
+      .from("processing_jobs")
       .update({ article_id: article.article_id })
-      .eq('job_id', job.job_id);
+      .eq("job_id", job.job_id);
 
     return article;
 
   } catch (error) {
-    log(`Save error: ${error.message}`, 'error');
+    log(`Save error: ${error.message}`, "error");
     return null;
   }
 }
 
 // ============================================
-// STAGE 6: SEND TO PROCESSOR
+// SEND TO PROCESSOR
 // ============================================
 
 async function sendToProcessor(article, job) {
   try {
-    log(`📤 Sending article ${article.article_id} to processor...`, 'process');
+    log(`📤 Sending article ${article.article_id} to processor...`, "process");
 
-    // Determine processing mode based on word count
-    let processingMode = 'normal';
+    let processingMode = "normal";
     if (article.word_count > 10000 && article.word_count <= 50000) {
-      processingMode = 'inspect';
+      processingMode = "inspect";
     } else if (article.word_count > 50000) {
-      processingMode = 'chunk';
+      processingMode = "chunk";
     }
 
     const payload = {
@@ -676,13 +709,13 @@ async function sendToProcessor(article, job) {
     };
 
     const response = await fetch(PROCESSOR_URL, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'x-admin-key': ADMIN_API_KEY || ''
+        "Content-Type": "application/json",
+        "x-admin-key": ADMIN_API_KEY || ""
       },
       body: JSON.stringify(payload),
-      timeout: 60000 // 60 seconds
+      timeout: 60000
     });
 
     if (!response.ok) {
@@ -693,13 +726,13 @@ async function sendToProcessor(article, job) {
     const result = await response.json();
 
     if (!result.success) {
-      throw new Error(result.error || 'Processor failed');
+      throw new Error(result.error || "Processor failed");
     }
 
     return { success: true, result };
 
   } catch (error) {
-    log(`Processor error: ${error.message}`, 'error');
+    log(`Processor error: ${error.message}`, "error");
     return { success: false, error: error.message };
   }
 }
@@ -710,11 +743,10 @@ async function sendToProcessor(article, job) {
 
 async function updateJobStage(jobId, stage, status) {
   try {
-    // Get current job stages
     const { data: job, error } = await supabase
-      .from('processing_jobs')
-      .select('stages')
-      .eq('job_id', jobId)
+      .from("processing_jobs")
+      .select("stages")
+      .eq("job_id", jobId)
       .single();
 
     if (error) throw error;
@@ -723,54 +755,51 @@ async function updateJobStage(jobId, stage, status) {
     stages[stage] = status;
 
     await supabase
-      .from('processing_jobs')
+      .from("processing_jobs")
       .update({
         current_stage: stage,
         stages: stages
       })
-      .eq('job_id', jobId);
-
-    // Log stage change (only for debug)
-    // log(`Job ${jobId}: ${stage} → ${status}`, 'info');
+      .eq("job_id", jobId);
 
   } catch (error) {
-    log(`Failed to update job stage: ${error.message}`, 'warn');
+    log(`Failed to update job stage: ${error.message}`, "warn");
   }
 }
 
 async function failJob(jobId, stage, error) {
   try {
-    log(`❌ Job ${jobId} failed at ${stage}: ${error}`, 'error');
+    log(`❌ Job ${jobId} failed at ${stage}: ${error}`, "error");
 
     await supabase
-      .from('processing_jobs')
+      .from("processing_jobs")
       .update({
-        status: 'failed',
+        status: "failed",
         current_stage: stage,
         error: error,
         completed_at: new Date().toISOString()
       })
-      .eq('job_id', jobId);
+      .eq("job_id", jobId);
 
   } catch (err) {
-    log(`Failed to mark job as failed: ${err.message}`, 'error');
+    log(`Failed to mark job as failed: ${err.message}`, "error");
   }
 }
 
 async function completeJob(jobId, articleId) {
   try {
     await supabase
-      .from('processing_jobs')
+      .from("processing_jobs")
       .update({
-        status: 'completed',
+        status: "completed",
         completed_at: new Date().toISOString()
       })
-      .eq('job_id', jobId);
+      .eq("job_id", jobId);
 
-    log(`✅ Job ${jobId} completed (article: ${articleId})`, 'success');
+    log(`✅ Job ${jobId} completed (article: ${articleId})`, "success");
 
   } catch (error) {
-    log(`Failed to complete job: ${error.message}`, 'error');
+    log(`Failed to complete job: ${error.message}`, "error");
   }
 }
 
@@ -779,23 +808,22 @@ async function completeJob(jobId, articleId) {
 // ============================================
 
 function generateHash(content) {
-  return crypto.createHash('sha256').update(content).digest('hex');
+  return crypto.createHash("sha256").update(content).digest("hex");
 }
 
 function generateSlug(title) {
   return title
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
     .substring(0, 100);
 }
 
 async function detectCategories(title, content) {
-  // First, try to get existing categories from database
   const { data: existingCategories } = await supabase
-    .from('system_config')
-    .select('value')
-    .eq('key', 'category_metadata')
+    .from("system_config")
+    .select("value")
+    .eq("key", "category_metadata")
     .single();
 
   let categoryMap = {};
@@ -803,19 +831,15 @@ async function detectCategories(title, content) {
     categoryMap = existingCategories.value || {};
   }
 
-  // If we have existing categories, try to match
   const existingCategoryNames = Object.keys(categoryMap);
   
   if (existingCategoryNames.length > 0) {
-    // Simple keyword matching against existing categories
     const text = `${title} ${content}`.toLowerCase();
     const matched = [];
     for (const category of existingCategoryNames) {
-      // Check if category appears in content
       if (text.includes(category.toLowerCase())) {
         matched.push(category);
       }
-      // Check aliases
       if (categoryMap[category]?.aliases) {
         for (const alias of categoryMap[category].aliases) {
           if (text.includes(alias.toLowerCase())) {
@@ -830,18 +854,17 @@ async function detectCategories(title, content) {
     }
   }
 
-  // Fallback: Keyword-based detection
   const keywords = {
-    'Technology': ['tech', 'software', 'ai', 'machine learning', 'programming', 'code', 'digital', 'computer', 'data', 'algorithm'],
-    'Science': ['science', 'research', 'discovery', 'experiment', 'biology', 'physics', 'chemistry', 'astronomy', 'genetics'],
-    'Business': ['business', 'finance', 'investment', 'market', 'economy', 'trade', 'company', 'startup', 'entrepreneur'],
-    'Health': ['health', 'medical', 'wellness', 'fitness', 'nutrition', 'disease', 'treatment', 'doctor', 'hospital'],
-    'Education': ['education', 'learn', 'school', 'university', 'college', 'student', 'teaching', 'study', 'course'],
-    'Entertainment': ['entertainment', 'movie', 'film', 'music', 'game', 'stream', 'show', 'tv', 'celebrity'],
-    'Sports': ['sport', 'game', 'team', 'player', 'match', 'league', 'tournament', 'coach', 'stadium'],
-    'Politics': ['politics', 'government', 'policy', 'election', 'president', 'minister', 'vote', 'congress'],
-    'Environment': ['environment', 'climate', 'sustainability', 'renewable', 'green', 'eco', 'nature', 'wildlife'],
-    'Finance': ['finance', 'money', 'bank', 'invest', 'saving', 'capital', 'credit', 'loan', 'interest', 'stock']
+    "Technology": ["tech", "software", "ai", "machine learning", "programming", "code", "digital", "computer", "data", "algorithm"],
+    "Science": ["science", "research", "discovery", "experiment", "biology", "physics", "chemistry", "astronomy", "genetics"],
+    "Business": ["business", "finance", "investment", "market", "economy", "trade", "company", "startup", "entrepreneur"],
+    "Health": ["health", "medical", "wellness", "fitness", "nutrition", "disease", "treatment", "doctor", "hospital"],
+    "Education": ["education", "learn", "school", "university", "college", "student", "teaching", "study", "course"],
+    "Entertainment": ["entertainment", "movie", "film", "music", "game", "stream", "show", "tv", "celebrity"],
+    "Sports": ["sport", "game", "team", "player", "match", "league", "tournament", "coach", "stadium"],
+    "Politics": ["politics", "government", "policy", "election", "president", "minister", "vote", "congress"],
+    "Environment": ["environment", "climate", "sustainability", "renewable", "green", "eco", "nature", "wildlife"],
+    "Finance": ["finance", "money", "bank", "invest", "saving", "capital", "credit", "loan", "interest", "stock"]
   };
 
   const text = `${title} ${content}`.toLowerCase();
@@ -856,7 +879,7 @@ async function detectCategories(title, content) {
     }
   }
 
-  return detected.length > 0 ? detected.slice(0, 5) : ['General'];
+  return detected.length > 0 ? detected.slice(0, 5) : ["General"];
 }
 
 function sleep(ms) {
@@ -864,22 +887,7 @@ function sleep(ms) {
 }
 
 // ============================================
-// STARTUP
+// EXPORT ROUTER
 // ============================================
 
-// Handle process signals
-process.on('SIGTERM', () => {
-  log('Received SIGTERM, shutting down...', 'warn');
-  process.exit(0);
-});
-
-process.on('SIGINT', () => {
-  log('Received SIGINT, shutting down...', 'warn');
-  process.exit(0);
-});
-
-// Start the scraper
-main().catch(error => {
-  log(`Fatal error: ${error.message}`, 'error');
-  process.exit(1);
-});
+export default router;
