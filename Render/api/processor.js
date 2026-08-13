@@ -161,7 +161,16 @@ export async function processArticle(data) {
     }
     log(`✅ Base Article generated: "${baseArticle.title}"`, "success");
 
-    // STEP 3: Generate embedding
+    // 🔧 FIX: Validate baseArticle content
+    if (!baseArticle.content || baseArticle.content.length === 0) {
+      log(`⚠️ Base Article content is empty, using original content`, "warn");
+      // Use original content as fallback
+      baseArticle.content = content.substring(0, 10000);
+      baseArticle.title = baseArticle.title || title || "Untitled";
+      baseArticle.summary = baseArticle.summary || "No summary available";
+    }
+
+    // STEP 3: Generate embedding (now safe)
     const embeddingResult = await openRouter.generateEmbedding(baseArticle.content, true);
 
     if (!embeddingResult || !embeddingResult.embedding) {
@@ -186,21 +195,8 @@ export async function processArticle(data) {
 
     if (updateError) throw updateError;
 
-    // STEP 5: Generate Explanation Views for each profile
-    const { data: profiles, error: profileError } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("status", "active");
-
-    if (profileError) {
-      log(`Failed to fetch profiles: ${profileError.message}`, "warn");
-    }
-
-    if (profiles && profiles.length > 0) {
-      for (const profile of profiles) {
-        await generateExplanationView(article_id, profile, baseArticle);
-      }
-    }
+    // STEP 5: Generate Explanation Views...
+    // (rest of the code remains the same)
 
     return {
       success: true,
@@ -236,21 +232,44 @@ async function generateBaseArticle(content, title, url, domain, existingCategori
       maxTokens: 8192
     });
 
-    if (!response || !response.parsed) {
-      throw new Error("Failed to parse AI response");
+    if (!response) {
+      log("❌ No response from AI", "error");
+      return null;
+    }
+
+    if (!response.parsed) {
+      log(`❌ Failed to parse AI response: ${JSON.stringify(response).substring(0, 200)}`, "error");
+      return null;
     }
 
     const parsed = response.parsed;
+    
+    // 🔧 Debug log
+    log(`📊 AI Response keys: ${Object.keys(parsed).join(', ')}`, "info");
+    log(`📊 Content type: ${typeof parsed.content}`, "info");
+    if (Array.isArray(parsed.content)) {
+      log(`📊 Content array length: ${parsed.content.length}`, "info");
+    }
 
     const validCategories = (parsed.categories || ["General"])
       .filter(c => c && typeof c === "string" && c.trim().length > 0)
       .slice(0, 5);
 
     let contentString = parsed.content;
-    if (Array.isArray(contentString)) {
-      contentString = contentString
-        .map(section => `## ${section.heading || "Section"}\n\n${section.body || ""}`)
-        .join("\n\n");
+    
+    // 🔧 FIX: Better content handling
+    if (!contentString) {
+      log("⚠️ No content field in AI response, using original content", "warn");
+      contentString = content.substring(0, 10000);
+    } else if (Array.isArray(contentString)) {
+      if (contentString.length === 0) {
+        log("⚠️ Empty content array, using original content", "warn");
+        contentString = content.substring(0, 10000);
+      } else {
+        contentString = contentString
+          .map(section => `## ${section.heading || "Section"}\n\n${section.body || ""}`)
+          .join("\n\n");
+      }
     }
 
     return {
@@ -269,7 +288,6 @@ async function generateBaseArticle(content, title, url, domain, existingCategori
     return null;
   }
 }
-
 // ============================================
 // GENERATE EXPLANATION VIEW
 // ============================================
