@@ -1,15 +1,42 @@
 // utils/supabase.js
 import { createClient } from '@supabase/supabase-js';
+import fs from 'fs';
+
+// ============================================
+// 🔑 READ SECRETS (Render Compatible)
+// ============================================
+
+function readSecretFile(path) {
+  try {
+    return fs.readFileSync(path, 'utf8').trim();
+  } catch (err) {
+    return null;
+  }
+}
+
+// Try Render secret files first, then fallback to env vars
+let supabaseUrl = readSecretFile('/etc/secrets/SUPABASE_URL');
+let supabaseKey = readSecretFile('/etc/secrets/SUPABASE_SERVICE_ROLE_KEY');
+
+// Fallback to environment variables if secret files don't exist
+if (!supabaseUrl) {
+  supabaseUrl = process.env.SUPABASE_URL;
+}
+
+if (!supabaseKey) {
+  supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+}
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('❌ Missing Supabase credentials!');
+  console.error('   Check: /etc/secrets/SUPABASE_URL and /etc/secrets/SUPABASE_SERVICE_ROLE_KEY');
+  console.error('   Or set: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in environment');
+  throw new Error('Missing Supabase credentials');
+}
 
 // ============================================
 // 🔌 SINGLETON SUPABASE CLIENT
 // ============================================
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error('❌ Missing Supabase credentials in environment variables');
-}
 
 const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
@@ -253,9 +280,8 @@ export async function deleteFile(bucket, path) {
 export async function registerApiKey() {
   try {
     const apiKey = process.env.ADMIN_API_KEY;
-    const serverName = process.env.SERVER_NAME || 'server1';
+    const serverName = process.env.SERVER_NAME || 'render-server';
 
-    // Store API key in system_config table
     const { data, error } = await supabase
       .from('system_config')
       .upsert({
@@ -285,16 +311,15 @@ export async function registerApiKey() {
 // ============================================
 // 🚀 AUTO-REGISTER ON STARTUP
 // ============================================
-// ✅ UNCOMMENT THIS LINE:
+// ✅ UNCOMMENT THIS LINE FOR RENDER:
 // registerApiKey().catch(console.error);
 
 // ============================================
-// 📦 EXPORTS - MATCHING FIREBASE STYLE
+// 📦 EXPORTS
 // ============================================
 export const db = supabase;
 export { supabase };
 
-// Default export for convenience
 export default {
   supabase,
   db: supabase,
