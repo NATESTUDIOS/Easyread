@@ -150,27 +150,66 @@ export async function processArticle(data) {
   log(`🔄 Processing article ${article_id}: "${title || 'Untitled'}"`, "process");
 
   try {
+    // ✅ STEP 0: Ensure we have content
+    let articleContent = content;
+    
+    if (!articleContent) {
+      log(`⚠️ No content provided, fetching from database for article ${article_id}`, "warn");
+      
+      const { data: article, error: fetchError } = await supabase
+        .from("articles")
+        .select("base_content, canonical_title, source_url, source_domain, categories, source_published_at")
+        .eq("article_id", article_id)
+        .single();
+
+      if (fetchError) {
+        throw new Error(`Failed to fetch article: ${fetchError.message}`);
+      }
+
+      if (!article || !article.base_content) {
+        throw new Error(`Article ${article_id} has no content in database`);
+      }
+
+      articleContent = article.base_content;
+      log(`✅ Retrieved content from database (${articleContent.length} characters)`, "success");
+    }
+
+    // ✅ Ensure content is a string
+    if (typeof articleContent !== 'string') {
+      articleContent = String(articleContent || '');
+    }
+
+    if (articleContent.length === 0) {
+      throw new Error("Content is empty");
+    }
+
     // STEP 1: Get existing categories
     const existingCategories = await getExistingCategories();
 
-    // STEP 2: Build Base Article using 2.0 prompt
-    const baseArticle = await generateBaseArticle(content, title, url, domain, existingCategories, published_at);
+    // STEP 2: Build Base Article
+    const baseArticle = await generateBaseArticle(
+      articleContent,  // ✅ Pass the validated content
+      title, 
+      url, 
+      domain, 
+      existingCategories, 
+      published_at
+    );
 
     if (!baseArticle) {
       throw new Error("Failed to generate Base Article");
     }
     log(`✅ Base Article generated: "${baseArticle.title}"`, "success");
 
-    // 🔧 FIX: Validate baseArticle content
+    // ✅ STEP 2.5: Validate baseArticle content (safe now)
     if (!baseArticle.content || baseArticle.content.length === 0) {
       log(`⚠️ Base Article content is empty, using original content`, "warn");
-      // Use original content as fallback
-      baseArticle.content = content.substring(0, 30000);
+      baseArticle.content = articleContent.substring(0, 30000);  // ✅ Safe now
       baseArticle.title = baseArticle.title || title || "Untitled";
       baseArticle.summary = baseArticle.summary || "No summary available";
     }
 
-    // STEP 3: Generate embedding (now safe)
+    // STEP 3: Generate embedding
     const embeddingResult = await openRouter.generateEmbedding(baseArticle.content, true);
 
     if (!embeddingResult || !embeddingResult.embedding) {
@@ -195,8 +234,17 @@ export async function processArticle(data) {
 
     if (updateError) throw updateError;
 
-    // STEP 5: Generate Explanation Views...
-    // (rest of the code remains the same)
+    // STEP 5: Generate Explanation Views
+    const { data: profiles, error: profileError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("status", "active");
+
+    if (profiles && profiles.length > 0) {
+      for (const profile of profiles) {
+        await generateExplanationView(article_id, profile, baseArticle);
+      }
+    }
 
     return {
       success: true,
@@ -224,6 +272,12 @@ export async function processArticle(data) {
 // ============================================
 
 async function generateBaseArticle(content, title, url, domain, existingCategories, publishedAt) {
+  // ✅ Ensure content exists
+  if (!content) {
+    log("❌ No content provided to generateBaseArticle", "error");
+    return null;
+  }
+
   const prompt = buildBaseArticlePrompt(content, title, url, domain, existingCategories, publishedAt);
 
   try {
@@ -232,17 +286,14 @@ async function generateBaseArticle(content, title, url, domain, existingCategori
       maxTokens: 8192
     });
 
-    // ✅ Check if response exists
     if (!response) {
       log("❌ No response from AI", "error");
       return null;
     }
 
-    // ✅ Check if parsed exists and has content
     if (!response.parsed) {
       log(`❌ Failed to parse AI response`, "error");
       
-      // ✅ Try to use raw content as fallback
       if (response.content) {
         log("⚠️ Using raw response content as fallback", "warn");
         return {
@@ -266,7 +317,7 @@ async function generateBaseArticle(content, title, url, domain, existingCategori
       return {
         canonical_topic: title || "Untitled Article",
         title: title || "Untitled Article",
-        content: content.substring(0, 30000),
+        content: content.substring(0, 30000),  // ✅ Safe now
         summary: "No summary available",
         categories: ["General"],
         estimated_read_time_minutes: Math.ceil(content.split(/\s+/).length / 200),
@@ -593,6 +644,11 @@ async function getExistingCategories() {
 // ============================================
 
 function buildBaseArticlePrompt(content, title, url, domain, existingCategories, publishedAt) {
+  // ✅ SAFE CONTENT HANDLING - Check if content exists before using .substring()
+  const safeContent = content && typeof content === 'string' && content.length > 0
+    ? content.substring(0, 30000)
+    : 'No content available from source. Please generate a general explanation of the topic based on the title and URL provided.';
+
   const sourceInfo = `
 URL: ${url || 'Not available'}
 Domain: ${domain || 'Not available'}
@@ -647,7 +703,7 @@ ${sourceInfo}
 
 SOURCE CONTENT
 
-${content.substring(0, 30000)}
+${safeContent}
 
 ==================================================
 STEP 1 — UNDERSTAND THE SOURCE
