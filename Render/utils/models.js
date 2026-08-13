@@ -8,7 +8,7 @@ export const MODEL_CONFIG = {
   // ---------- GENERATION MODELS (High Quality) ----------
   generation: {
     primary: {
-      id: 'nvidia/nemotron-3-ultra:free',
+      id: 'nvidia/nemotron-3-ultra-550b-a55b:free',
       context: 1000000, // 1M tokens
       speed: 11,
       quality: 5,
@@ -22,7 +22,7 @@ export const MODEL_CONFIG = {
       weeklyTokens: '128B'
     },
     fallback2: {
-      id: 'nvidia/nemotron-3-super:free',
+      id: 'nvidia/nemotron-3-super-120b-a12b:free',
       context: 262144,
       speed: 38,
       quality: 4,
@@ -77,7 +77,7 @@ export const MODEL_CONFIG = {
       weeklyTokens: '4.47B'
     },
     fallback: {
-      id: 'nvidia/nemotron-3-embed-1b-v1:free',
+      id: 'nvidia/nemotron-3-embed-1b:free',
       context: 32768, // 33K tokens
       dimensions: 768,
       weeklyTokens: '6.89B'
