@@ -1,6 +1,7 @@
 // utils/openrouter.js
 
 import { OpenRouter } from '@openrouter/sdk';
+import fs from 'fs';
 import { 
   MODEL_CONFIG,
   getModelConfig, 
@@ -10,14 +11,28 @@ import {
 } from './models.js';
 
 // ============================================
-// 🔑 API KEY CONFIGURATION
+// 🔑 READ SECRETS (Render Compatible)
 // ============================================
 
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+function readSecretFile(path) {
+  try {
+    return fs.readFileSync(path, 'utf8').trim();
+  } catch (err) {
+    return null;
+  }
+}
+
+// Try Render secret files first, then fallback to env vars
+let OPENROUTER_API_KEY = readSecretFile('/etc/secrets/OPENROUTER_API_KEY');
+
+if (!OPENROUTER_API_KEY) {
+  OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+}
 
 if (!OPENROUTER_API_KEY) {
   console.error('❌ OPENROUTER_API_KEY is missing!');
-  console.error('📝 Get your API key from: https://openrouter.ai/');
+  console.error('   Check: /etc/secrets/OPENROUTER_API_KEY');
+  console.error('   Or set: OPENROUTER_API_KEY in environment');
 }
 
 console.log(`🔑 OpenRouter API Key: ${OPENROUTER_API_KEY ? '✅ Loaded' : '❌ Missing'}`);
@@ -58,18 +73,10 @@ class OpenRouterService {
   }
 
   // ============================================
-  // 📝 TEXT GENERATION (Pure - No Prompt Logic)
+  // 📝 TEXT GENERATION
   // ============================================
   
-  /**
-   * Generate text using OpenRouter with automatic fallback
-   * @param {string} prompt - The prompt to send to the AI (provided by the API)
-   * @param {string} task - Task type (for model selection): 'generation' | 'fast'
-   * @param {object} options - Override settings: temperature, maxTokens, topP
-   * @returns {object} { content, model, usage, finishReason }
-   */
   async generate(prompt, task = 'generation', options = {}) {
-    // Get config from models.js
     const config = getModelConfig(task);
     const models = getModelIds(task);
     
@@ -79,12 +86,10 @@ class OpenRouterService {
     
     let lastError = null;
     
-    // Try each model in fallback order
     for (let i = 0; i < models.length; i++) {
       const modelId = models[i];
       
       try {
-        // Check daily rate limit
         if (!this.canMakeRequest()) {
           throw new Error(`Daily rate limit reached (${this.dailyLimit} requests/day)`);
         }
@@ -103,7 +108,6 @@ class OpenRouterService {
           provider: { order: ['free'] }
         });
         
-        // Track successful request
         this.trackRequest();
         const details = getModelDetails(modelId);
         
@@ -121,19 +125,16 @@ class OpenRouterService {
         console.warn(`❌ [${task}] ${modelId} failed:`, error.message);
         lastError = error;
         
-        // Rate limit handling
         if (error.status === 429) {
           const waitTime = Math.min(1000 * Math.pow(2, i), 10000);
           console.log(`⏳ Rate limit, waiting ${waitTime}ms...`);
           await new Promise(resolve => setTimeout(resolve, waitTime));
         }
         
-        // If it's the last model, throw
         if (i === models.length - 1) {
           throw new Error(`All models failed for ${task}: ${lastError?.message || 'Unknown error'}`);
         }
         
-        // Wait before next model
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
@@ -143,12 +144,6 @@ class OpenRouterService {
   // 🔢 EMBEDDING GENERATION
   // ============================================
   
-  /**
-   * Generate embeddings for text
-   * @param {string} text - Text to embed
-   * @param {boolean} useLongContext - Use 131K context model vs 33K
-   * @returns {object} { embedding, model, dimensions }
-   */
   async generateEmbedding(text, useLongContext = true) {
     const config = MODEL_CONFIG.embedding;
     const modelId = useLongContext ? config.primary.id : config.fallback.id;
@@ -163,7 +158,7 @@ class OpenRouterService {
       
       const response = await this.client.embeddings.create({
         model: modelId,
-        input: text.substring(0, maxTokens * 4), // Approximate char limit
+        input: text.substring(0, maxTokens * 4),
         encodingFormat: 'float'
       });
       
@@ -178,7 +173,6 @@ class OpenRouterService {
     } catch (error) {
       console.error(`❌ Embedding with ${modelId} failed:`, error.message);
       
-      // Try fallback
       try {
         console.log(`🔄 Trying fallback: ${config.fallback.id}`);
         const response = await this.client.embeddings.create({
@@ -202,18 +196,10 @@ class OpenRouterService {
   }
 
   // ============================================
-  // ⚙️ CONVENIENCE METHODS (Still Pure)
+  // ⚙️ CONVENIENCE METHODS
   // ============================================
   
-  /**
-   * Generate with JSON parsing helper
-   * @param {string} prompt - The prompt to send
-   * @param {string} task - Task type
-   * @param {object} options - Additional options
-   * @returns {object} Parsed JSON response
-   */
   async generateJSON(prompt, task = 'generation', options = {}) {
-    // Add instruction to return valid JSON
     const jsonPrompt = `${prompt}\n\nReturn ONLY valid JSON. Do not include any other text.`;
     const response = await this.generate(jsonPrompt, task, options);
     
@@ -288,7 +274,6 @@ class OpenRouterService {
     try {
       const status = this.getStatus();
       
-      // Test a simple request
       const response = await this.client.chat.send({
         model: 'nvidia/nemotron-3.5-lightning:free',
         messages: [
