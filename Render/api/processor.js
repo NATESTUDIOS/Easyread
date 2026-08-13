@@ -271,6 +271,8 @@ export async function processArticle(data) {
 // GENERATE BASE ARTICLE (2.0 Prompt)
 // ============================================
 
+// api/processor.js
+
 async function generateBaseArticle(content, title, url, domain, existingCategories, publishedAt) {
   // ✅ Ensure content exists
   if (!content) {
@@ -291,25 +293,66 @@ async function generateBaseArticle(content, title, url, domain, existingCategori
       return null;
     }
 
+    // ✅ If parsing failed but we have raw content, use it
     if (!response.parsed) {
       log(`❌ Failed to parse AI response`, "error");
       
-      if (response.content) {
+      // ✅ Try to use raw content (from response.rawContent or response.content)
+      const rawContent = response.rawContent || response.content;
+      
+      if (rawContent && typeof rawContent === 'string' && rawContent.length > 0) {
         log("⚠️ Using raw response content as fallback", "warn");
+        log(`📄 Raw content length: ${rawContent.length}`, "info");
+        
+        // ✅ Try to extract meaningful content from raw response
+        let cleanContent = rawContent;
+        
+        // Remove markdown code blocks
+        cleanContent = cleanContent.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+        
+        // Try to extract the JSON part
+        const start = cleanContent.indexOf('{');
+        const end = cleanContent.lastIndexOf('}');
+        if (start !== -1 && end !== -1 && end > start) {
+          cleanContent = cleanContent.substring(start, end + 1);
+        }
+        
+        // Try to extract title from raw content
+        let extractedTitle = title || "Untitled Article";
+        const titleMatch = cleanContent.match(/"title"\s*:\s*"([^"]+)"/);
+        if (titleMatch) {
+          extractedTitle = titleMatch[1];
+        }
+        
+        // Try to extract summary
+        let extractedSummary = "No summary available";
+        const summaryMatch = cleanContent.match(/"summary"\s*:\s*"([^"]+)"/);
+        if (summaryMatch) {
+          extractedSummary = summaryMatch[1];
+        }
+        
         return {
-          canonical_topic: title || "Untitled Article",
-          title: title || "Untitled Article",
-          content: response.content.substring(0, 30000),
-          summary: "No summary available",
+          canonical_topic: extractedTitle,
+          title: extractedTitle,
+          content: cleanContent.length > 100 ? cleanContent : content.substring(0, 30000),
+          summary: extractedSummary,
           categories: ["General"],
-          estimated_read_time_minutes: Math.ceil(response.content.split(/\s+/).length / 200),
+          estimated_read_time_minutes: Math.ceil((cleanContent.length || content.length) / 1000),
           source_facts: []
         };
       }
+      
       return null;
     }
 
     const parsed = response.parsed;
+
+    // ✅ Debug logging
+    log(`📊 AI Response keys: ${Object.keys(parsed).join(', ')}`, "info");
+    log(`📊 Content type: ${typeof parsed.content}`, "info");
+    if (Array.isArray(parsed.content)) {
+      log(`📊 Content array length: ${parsed.content.length}`, "info");
+    }
 
     // ✅ Check if content is null or undefined
     if (!parsed.content) {
@@ -317,7 +360,7 @@ async function generateBaseArticle(content, title, url, domain, existingCategori
       return {
         canonical_topic: title || "Untitled Article",
         title: title || "Untitled Article",
-        content: content.substring(0, 30000),  // ✅ Safe now
+        content: content.substring(0, 30000),
         summary: "No summary available",
         categories: ["General"],
         estimated_read_time_minutes: Math.ceil(content.split(/\s+/).length / 200),
@@ -325,7 +368,37 @@ async function generateBaseArticle(content, title, url, domain, existingCategori
       };
     }
 
-    // ... rest of the function
+    const validCategories = (parsed.categories || ["General"])
+      .filter(c => c && typeof c === "string" && c.trim().length > 0)
+      .slice(0, 5);
+
+    let contentString = parsed.content;
+
+    if (!contentString) {
+      log("⚠️ No content field in AI response, using original content", "warn");
+      contentString = content.substring(0, 30000);
+    } else if (Array.isArray(contentString)) {
+      if (contentString.length === 0) {
+        log("⚠️ Empty content array, using original content", "warn");
+        contentString = content.substring(0, 30000);
+      } else {
+        contentString = contentString
+          .map(section => `## ${section.heading || "Section"}\n\n${section.body || ""}`)
+          .join("\n\n");
+      }
+    }
+
+    return {
+      canonical_topic: parsed.canonical_topic || parsed.title || title || "Untitled Article",
+      title: parsed.title || title || "Untitled Article",
+      content: contentString,
+      summary: parsed.summary || "",
+      categories: validCategories.length > 0 ? validCategories : ["General"],
+      estimated_read_time_minutes: parsed.estimated_read_time_minutes || 
+        Math.ceil(contentString.split(/\s+/).length / 200),
+      source_facts: parsed.source_facts || []
+    };
+
   } catch (error) {
     log(`AI generation failed: ${error.message}`, "error");
     return null;
