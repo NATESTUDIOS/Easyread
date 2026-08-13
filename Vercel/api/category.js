@@ -1,4 +1,5 @@
 // api/category.js
+// EasyRead Category Management - No AI needed
 
 import { 
   supabase,
@@ -11,8 +12,6 @@ import {
   exists,
   count
 } from '../utils/supabase.js';
-
-import openRouter from '../utils/openrouter.js';
 
 // ============================================
 // CONSTANTS
@@ -100,7 +99,7 @@ async function handleGet(req, res, action) {
     return await getArticlesByCategory(req, res, id);
   }
 
-  // Get suggestions (for AI prompt)
+  // Get category suggestions (from existing categories)
   if (action === 'suggestions') {
     return await getCategorySuggestions(req, res);
   }
@@ -125,16 +124,6 @@ async function handlePost(req, res, action) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
     return await createCategory(req, res);
-  }
-
-  // Auto-detect categories (AI powered)
-  if (action === 'auto-detect') {
-    return await autoDetectCategories(req, res);
-  }
-
-  // Suggest categories from content
-  if (action === 'suggest') {
-    return await suggestCategories(req, res);
   }
 
   // Merge categories (admin only)
@@ -217,7 +206,6 @@ async function handleDelete(req, res, action) {
 // ============================================
 async function listCategories(req, res) {
   try {
-    // Get all unique categories from articles
     const { data, error } = await supabase
       .from('articles')
       .select('categories')
@@ -225,7 +213,6 @@ async function listCategories(req, res) {
 
     if (error) throw error;
 
-    // Flatten and count categories
     const categoryMap = new Map();
     data.forEach(article => {
       if (article.categories && Array.isArray(article.categories)) {
@@ -238,7 +225,6 @@ async function listCategories(req, res) {
       }
     });
 
-    // Convert to array and sort
     const categories = Array.from(categoryMap.entries())
       .map(([name, count]) => ({
         name,
@@ -286,7 +272,7 @@ async function getCategoryStats(req, res) {
           const cleanName = cat.trim();
           if (cleanName) {
             stats.categories.set(cleanName, (stats.categories.get(cleanName) || 0) + 1);
-            
+
             if (!stats.category_articles.has(cleanName)) {
               stats.category_articles.set(cleanName, []);
             }
@@ -384,7 +370,7 @@ async function getCategoryById(req, res, id) {
 async function getCategoryByName(req, res, name) {
   try {
     const normalized = name.trim().toLowerCase();
-    
+
     const { data: articles, error } = await supabase
       .from('articles')
       .select('categories, article_id, canonical_title, slug')
@@ -445,7 +431,7 @@ async function getCategoryByName(req, res, name) {
 async function searchCategories(req, res, search) {
   try {
     const searchTerm = search.trim().toLowerCase();
-    
+
     const { data: articles, error } = await supabase
       .from('articles')
       .select('categories')
@@ -662,7 +648,7 @@ async function updateCategory(req, res) {
       const updatedCategories = article.categories.map(cat => 
         cat === old_name ? new_name : cat
       );
-      
+
       await supabase
         .from('articles')
         .update({ categories: updatedCategories })
@@ -752,7 +738,7 @@ async function deleteCategory(req, res) {
     if (!configError && config) {
       const metadata = config.value || {};
       delete metadata[name];
-      
+
       await supabase
         .from('system_config')
         .upsert({
@@ -769,99 +755,6 @@ async function deleteCategory(req, res) {
   } catch (error) {
     console.error('Delete category error:', error);
     res.status(500).json({ error: 'Failed to delete category' });
-  }
-}
-
-// ============================================
-// 🤖 AUTO-DETECT CATEGORIES (AI powered)
-// ============================================
-async function autoDetectCategories(req, res) {
-  const { content, title, existing_categories } = req.body;
-
-  if (!content) {
-    return res.status(400).json({ error: 'Content required' });
-  }
-
-  try {
-    // Get all existing categories
-    const existing = await getExistingCategories();
-
-    // Build prompt for category detection
-    const prompt = buildCategoryDetectionPrompt(content, title, existing, existing_categories);
-
-    // Call OpenRouter to detect categories
-    const response = await openRouter.generateJSON(prompt, 'category_detection', {
-      temperature: 0.2,
-      maxTokens: 512
-    });
-
-    // Get categories from response
-    let categories = response.parsed;
-    if (!Array.isArray(categories)) {
-      categories = [categories] || ['General'];
-    }
-
-    // Ensure max 5 categories
-    const finalCategories = categories.slice(0, MAX_CATEGORIES_PER_ARTICLE);
-
-    res.json({
-      success: true,
-      categories: finalCategories,
-      confidence: 0.85,
-      suggested_from_existing: finalCategories.filter(c => existing.includes(c)),
-      new_categories: finalCategories.filter(c => !existing.includes(c))
-    });
-  } catch (error) {
-    console.error('Auto-detect categories error:', error);
-    res.status(500).json({ error: 'Failed to detect categories' });
-  }
-}
-
-// ============================================
-// 💡 SUGGEST CATEGORIES FROM CONTENT
-// ============================================
-async function suggestCategories(req, res) {
-  const { content, title, max_suggestions = 5 } = req.body;
-
-  if (!content) {
-    return res.status(400).json({ error: 'Content required' });
-  }
-
-  try {
-    // Get existing categories
-    const existing = await getExistingCategories();
-
-    // Build prompt for category suggestion
-    const prompt = buildCategorySuggestionPrompt(content, title, existing, max_suggestions);
-
-    // Call OpenRouter for suggestions
-    const response = await openRouter.generateJSON(prompt, 'category_detection', {
-      temperature: 0.3,
-      maxTokens: 512
-    });
-
-    let suggestions = response.parsed;
-    if (!Array.isArray(suggestions)) {
-      suggestions = ['General'];
-    }
-
-    // Match suggestions with existing categories
-    const matched = suggestions.slice(0, max_suggestions).map(s => {
-      const match = existing.find(e => 
-        e.toLowerCase().includes(s.toLowerCase()) || 
-        s.toLowerCase().includes(e.toLowerCase())
-      );
-      return match || s;
-    });
-
-    res.json({
-      success: true,
-      suggestions: matched.slice(0, max_suggestions),
-      existing_categories: existing.slice(0, 20)
-    });
-  } catch (error) {
-    console.error('Suggest categories error:', error);
-    res.status(500).json({ error: 'Failed to suggest categories' });
   }
 }
 
@@ -1093,7 +986,7 @@ async function mergeCategories(req, res) {
       const newCategories = article.categories.map(cat => 
         source_categories.includes(cat) ? target_category : cat
       );
-      
+
       const uniqueCategories = [...new Set(newCategories)]
         .slice(0, MAX_CATEGORIES_PER_ARTICLE);
 
@@ -1181,7 +1074,7 @@ async function removeCategoryFromArticle(req, res) {
     }
 
     const newCategories = article.categories.filter(c => c !== category);
-    
+
     await update('articles', article_id, {
       categories: newCategories.length > 0 ? newCategories : null
     });
@@ -1250,7 +1143,6 @@ async function updateCategoryHierarchy(req, res) {
 // ===== HELPER FUNCTIONS =====
 // ============================================
 
-// Generate slug from name
 function generateSlug(name) {
   return name
     .toLowerCase()
@@ -1259,31 +1151,29 @@ function generateSlug(name) {
     .substring(0, 100);
 }
 
-// Calculate match score for search
 function calculateMatchScore(category, searchTerm) {
   const catLower = category.toLowerCase();
   const searchLower = searchTerm.toLowerCase();
-  
+
   if (catLower === searchLower) return 100;
   if (catLower.startsWith(searchLower)) return 80;
   if (catLower.includes(searchLower)) return 60;
   if (searchLower.includes(catLower)) return 40;
-  
+
   const catWords = catLower.split(' ');
   const searchWords = searchLower.split(' ');
   let score = 0;
-  
+
   for (const word of searchWords) {
     for (const catWord of catWords) {
       if (catWord === word) score += 20;
       else if (catWord.includes(word) || word.includes(catWord)) score += 10;
     }
   }
-  
+
   return Math.min(score, 100);
 }
 
-// Get existing categories
 async function getExistingCategories() {
   const { data: articles, error } = await supabase
     .from('articles')
@@ -1305,66 +1195,12 @@ async function getExistingCategories() {
   return Array.from(categorySet).sort();
 }
 
-// Build category tree node
 function buildTreeNode(node, allNodes) {
   const children = allNodes.filter(n => n.parent === node.name);
   return {
     ...node,
     children: children.map(child => buildTreeNode(child, allNodes))
   };
-}
-
-// ============================================
-// PROMPT BUILDERS
-// ============================================
-
-// Build category detection prompt for AI
-function buildCategoryDetectionPrompt(content, title, existingCategories, currentCategories) {
-  return `
-You are an expert content categorizer. Analyze the following content and suggest appropriate categories.
-
-Title: ${title || 'Untitled'}
-
-Content Preview: ${content.substring(0, 2000)}...
-
-Existing Categories in System:
-${existingCategories.join(', ')}
-
-Current Categories (if any): ${currentCategories?.join(', ') || 'None'}
-
-Rules:
-1. Suggest categories that best represent the content
-2. Use existing categories when possible
-3. Only create new categories if absolutely necessary
-4. Max 5 categories per article
-5. Categories should be broad enough to group similar content
-6. Avoid creating too many niche categories
-
-Return your response as a JSON array of category names.
-`;
-}
-
-// Build category suggestion prompt
-function buildCategorySuggestionPrompt(content, title, existingCategories, maxSuggestions) {
-  return `
-You are an expert content categorizer. Suggest appropriate categories for the following content.
-
-Title: ${title || 'Untitled'}
-
-Content Preview: ${content.substring(0, 1500)}...
-
-Existing Categories in System:
-${existingCategories.join(', ') || 'None'}
-
-Rules:
-1. Suggest ${maxSuggestions} categories that best represent the content
-2. Prefer existing categories when possible
-3. Only create new categories if absolutely necessary
-4. Categories should be broad enough to group similar content
-5. Avoid overly specific or niche categories
-
-Return your response as a JSON array of category names.
-`;
 }
 
 // ============================================
