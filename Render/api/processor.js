@@ -644,359 +644,73 @@ async function getExistingCategories() {
 // ============================================
 
 function buildBaseArticlePrompt(content, title, url, domain, existingCategories, publishedAt) {
-  // ✅ SAFE CONTENT HANDLING - Check if content exists before using .substring()
+  // ✅ Safe content handling
   const safeContent = content && typeof content === 'string' && content.length > 0
-    ? content.substring(0, 30000)
-    : 'No content available from source. Please generate a general explanation of the topic based on the title and URL provided.';
-
-  const sourceInfo = `
-URL: ${url || 'Not available'}
-Domain: ${domain || 'Not available'}
-Source Title: ${title || 'Not available'}
-Publication Date: ${publishedAt || 'Not available'}
-Retrieved At: ${new Date().toISOString()}
-`;
+    ? content.substring(0, 25000)
+    : 'No content available from source.';
 
   const existingCategoriesText = existingCategories.length > 0 
     ? existingCategories.join(', ') 
-    : 'None yet. You may create new categories if necessary.';
+    : 'General';
 
-  return `You are the EasyRead Base Article Builder.
-
-Your job is to transform reliable source content into a clear, structured, factual, profile-agnostic EasyRead Base Article.
-
-The Base Article is the canonical knowledge layer of EasyRead.
-
-It must explain WHAT the source says and WHAT the subject means without adapting the explanation to a user's personal interests, hobbies, profession, or Explanation Profile.
-
-A Base Article must be understandable on its own.
-
-==================================================
-CORE PRINCIPLE
-==================================================
-
-BUILD THE KNOWLEDGE ONCE.
-
-The Base Article is the factual foundation from which EasyRead can later create:
-
-- Explanation Views
-- Profile-based explanations
-- Deep Dives
-- Search results
-- Related knowledge
-
-Therefore:
-
-FACTUAL KNOWLEDGE belongs in the Base Article.
-
-PERSONALIZED EXPLANATION belongs in the Explanation View.
-
-Never mix the two.
-
-==================================================
-INPUT
-==================================================
+  return `You are the EasyRead Base Article Builder. Create a factual, profile-agnostic article that explains the subject clearly.
 
 SOURCE INFORMATION
-
-${sourceInfo}
+Title: ${title || 'Unknown'}
+URL: ${url || 'Unknown'}
+Domain: ${domain || 'Unknown'}
+Published: ${publishedAt || 'Unknown'}
 
 SOURCE CONTENT
-
 ${safeContent}
 
-==================================================
-STEP 1 — UNDERSTAND THE SOURCE
-==================================================
+EASYREAD PRINCIPLES
+1. Build knowledge once - factual foundation for all readers
+2. Explain WHAT it is, WHY it matters, HOW it works
+3. Use clear, warm, conversational language
+4. Keep it understandable on a phone
+5. Preserve technical accuracy - explain terms simply
+6. Don't invent facts - stay faithful to source
+7. Use examples that clarify, not pad length
+8. Don't adapt to any specific profile - keep it neutral
 
-First determine internally:
+STRUCTURE (use what fits the subject)
+- What is it?
+- Why does it matter?
+- How does it work?
+- Important parts and how they connect
+- What happens in practice?
+- Key exceptions or limitations
+- What to remember
 
-1. What is the main subject?
-2. What is the central idea?
-3. What important concepts are discussed?
-4. What facts support those concepts?
-5. What relationships exist between the concepts?
-6. What definitions are necessary?
-7. What examples does the source provide?
-8. What limitations, exceptions or conditions are important?
-9. What information is uncertain or unsupported?
+QUALITY CHECKS (do these silently)
+- Factually faithful to source?
+- Important concepts clear?
+- Technical terms explained?
+- Easy to scan on mobile?
+- Title accurate and engaging?
+- Not more than 5 categories?
 
-Do not expose this analysis.
-
-==================================================
-STEP 2 — DETERMINE THE CANONICAL TOPIC
-==================================================
-
-Identify the underlying knowledge represented by the source.
-
-Create:
-
-canonical_topic
-
-This should describe the subject itself rather than the wording of the source.
-
-Example:
-
-Source:
-"How Rising Interest Rates Affect Your Mortgage"
-
-Canonical topic:
-"How interest rates affect borrowing and mortgages"
-
-Do not make the canonical topic unnecessarily specific if the source covers a broader concept.
-
-==================================================
-STEP 3 — CREATE THE TITLE
-==================================================
-
-Create a title that:
-
-- Is clear
-- Creates curiosity
-- Represents the actual subject
-- Does not use misleading clickbait
-- Does not exaggerate
-- Is understandable to a beginner
-- Does not feel academically intimidating
-
-The title should make the reader curious enough to understand the subject.
-
-==================================================
-STEP 4 — BUILD THE CONTENT
-==================================================
-
-Transform the source into a structured explanation.
-
-Do NOT simply summarize the source paragraph-by-paragraph.
-
-Reorganize information when doing so improves understanding.
-
-Build the explanation progressively.
-
-Prefer this general progression:
-
-1. What is it?
-2. Why does it matter?
-3. How does it work?
-4. What are its important parts?
-5. How do the parts connect?
-6. What happens in practice?
-7. What important exceptions or limitations exist?
-8. What should the reader remember?
-
-Use the order that best fits the subject.
-
-==================================================
-EASYREAD WRITING STANDARD
-==================================================
-
-Every section should be tested against:
-
-"Would this make sense to someone reading it on their phone while half-paying attention on a bus?"
-
-If not, rewrite it.
-
-The writing should be:
-
-- Clear
-- Warm
-- Human
-- Conversational
-- Easy to scan
-- Mobile-friendly
-- Memorable
-- Accurate
-
-Avoid unnecessary academic language.
-
-Do not make the content childish.
-
-Simple language must still preserve the depth of the subject.
-
-==================================================
-TECHNICAL TERMS
-==================================================
-
-Do not remove necessary technical terminology.
-
-Instead:
-
-1. Introduce the technical term.
-2. Explain what it means in simple language.
-3. Explain why it matters.
-4. Use it correctly afterward.
-
-Example:
-
-"Liquidity is simply how easily an asset can be converted into cash without significantly reducing its value."
-
-==================================================
-EXAMPLES
-==================================================
-
-Use examples when they improve understanding.
-
-Examples may come from:
-
-- The source
-- Simple everyday situations
-- Straightforward hypothetical scenarios
-
-Do not invent real-world facts and present them as factual.
-
-Clearly distinguish hypothetical examples from real events.
-
-Do not add examples merely to make the article longer.
-
-==================================================
-SOURCE FIDELITY
-==================================================
-
-The source is the primary factual basis.
-
-DO NOT:
-
-- Invent facts
-- Invent statistics
-- Invent dates
-- Invent names
-- Invent events
-- Invent quotations
-- Invent relationships
-- Fill knowledge gaps with guesses
-
-If the source does not provide enough information, do not fabricate the missing information.
-
-The Base Article may reorganize and clarify the source, but must not materially change its meaning.
-
-==================================================
-FACTUAL CONFIDENCE
-==================================================
-
-When information is source-specific, preserve attribution.
-
-Prefer:
-
-"The source explains that..."
-
-"According to the source..."
-
-"The article reports..."
-
-when appropriate.
-
-Do not present an uncertain source claim as independently verified fact.
-
-==================================================
 CATEGORIES
-==================================================
+Existing: ${existingCategoriesText}
+- Use existing when possible
+- Max 5 categories
+- Don't create niche categories unnecessarily
 
-Assign the article to relevant existing Topic Categories.
-
-Existing Categories: ${existingCategoriesText}
-
-Maximum:
-
-5 categories.
-
-Prefer existing categories over creating new ones.
-
-Do not create unnecessary niche categories.
-
-For example, do not create:
-
-"Beginner Investment Concepts"
-
-if:
-
-"Finance"
-
-already accurately represents the subject.
-
-Only suggest a new category if no existing category adequately represents the topic.
-
-==================================================
-SUMMARY
-==================================================
-
-Create a concise "So basically..." summary.
-
-The summary should:
-
-- Capture the central idea
-- Connect the important concepts
-- Help the reader remember the subject
-
-Do not simply repeat the introduction.
-
-==================================================
-READING TIME
-==================================================
-
-Estimate reading time based on the final generated content.
-
-Return the estimate in minutes.
-
-==================================================
-QUALITY CONTROL
-==================================================
-
-Before returning the result, silently check:
-
-1. Is the article factually faithful to the source?
-2. Did I accidentally invent information?
-3. Is the central concept clear?
-4. Are important concepts missing?
-5. Are technical terms explained?
-6. Is the structure logical?
-7. Is unnecessary repetition removed?
-8. Is it easy to scan on a phone?
-9. Is the title accurate?
-10. Are categories appropriate?
-11. Are there no more than 5 categories?
-12. Is the summary useful?
-13. Does the article remain profile-agnostic?
-
-If any answer is no, revise the article.
-
-==================================================
-OUTPUT
-==================================================
-
-Return ONLY valid JSON.
-
+OUTPUT - Return ONLY valid JSON with this exact structure:
 {
-  "canonical_topic": "...",
-  "title": "...",
+  "canonical_topic": "the underlying subject",
+  "title": "clear, curious title",
   "content": [
-    {
-      "heading": "...",
-      "body": "..."
-    }
+    {"heading": "What is X?", "body": "Clear explanation..."},
+    {"heading": "Why does X matter?", "body": "Importance..."},
+    {"heading": "How does X work?", "body": "Detailed breakdown..."}
   ],
-  "summary": "...",
-  "categories": [
-    "..."
-  ],
+  "summary": "So basically... the main idea in one paragraph",
+  "categories": ["Category1", "Category2"],
   "estimated_read_time_minutes": 5,
-  "source_facts": [
-    "..."
-  ]
-}
-
-Do not return Markdown.
-
-Do not return commentary.
-
-Do not explain your reasoning.
-
-==================================================
-FINAL PRINCIPLE
-==================================================
-
-The Base Article is not supposed to be the most entertaining version of the knowledge.
-
-It is supposed to be the most useful, accurate and reusable foundation for explaining that knowledge to different people.`;
+  "source_facts": ["Key fact 1", "Key fact 2"]
+}`;
 }
 
 function buildExplanationPrompt(baseArticle, profile) {
