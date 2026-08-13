@@ -22,7 +22,7 @@ const router = Router();
 // CONFIGURATION
 // ============================================
 
-const PROCESSOR_URL = process.env.PROCESSOR_URL || "http://localhost:3001/api/processor";
+const PROCESSOR_URL = "/api/processor";
 const ADMIN_API_KEY = process.env.ADMIN_API_KEY;
 const SCRAPER_INTERVAL = parseInt(process.env.SCRAPER_INTERVAL) || 10000;
 const BATCH_SIZE = parseInt(process.env.SCRAPER_BATCH_SIZE) || 3;
