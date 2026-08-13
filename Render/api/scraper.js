@@ -22,7 +22,7 @@ const router = Router();
 // CONFIGURATION
 // ============================================
 
-const PROCESSOR_URL = "/api/processor";
+const PROCESSOR_URL = process.env.PROCESSOR_URL || "http://localhost:3001/api/processor";
 const ADMIN_API_KEY = process.env.ADMIN_API_KEY;
 const SCRAPER_INTERVAL = parseInt(process.env.SCRAPER_INTERVAL) || 10000;
 const BATCH_SIZE = parseInt(process.env.SCRAPER_BATCH_SIZE) || 3;
@@ -63,16 +63,488 @@ let stats = {
 };
 
 // ============================================
+// AUTHENTICATION HELPERS
+// ============================================
+
+async function authenticateUser(userId) {
+  if (!userId) return null;
+  
+  const users = await getByColumn('users', 'user_id', userId);
+  if (users.length === 0) return null;
+  
+  return users[0];
+}
+
+async function checkUserCredits(userId, requiredCredits = 1) {
+  const user = await authenticateUser(userId);
+  if (!user) return { valid: false, error: "User not found" };
+  
+  // Check if user has enough credits for context submission (1 credit)
+  if (user.credits < requiredCredits) {
+    return { 
+      valid: false, 
+      error: "Insufficient credits",
+      credits: user.credits,
+      required: requiredCredits
+    };
+  }
+  
+  // Check daily limit (50 credits per day)
+  const today = new Date().toISOString().split('T')[0];
+  const usageRecords = await getByColumn('usage', 'user_id', userId);
+  const todayUsage = usageRecords.find(u => u.date === today);
+  const dailyCreditsUsed = todayUsage ? todayUsage.credits_used : 0;
+  
+  if (dailyCreditsUsed + requiredCredits > 50) {
+    return {
+      valid: false,
+      error: "Daily credit limit exceeded",
+      used: dailyCreditsUsed,
+      limit: 50,
+      remaining: 50 - dailyCreditsUsed
+    };
+  }
+  
+  return { valid: true, user };
+}
+
+async function deductUserCredits(userId, amount = 1, reason = 'context_submit') {
+  const users = await getByColumn('users', 'user_id', userId);
+  if (users.length === 0) return null;
+  
+  const user = users[0];
+  const newCredits = user.credits - amount;
+  
+  await update('users', userId, { credits: newCredits });
+  
+  // Log transaction
+  await insert('credit_transactions', {
+    user_id: userId,
+    amount: -amount,
+    reason: reason,
+    balance_after: newCredits
+  });
+  
+  // Update usage
+  const today = new Date().toISOString().split('T')[0];
+  const usageRecords = await getByColumn('usage', 'user_id', userId);
+  const todayUsage = usageRecords.find(u => u.date === today);
+  
+  if (todayUsage) {
+    await update('usage', todayUsage.usage_id, {
+      credits_used: (todayUsage.credits_used || 0) + amount,
+      context_submits: (todayUsage.context_submits || 0) + 1
+    });
+  } else {
+    await insert('usage', {
+      user_id: userId,
+      date: today,
+      credits_used: amount,
+      context_submits: 1,
+      questions: 0,
+      deep_dives: 0,
+      articles_read: 0
+    });
+  }
+  
+  return { newCredits };
+}
+
+// ============================================
 // ROUTES
 // ============================================
 
-router.post("/start", async (req, res) => {
-  const apiKey = req.headers["x-admin-key"];
+/**
+ * POST /api/scraper/submit
+ * Submit a single URL for scraping (Admin or User)
+ * 
+ * Admin: Uses x-admin-key header
+ * User: Uses user_id in body (deducts 1 credit)
+ */
+router.post("/submit", async (req, res) => {
+  const adminKey = req.headers["x-admin-key"];
+  const { url, user_id } = req.body;
 
-  if (apiKey !== ADMIN_API_KEY) {
+  if (!url) {
+    return res.status(400).json({
+      success: false,
+      error: "URL is required"
+    });
+  }
+
+  try {
+    new URL(url);
+  } catch {
+    return res.status(400).json({
+      success: false,
+      error: "Invalid URL format"
+    });
+  }
+
+  // Check if it's an admin request
+  const isAdmin = adminKey && adminKey === ADMIN_API_KEY;
+
+  // If not admin, user must be authenticated
+  if (!isAdmin) {
+    if (!user_id) {
+      return res.status(401).json({
+        success: false,
+        error: "Authentication required. Provide user_id or admin key."
+      });
+    }
+
+    // Check user credits (context submit costs 1 credit)
+    const creditCheck = await checkUserCredits(user_id, 1);
+    if (!creditCheck.valid) {
+      return res.status(402).json({
+        success: false,
+        error: creditCheck.error,
+        credits: creditCheck.credits,
+        required: 1,
+        daily_used: creditCheck.used,
+        daily_limit: 50
+      });
+    }
+  }
+
+  try {
+    // Check if URL already exists in processing_jobs
+    const { data: existing, error: checkError } = await supabase
+      .from("processing_jobs")
+      .select("job_id, status")
+      .eq("url", url)
+      .in("status", ["pending", "processing"])
+      .limit(1);
+
+    if (checkError) throw checkError;
+
+    if (existing && existing.length > 0) {
+      return res.status(409).json({
+        success: false,
+        error: "URL already in queue",
+        job_id: existing[0].job_id,
+        status: existing[0].status
+      });
+    }
+
+    // Deduct credits if user (not admin)
+    if (!isAdmin && user_id) {
+      await deductUserCredits(user_id, 1, 'context_submit');
+    }
+
+    // Create job
+    const { data: job, error: insertError } = await supabase
+      .from("processing_jobs")
+      .insert({
+        url: url,
+        user_id: isAdmin ? null : user_id,
+        status: "pending",
+        current_stage: "fetch",
+        stages: {
+          fetch: "pending",
+          extract: "pending",
+          quality: "pending",
+          duplicate_check: "pending",
+          processing: "pending",
+          embedding: "pending",
+          storage: "pending"
+        },
+        started_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (insertError) throw insertError;
+
+    log(`📝 URL submitted: ${url} (job: ${job.job_id})`, "info");
+
+    // If scraper is not running, process immediately
+    if (!isRunning) {
+      log("🚀 Scraper not running, processing job immediately...", "warn");
+      const success = await processJob(job);
+      if (success) {
+        stats.totalProcessed++;
+      } else {
+        stats.totalFailed++;
+      }
+    }
+
+    res.status(201).json({
+      success: true,
+      message: "URL submitted for scraping",
+      job_id: job.job_id,
+      status: job.status,
+      credits_used: isAdmin ? 0 : 1,
+      credits_remaining: isAdmin ? null : (await authenticateUser(user_id))?.credits
+    });
+
+  } catch (error) {
+    log(`❌ Failed to submit URL: ${error.message}`, "error");
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/scraper/submit-batch
+ * Submit multiple URLs for scraping (Admin only)
+ */
+router.post("/submit-batch", async (req, res) => {
+  const adminKey = req.headers["x-admin-key"];
+  const { urls, user_id } = req.body;
+
+  // Admin only
+  if (adminKey !== ADMIN_API_KEY) {
     return res.status(401).json({
       success: false,
-      error: "Unauthorized"
+      error: "Unauthorized. Admin key required for batch submissions."
+    });
+  }
+
+  if (!urls || !Array.isArray(urls) || urls.length === 0) {
+    return res.status(400).json({
+      success: false,
+      error: "URLs array is required"
+    });
+  }
+
+  if (urls.length > 50) {
+    return res.status(400).json({
+      success: false,
+      error: "Maximum 50 URLs per batch"
+    });
+  }
+
+  const results = [];
+  const errors = [];
+
+  for (const url of urls) {
+    try {
+      new URL(url);
+
+      const { data: existing, error: checkError } = await supabase
+        .from("processing_jobs")
+        .select("job_id, status")
+        .eq("url", url)
+        .in("status", ["pending", "processing"])
+        .limit(1);
+
+      if (checkError) throw checkError;
+
+      if (existing && existing.length > 0) {
+        results.push({
+          url,
+          status: "exists",
+          job_id: existing[0].job_id,
+          message: "URL already in queue"
+        });
+        continue;
+      }
+
+      const { data: job, error: insertError } = await supabase
+        .from("processing_jobs")
+        .insert({
+          url: url,
+          user_id: user_id || null,
+          status: "pending",
+          current_stage: "fetch",
+          stages: {
+            fetch: "pending",
+            extract: "pending",
+            quality: "pending",
+            duplicate_check: "pending",
+            processing: "pending",
+            embedding: "pending",
+            storage: "pending"
+          },
+          started_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      results.push({
+        url,
+        status: "submitted",
+        job_id: job.job_id
+      });
+
+      log(`📝 Batch URL submitted: ${url} (job: ${job.job_id})`, "info");
+
+    } catch (error) {
+      errors.push({
+        url,
+        error: error.message
+      });
+    }
+  }
+
+  // If scraper is not running, process jobs
+  if (!isRunning && results.length > 0) {
+    log("🚀 Scraper not running, processing batch jobs...", "warn");
+    const result = await processPendingJobs();
+    log(`📊 Batch processed: ${result.processed} success, ${result.failed} failed`, "info");
+  }
+
+  res.status(201).json({
+    success: true,
+    message: `Submitted ${results.length} URLs for scraping`,
+    results,
+    errors: errors.length > 0 ? errors : undefined,
+    total_submitted: results.length,
+    total_errors: errors.length
+  });
+});
+
+/**
+ * POST /api/scraper/submit-text
+ * Submit raw text for processing (User only)
+ */
+router.post("/submit-text", async (req, res) => {
+  const { text, title, user_id } = req.body;
+
+  if (!user_id) {
+    return res.status(401).json({
+      success: false,
+      error: "Authentication required. user_id required."
+    });
+  }
+
+  if (!text) {
+    return res.status(400).json({
+      success: false,
+      error: "Text content is required"
+    });
+  }
+
+  if (text.length < 100) {
+    return res.status(400).json({
+      success: false,
+      error: "Text too short (min 100 characters)"
+    });
+  }
+
+  // Check user credits
+  const creditCheck = await checkUserCredits(user_id, 1);
+  if (!creditCheck.valid) {
+    return res.status(402).json({
+      success: false,
+      error: creditCheck.error,
+      credits: creditCheck.credits,
+      required: 1,
+      daily_used: creditCheck.used,
+      daily_limit: 50
+    });
+  }
+
+  try {
+    // Check for malicious content
+    const maliciousPatterns = [
+      /<script/i, /javascript:/i, /onclick=/i, /onerror=/i,
+      /onload=/i, /eval\(/i, /document\.write/i
+    ];
+    if (maliciousPatterns.some(pattern => pattern.test(text))) {
+      return res.status(400).json({
+        success: false,
+        error: "Content appears to be malicious or contains prohibited content"
+      });
+    }
+
+    // Deduct credits
+    await deductUserCredits(user_id, 1, 'context_submit');
+
+    // Create a processing job with the text content
+    const { data: job, error: insertError } = await supabase
+      .from("processing_jobs")
+      .insert({
+        url: null,
+        user_id: user_id,
+        status: "pending",
+        current_stage: "extract",
+        stages: {
+          fetch: "skipped",
+          extract: "pending",
+          quality: "pending",
+          duplicate_check: "pending",
+          processing: "pending",
+          embedding: "pending",
+          storage: "pending"
+        },
+        started_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (insertError) throw insertError;
+
+    // Save the text content directly as an article
+    const { data: article, error: articleError } = await supabase
+      .from("articles")
+      .insert({
+        canonical_title: title || "User Submitted Content",
+        slug: `user-content-${Date.now()}`,
+        base_content: text,
+        summary: "",
+        source_url: null,
+        source_domain: "user-submitted",
+        categories: ["User Content"],
+        content_hash: crypto.createHash('sha256').update(text).digest('hex'),
+        word_count: text.split(/\s+/).length,
+        version: 1,
+        status: "processing",
+        retrieved_at: new Date().toISOString(),
+        next_refresh_at: new Date(Date.now() + REFRESH_INTERVAL_DAYS * 24 * 60 * 60 * 1000).toISOString()
+      })
+      .select()
+      .single();
+
+    if (articleError) throw articleError;
+
+    // Update job with article_id
+    await supabase
+      .from("processing_jobs")
+      .update({ article_id: article.article_id })
+      .eq("job_id", job.job_id);
+
+    // Send to processor
+    await sendToProcessor(article, job);
+
+    // Complete job
+    await completeJob(job.job_id, article.article_id);
+
+    log(`📝 Text submitted by user ${user_id} (article: ${article.article_id})`, "info");
+
+    res.status(201).json({
+      success: true,
+      message: "Text submitted for processing",
+      article_id: article.article_id,
+      credits_used: 1,
+      credits_remaining: (await authenticateUser(user_id))?.credits
+    });
+
+  } catch (error) {
+    log(`❌ Failed to submit text: ${error.message}`, "error");
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/scraper/start
+ * Start the scraper (Admin only)
+ */
+router.post("/start", async (req, res) => {
+  const adminKey = req.headers["x-admin-key"];
+
+  if (adminKey !== ADMIN_API_KEY) {
+    return res.status(401).json({
+      success: false,
+      error: "Unauthorized. Admin key required."
     });
   }
 
@@ -92,13 +564,17 @@ router.post("/start", async (req, res) => {
   });
 });
 
+/**
+ * POST /api/scraper/stop
+ * Stop the scraper (Admin only)
+ */
 router.post("/stop", async (req, res) => {
-  const apiKey = req.headers["x-admin-key"];
+  const adminKey = req.headers["x-admin-key"];
 
-  if (apiKey !== ADMIN_API_KEY) {
+  if (adminKey !== ADMIN_API_KEY) {
     return res.status(401).json({
       success: false,
-      error: "Unauthorized"
+      error: "Unauthorized. Admin key required."
     });
   }
 
@@ -110,6 +586,10 @@ router.post("/stop", async (req, res) => {
   });
 });
 
+/**
+ * GET /api/scraper/status
+ * Get scraper status (Public)
+ */
 router.get("/status", async (req, res) => {
   const status = await getStatus();
   res.json({
@@ -118,13 +598,17 @@ router.get("/status", async (req, res) => {
   });
 });
 
+/**
+ * POST /api/scraper/run-once
+ * Run scraper once (Admin only)
+ */
 router.post("/run-once", async (req, res) => {
-  const apiKey = req.headers["x-admin-key"];
+  const adminKey = req.headers["x-admin-key"];
 
-  if (apiKey !== ADMIN_API_KEY) {
+  if (adminKey !== ADMIN_API_KEY) {
     return res.status(401).json({
       success: false,
-      error: "Unauthorized"
+      error: "Unauthorized. Admin key required."
     });
   }
 
@@ -171,17 +655,22 @@ export async function stopScraper() {
 }
 
 export async function getStatus() {
-  const { count: pending, error: pendingError } = await supabase
+  const { count: pending } = await supabase
     .from("processing_jobs")
     .select("*", { count: "exact", head: true })
     .eq("status", "pending");
 
-  const { count: processing, error: processingError } = await supabase
+  const { count: processing } = await supabase
     .from("processing_jobs")
     .select("*", { count: "exact", head: true })
     .eq("status", "processing");
 
-  const { count: failed, error: failedError } = await supabase
+  const { count: completed } = await supabase
+    .from("processing_jobs")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "completed");
+
+  const { count: failed } = await supabase
     .from("processing_jobs")
     .select("*", { count: "exact", head: true })
     .eq("status", "failed");
@@ -192,6 +681,7 @@ export async function getStatus() {
     queue: {
       pending: pending || 0,
       processing: processing || 0,
+      completed: completed || 0,
       failed: failed || 0
     },
     config: {
@@ -248,6 +738,14 @@ export async function processPendingJobs() {
 
   return { processed, failed };
 }
+
+// ============================================
+// (Rest of the functions remain the same)
+// processJob, fetchContent, extractContent, 
+// checkQuality, checkDuplicate, saveArticle, 
+// sendToProcessor, updateJobStage, failJob, 
+// completeJob, helper functions...
+// ============================================
 
 async function processJob(job) {
   const jobId = job.job_id;
@@ -330,10 +828,6 @@ async function processJob(job) {
   }
 }
 
-// ============================================
-// FETCH CONTENT
-// ============================================
-
 async function fetchContent(url) {
   if (!url) return { success: false, error: "No URL provided" };
 
@@ -377,18 +871,12 @@ async function fetchContent(url) {
   }
 }
 
-// ============================================
-// EXTRACT CONTENT
-// ============================================
-
 async function extractContent(html, url) {
   try {
     const $ = cheerio.load(html);
 
-    // Title
     let title = $("title").first().text().trim() || $("h1").first().text().trim() || "Untitled";
 
-    // Remove noise
     const noiseSelectors = [
       "script", "style", "noscript", "iframe",
       "nav", "header", "footer",
@@ -404,7 +892,6 @@ async function extractContent(html, url) {
     ];
     $(noiseSelectors.join(",")).remove();
 
-    // Find main content
     let mainContent = null;
     const contentSelectors = [
       "article", ".article", ".post",
@@ -427,7 +914,6 @@ async function extractContent(html, url) {
       mainContent = $("body");
     }
 
-    // Extract text
     let textContent = mainContent.text()
       .replace(/\s+/g, " ")
       .replace(/\n\s*\n/g, "\n\n")
@@ -440,20 +926,16 @@ async function extractContent(html, url) {
         .trim();
     }
 
-    // HTML content
     let htmlContent = (mainContent.html() || "")
       .replace(/\s+/g, " ")
       .replace(/>\s+</g, "><")
       .trim();
 
-    // Word count
     const wordCount = textContent.split(/\s+/).filter(w => w.length > 0).length;
 
-    // Domain
     let domain = "";
     try { domain = new URL(url).hostname.replace("www.", ""); } catch {}
 
-    // Published date
     let publishedAt = null;
     const dateSelectors = [
       'meta[property="article:published_time"]',
@@ -494,10 +976,6 @@ async function extractContent(html, url) {
   }
 }
 
-// ============================================
-// QUALITY CHECK
-// ============================================
-
 function checkQuality(extractResult) {
   const { wordCount, textContent } = extractResult;
 
@@ -524,10 +1002,6 @@ function checkQuality(extractResult) {
     processingMode: wordCount > 10000 ? (wordCount > 50000 ? "chunk" : "inspect") : "normal"
   };
 }
-
-// ============================================
-// DUPLICATE CHECK
-// ============================================
 
 async function checkDuplicate(textContent) {
   try {
@@ -561,10 +1035,6 @@ async function checkDuplicate(textContent) {
   }
 }
 
-// ============================================
-// SAVE ARTICLE
-// ============================================
-
 async function saveArticle(job, extractResult, duplicateResult) {
   try {
     const { title, textContent, htmlContent, domain, url, publishedAt, wordCount } = extractResult;
@@ -580,7 +1050,7 @@ async function saveArticle(job, extractResult, duplicateResult) {
         .select("slug")
         .eq("slug", finalSlug)
         .limit(1);
-      
+
       if (!existing || existing.length === 0) break;
       finalSlug = `${slug}-${counter}`;
       counter++;
@@ -684,10 +1154,6 @@ async function saveArticle(job, extractResult, duplicateResult) {
   }
 }
 
-// ============================================
-// SEND TO PROCESSOR
-// ============================================
-
 async function sendToProcessor(article, job) {
   try {
     log(`📤 Sending article ${article.article_id} to processor...`, "process");
@@ -739,10 +1205,6 @@ async function sendToProcessor(article, job) {
     return { success: false, error: error.message };
   }
 }
-
-// ============================================
-// JOB STATUS FUNCTIONS
-// ============================================
 
 async function updateJobStage(jobId, stage, status) {
   try {
@@ -806,10 +1268,6 @@ async function completeJob(jobId, articleId) {
   }
 }
 
-// ============================================
-// HELPER FUNCTIONS
-// ============================================
-
 function generateHash(content) {
   return crypto.createHash("sha256").update(content).digest("hex");
 }
@@ -835,7 +1293,7 @@ async function detectCategories(title, content) {
   }
 
   const existingCategoryNames = Object.keys(categoryMap);
-  
+
   if (existingCategoryNames.length > 0) {
     const text = `${title} ${content}`.toLowerCase();
     const matched = [];
