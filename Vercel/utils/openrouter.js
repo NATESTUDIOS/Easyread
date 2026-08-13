@@ -1,6 +1,6 @@
 // utils/openrouter.js
 
-import OpenAI from 'openai';
+import { OpenRouter } from '@openrouter/sdk';
 import { 
   MODEL_CONFIG,
   getModelConfig, 
@@ -23,7 +23,7 @@ if (!OPENROUTER_API_KEY) {
 console.log(`🔑 OpenRouter API Key: ${OPENROUTER_API_KEY ? '✅ Loaded' : '❌ Missing'}`);
 
 // ============================================
-// MAIN SERVICE - Using OpenAI SDK
+// MAIN SERVICE - Using @openrouter/sdk
 // ============================================
 
 class OpenRouterService {
@@ -32,14 +32,11 @@ class OpenRouterService {
       throw new Error('OpenRouter API key is required');
     }
 
-    // Use OpenAI SDK with OpenRouter base URL
-    this.client = new OpenAI({
+    // ✅ Correct initialization according to OpenRouter docs
+    this.client = new OpenRouter({
       apiKey: OPENROUTER_API_KEY,
-      baseURL: 'https://openrouter.ai/api/v1',
-      defaultHeaders: {
-        'HTTP-Referer': process.env.APP_URL || 'https://easyread.app',
-        'X-Title': 'EasyRead'
-      }
+      httpReferer: process.env.APP_URL || 'https://easyread.app',
+      appTitle: 'EasyRead'
     });
 
     // Free tier configuration
@@ -59,18 +56,13 @@ class OpenRouterService {
   }
 
   // ============================================
-  // 📝 TEXT GENERATION (Pure - No Prompt Logic)
+  // 📝 TEXT GENERATION
   // ============================================
 
   /**
    * Generate text using OpenRouter with automatic fallback
-   * @param {string} prompt - The prompt to send to the AI (provided by the API)
-   * @param {string} task - Task type (for model selection): 'generation' | 'fast'
-   * @param {object} options - Override settings: temperature, maxTokens, topP
-   * @returns {object} { content, model, usage, finishReason }
    */
   async generate(prompt, task = 'generation', options = {}) {
-    // Get config from models.js
     const config = getModelConfig(task);
     const models = getModelIds(task);
 
@@ -92,7 +84,8 @@ class OpenRouterService {
 
         console.log(`🔄 [${task}] Attempt ${i + 1}/${models.length}: ${modelId}`);
 
-        const response = await this.client.chat.completions.create({
+        // ✅ Correct method: client.chat.send()
+        const response = await this.client.chat.send({
           model: modelId,
           messages: [
             { role: 'system', content: 'You are a helpful AI assistant for EasyRead.' },
@@ -101,7 +94,6 @@ class OpenRouterService {
           temperature,
           max_tokens: maxTokens,
           top_p: topP,
-          // OpenRouter specific: provider order for free models
           provider: { order: ['free'] }
         });
 
@@ -145,12 +137,6 @@ class OpenRouterService {
   // 🔢 EMBEDDING GENERATION
   // ============================================
 
-  /**
-   * Generate embeddings for text
-   * @param {string} text - Text to embed
-   * @param {boolean} useLongContext - Use 131K context model vs 33K
-   * @returns {object} { embedding, model, dimensions }
-   */
   async generateEmbedding(text, useLongContext = true) {
     const config = MODEL_CONFIG.embedding;
     const modelId = useLongContext ? config.primary.id : config.fallback.id;
@@ -163,9 +149,10 @@ class OpenRouterService {
         throw new Error(`Daily rate limit reached (${this.dailyLimit} requests/day)`);
       }
 
+      // ✅ Correct method: client.embeddings.create()
       const response = await this.client.embeddings.create({
         model: modelId,
-        input: text.substring(0, maxTokens * 4), // Approximate char limit
+        input: text.substring(0, maxTokens * 4),
         encodingFormat: 'float'
       });
 
@@ -204,18 +191,10 @@ class OpenRouterService {
   }
 
   // ============================================
-  // ⚙️ CONVENIENCE METHODS (Still Pure)
+  // ⚙️ CONVENIENCE METHODS
   // ============================================
 
-  /**
-   * Generate with JSON parsing helper
-   * @param {string} prompt - The prompt to send
-   * @param {string} task - Task type
-   * @param {object} options - Additional options
-   * @returns {object} Parsed JSON response
-   */
   async generateJSON(prompt, task = 'generation', options = {}) {
-    // Add instruction to return valid JSON
     const jsonPrompt = `${prompt}\n\nReturn ONLY valid JSON. Do not include any other text.`;
     const response = await this.generate(jsonPrompt, task, options);
 
@@ -291,7 +270,7 @@ class OpenRouterService {
       const status = this.getStatus();
 
       // Test a simple request
-      const response = await this.client.chat.completions.create({
+      const response = await this.client.chat.send({
         model: 'nvidia/nemotron-3.5-lightning:free',
         messages: [
           { role: 'user', content: 'Say "OK" if you are working.' }
