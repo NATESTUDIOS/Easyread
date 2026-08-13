@@ -227,24 +227,51 @@ class OpenRouterService {
   // ⚙️ CONVENIENCE METHODS
   // ============================================
 
-  async generateJSON(prompt, task = 'generation', options = {}) {
-    const jsonPrompt = `${prompt}\n\nReturn ONLY valid JSON. Do not include any other text.`;
-    const response = await this.generate(jsonPrompt, task, options);
+  // ✅ Fixed code
+async generateJSON(prompt, task = 'generation', options = {}) {
+  const jsonPrompt = `${prompt}\n\nReturn ONLY valid JSON. Do not include any other text.`;
+  const response = await this.generate(jsonPrompt, task, options);
 
-    try {
-      return {
-        ...response,
-        parsed: JSON.parse(response.content)
-      };
-    } catch (error) {
-      console.warn('JSON parsing failed, returning raw content');
-      return {
-        ...response,
-        parsed: null
-      };
-    }
+  // ✅ Check if response exists
+  if (!response) {
+    console.warn('⚠️ No response from AI');
+    return { parsed: null };
   }
 
+  // ✅ Check if content exists
+  if (!response.content) {
+    console.warn('⚠️ No content in response');
+    return { ...response, parsed: null };
+  }
+
+  try {
+    // ✅ Try to parse JSON
+    const parsed = JSON.parse(response.content);
+    
+    // ✅ Validate parsed structure
+    if (!parsed || typeof parsed !== 'object') {
+      console.warn('⚠️ Parsed result is not an object');
+      return { ...response, parsed: null };
+    }
+
+    // ✅ Ensure content array exists
+    if (!parsed.content) {
+      parsed.content = [];
+    }
+
+    return {
+      ...response,
+      parsed
+    };
+  } catch (error) {
+    console.warn('❌ JSON parsing failed:', error.message);
+    console.warn(`📄 Content preview: ${(response.content || '').substring(0, 300)}...`);
+    return {
+      ...response,
+      parsed: null
+    };
+  }
+}
   // ============================================
   // 📊 RATE LIMITING
   // ============================================
