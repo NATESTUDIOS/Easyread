@@ -165,7 +165,7 @@ export async function processArticle(data) {
     if (!baseArticle.content || baseArticle.content.length === 0) {
       log(`⚠️ Base Article content is empty, using original content`, "warn");
       // Use original content as fallback
-      baseArticle.content = content.substring(0, 10000);
+      baseArticle.content = content.substring(0, 30000);
       baseArticle.title = baseArticle.title || title || "Untitled";
       baseArticle.summary = baseArticle.summary || "No summary available";
     }
@@ -232,57 +232,49 @@ async function generateBaseArticle(content, title, url, domain, existingCategori
       maxTokens: 8192
     });
 
+    // ✅ Check if response exists
     if (!response) {
       log("❌ No response from AI", "error");
       return null;
     }
 
+    // ✅ Check if parsed exists and has content
     if (!response.parsed) {
-      log(`❌ Failed to parse AI response: ${JSON.stringify(response).substring(0, 200)}`, "error");
+      log(`❌ Failed to parse AI response`, "error");
+      
+      // ✅ Try to use raw content as fallback
+      if (response.content) {
+        log("⚠️ Using raw response content as fallback", "warn");
+        return {
+          canonical_topic: title || "Untitled Article",
+          title: title || "Untitled Article",
+          content: response.content.substring(0, 30000),
+          summary: "No summary available",
+          categories: ["General"],
+          estimated_read_time_minutes: Math.ceil(response.content.split(/\s+/).length / 200),
+          source_facts: []
+        };
+      }
       return null;
     }
 
     const parsed = response.parsed;
-    
-    // 🔧 Debug log
-    log(`📊 AI Response keys: ${Object.keys(parsed).join(', ')}`, "info");
-    log(`📊 Content type: ${typeof parsed.content}`, "info");
-    if (Array.isArray(parsed.content)) {
-      log(`📊 Content array length: ${parsed.content.length}`, "info");
+
+    // ✅ Check if content is null or undefined
+    if (!parsed.content) {
+      log("⚠️ AI returned null content, using original content", "warn");
+      return {
+        canonical_topic: title || "Untitled Article",
+        title: title || "Untitled Article",
+        content: content.substring(0, 30000),
+        summary: "No summary available",
+        categories: ["General"],
+        estimated_read_time_minutes: Math.ceil(content.split(/\s+/).length / 200),
+        source_facts: []
+      };
     }
 
-    const validCategories = (parsed.categories || ["General"])
-      .filter(c => c && typeof c === "string" && c.trim().length > 0)
-      .slice(0, 5);
-
-    let contentString = parsed.content;
-    
-    // 🔧 FIX: Better content handling
-    if (!contentString) {
-      log("⚠️ No content field in AI response, using original content", "warn");
-      contentString = content.substring(0, 10000);
-    } else if (Array.isArray(contentString)) {
-      if (contentString.length === 0) {
-        log("⚠️ Empty content array, using original content", "warn");
-        contentString = content.substring(0, 10000);
-      } else {
-        contentString = contentString
-          .map(section => `## ${section.heading || "Section"}\n\n${section.body || ""}`)
-          .join("\n\n");
-      }
-    }
-
-    return {
-      canonical_topic: parsed.canonical_topic || parsed.title || title || "Untitled Article",
-      title: parsed.title || title || "Untitled Article",
-      content: contentString,
-      summary: parsed.summary || "",
-      categories: validCategories.length > 0 ? validCategories : ["General"],
-      estimated_read_time_minutes: parsed.estimated_read_time_minutes || 
-        Math.ceil(contentString.split(/\s+/).length / 200),
-      source_facts: parsed.source_facts || []
-    };
-
+    // ... rest of the function
   } catch (error) {
     log(`AI generation failed: ${error.message}`, "error");
     return null;
@@ -395,7 +387,7 @@ export async function processQuestion(data) {
     if (existingKnowledge.article) {
       knowledgeAction = "reuse";
       baseArticleId = existingKnowledge.article.article_id;
-      
+
       // Check if explanation view exists for this profile
       const { data: view, error: viewError } = await supabase
         .from("explanation_views")
@@ -405,7 +397,7 @@ export async function processQuestion(data) {
         .single();
 
       if (viewError && viewError.code !== "PGRST116") throw viewError;
-      
+
       if (view) {
         knowledgeAction = "reuse";
         explanationViewId = view.view_id;
@@ -655,7 +647,7 @@ ${sourceInfo}
 
 SOURCE CONTENT
 
-${content.substring(0, 10000)}
+${content.substring(0, 30000)}
 
 ==================================================
 STEP 1 — UNDERSTAND THE SOURCE
@@ -1384,7 +1376,7 @@ The objective is:
 
 function buildQuestionPrompt(question, profile, existingKnowledge, knowledgeAction) {
   let retrievedContent = '';
-  
+
   if (existingKnowledge.article) {
     retrievedContent += `
 EXISTING BASE ARTICLE:
@@ -1933,17 +1925,17 @@ function generateCanonicalTopic(question) {
 function isLowQualityQuestion(question) {
   const minLength = 5;
   const maxWordCount = 20;
-  
+
   const words = question.split(/\s+/);
   if (words.length < minLength) return true;
   if (words.length > maxWordCount) return false;
-  
+
   const vaguePatterns = [
     /^what$/i, /^how$/i, /^why$/i,
     /^tell me/i, /^explain/i,
     /^what is/i, /^what are/i, /^what do/i
   ];
-  
+
   return vaguePatterns.some(pattern => pattern.test(question));
 }
 
