@@ -1,6 +1,6 @@
 // utils/openrouter.js
 
-import { OpenRouter } from '@openrouter/sdk';
+import OpenAI from 'openai';
 import { 
   MODEL_CONFIG,
   getModelConfig, 
@@ -23,7 +23,7 @@ if (!OPENROUTER_API_KEY) {
 console.log(`🔑 OpenRouter API Key: ${OPENROUTER_API_KEY ? '✅ Loaded' : '❌ Missing'}`);
 
 // ============================================
-// MAIN SERVICE
+// MAIN SERVICE - Using OpenAI SDK
 // ============================================
 
 class OpenRouterService {
@@ -31,26 +31,27 @@ class OpenRouterService {
     if (!OPENROUTER_API_KEY) {
       throw new Error('OpenRouter API key is required');
     }
-    
-    this.client = new OpenRouter({
+
+    // Use OpenAI SDK with OpenRouter base URL
+    this.client = new OpenAI({
       apiKey: OPENROUTER_API_KEY,
       baseURL: 'https://openrouter.ai/api/v1',
-      headers: {
+      defaultHeaders: {
         'HTTP-Referer': process.env.APP_URL || 'https://easyread.app',
         'X-Title': 'EasyRead'
       }
     });
-    
+
     // Free tier configuration
     this.hasCredits = process.env.OPENROUTER_CREDITS_PURCHASED === 'true';
     this.dailyLimit = this.hasCredits ? 1000 : 50;
     this.dailyRequests = 0;
     this.lastReset = new Date().toDateString();
-    
+
     // Log startup info
     const genModel = MODEL_CONFIG.generation.primary;
     const embedModel = MODEL_CONFIG.embedding.primary;
-    
+
     console.log('🚀 OpenRouter Service Initialized');
     console.log(`📊 Daily Limit: ${this.dailyLimit} requests`);
     console.log(`📦 Generation: ${genModel.id} (${genModel.context} context)`);
@@ -60,7 +61,7 @@ class OpenRouterService {
   // ============================================
   // 📝 TEXT GENERATION (Pure - No Prompt Logic)
   // ============================================
-  
+
   /**
    * Generate text using OpenRouter with automatic fallback
    * @param {string} prompt - The prompt to send to the AI (provided by the API)
@@ -72,26 +73,26 @@ class OpenRouterService {
     // Get config from models.js
     const config = getModelConfig(task);
     const models = getModelIds(task);
-    
+
     const temperature = options.temperature ?? config.temperature ?? 0.7;
     const maxTokens = options.maxTokens ?? config.maxTokens ?? 4096;
     const topP = options.topP ?? config.topP ?? 0.9;
-    
+
     let lastError = null;
-    
+
     // Try each model in fallback order
     for (let i = 0; i < models.length; i++) {
       const modelId = models[i];
-      
+
       try {
         // Check daily rate limit
         if (!this.canMakeRequest()) {
           throw new Error(`Daily rate limit reached (${this.dailyLimit} requests/day)`);
         }
-        
+
         console.log(`🔄 [${task}] Attempt ${i + 1}/${models.length}: ${modelId}`);
-        
-        const response = await this.client.chat.send({
+
+        const response = await this.client.chat.completions.create({
           model: modelId,
           messages: [
             { role: 'system', content: 'You are a helpful AI assistant for EasyRead.' },
@@ -100,15 +101,16 @@ class OpenRouterService {
           temperature,
           max_tokens: maxTokens,
           top_p: topP,
+          // OpenRouter specific: provider order for free models
           provider: { order: ['free'] }
         });
-        
+
         // Track successful request
         this.trackRequest();
         const details = getModelDetails(modelId);
-        
+
         console.log(`✅ [${task}] Success with: ${modelId}`);
-        
+
         return {
           content: response.choices[0].message.content,
           model: modelId,
@@ -116,23 +118,23 @@ class OpenRouterService {
           usage: response.usage,
           finishReason: response.choices[0].finish_reason
         };
-        
+
       } catch (error) {
         console.warn(`❌ [${task}] ${modelId} failed:`, error.message);
         lastError = error;
-        
+
         // Rate limit handling
         if (error.status === 429) {
           const waitTime = Math.min(1000 * Math.pow(2, i), 10000);
           console.log(`⏳ Rate limit, waiting ${waitTime}ms...`);
           await new Promise(resolve => setTimeout(resolve, waitTime));
         }
-        
+
         // If it's the last model, throw
         if (i === models.length - 1) {
           throw new Error(`All models failed for ${task}: ${lastError?.message || 'Unknown error'}`);
         }
-        
+
         // Wait before next model
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
@@ -142,7 +144,7 @@ class OpenRouterService {
   // ============================================
   // 🔢 EMBEDDING GENERATION
   // ============================================
-  
+
   /**
    * Generate embeddings for text
    * @param {string} text - Text to embed
@@ -153,31 +155,31 @@ class OpenRouterService {
     const config = MODEL_CONFIG.embedding;
     const modelId = useLongContext ? config.primary.id : config.fallback.id;
     const maxTokens = useLongContext ? config.maxTokens : config.fallback.context;
-    
+
     console.log(`🔢 Embedding with: ${modelId}`);
-    
+
     try {
       if (!this.canMakeRequest()) {
         throw new Error(`Daily rate limit reached (${this.dailyLimit} requests/day)`);
       }
-      
+
       const response = await this.client.embeddings.create({
         model: modelId,
         input: text.substring(0, maxTokens * 4), // Approximate char limit
         encodingFormat: 'float'
       });
-      
+
       this.trackRequest();
-      
+
       return {
         embedding: response.data[0].embedding,
         model: modelId,
         dimensions: config.primary.dimensions
       };
-      
+
     } catch (error) {
       console.error(`❌ Embedding with ${modelId} failed:`, error.message);
-      
+
       // Try fallback
       try {
         console.log(`🔄 Trying fallback: ${config.fallback.id}`);
@@ -186,9 +188,9 @@ class OpenRouterService {
           input: text.substring(0, 32768 * 4),
           encodingFormat: 'float'
         });
-        
+
         this.trackRequest();
-        
+
         return {
           embedding: response.data[0].embedding,
           model: config.fallback.id,
@@ -204,7 +206,7 @@ class OpenRouterService {
   // ============================================
   // ⚙️ CONVENIENCE METHODS (Still Pure)
   // ============================================
-  
+
   /**
    * Generate with JSON parsing helper
    * @param {string} prompt - The prompt to send
@@ -216,7 +218,7 @@ class OpenRouterService {
     // Add instruction to return valid JSON
     const jsonPrompt = `${prompt}\n\nReturn ONLY valid JSON. Do not include any other text.`;
     const response = await this.generate(jsonPrompt, task, options);
-    
+
     try {
       return {
         ...response,
@@ -234,7 +236,7 @@ class OpenRouterService {
   // ============================================
   // 📊 RATE LIMITING
   // ============================================
-  
+
   canMakeRequest() {
     const today = new Date().toDateString();
     if (today !== this.lastReset) {
@@ -260,7 +262,7 @@ class OpenRouterService {
   // ============================================
   // 📈 STATUS & HEALTH
   // ============================================
-  
+
   getStatus() {
     return {
       apiKeySet: !!OPENROUTER_API_KEY,
@@ -287,9 +289,9 @@ class OpenRouterService {
   async healthCheck() {
     try {
       const status = this.getStatus();
-      
+
       // Test a simple request
-      const response = await this.client.chat.send({
+      const response = await this.client.chat.completions.create({
         model: 'nvidia/nemotron-3.5-lightning:free',
         messages: [
           { role: 'user', content: 'Say "OK" if you are working.' }
@@ -297,7 +299,7 @@ class OpenRouterService {
         max_tokens: 10,
         provider: { order: ['free'] }
       });
-      
+
       return {
         status: 'healthy',
         ...status,
