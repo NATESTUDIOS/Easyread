@@ -228,6 +228,8 @@ class OpenRouterService {
   // ============================================
 
   // ✅ Fixed code
+// utils/openrouter.js
+
 async generateJSON(prompt, task = 'generation', options = {}) {
   const jsonPrompt = `${prompt}\n\nReturn ONLY valid JSON. Do not include any other text.`;
   const response = await this.generate(jsonPrompt, task, options);
@@ -244,9 +246,26 @@ async generateJSON(prompt, task = 'generation', options = {}) {
     return { ...response, parsed: null };
   }
 
+  // ✅ LOG THE FULL RESPONSE CONTENT (for debugging)
+  console.log(`📄 Full response content length: ${response.content.length}`);
+  console.log(`📄 Response preview (first 500 chars):\n${response.content.substring(0, 500)}`);
+  
+  // ✅ Try to clean the response
+  let cleanedContent = response.content;
+  
+  // Remove markdown code blocks
+  cleanedContent = cleanedContent.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+  
+  // Try to extract JSON (find first { to last })
+  const start = cleanedContent.indexOf('{');
+  const end = cleanedContent.lastIndexOf('}');
+  if (start !== -1 && end !== -1 && end > start) {
+    cleanedContent = cleanedContent.substring(start, end + 1);
+    console.log(`📄 Extracted JSON length: ${cleanedContent.length}`);
+  }
+
   try {
-    // ✅ Try to parse JSON
-    const parsed = JSON.parse(response.content);
+    const parsed = JSON.parse(cleanedContent);
     
     // ✅ Validate parsed structure
     if (!parsed || typeof parsed !== 'object') {
@@ -256,19 +275,24 @@ async generateJSON(prompt, task = 'generation', options = {}) {
 
     // ✅ Ensure content array exists
     if (!parsed.content) {
+      console.warn('⚠️ Missing content field, adding empty array');
       parsed.content = [];
     }
 
+    console.log(`✅ JSON parsed successfully. Keys: ${Object.keys(parsed).join(', ')}`);
+    
     return {
       ...response,
       parsed
     };
   } catch (error) {
     console.warn('❌ JSON parsing failed:', error.message);
-    console.warn(`📄 Content preview: ${(response.content || '').substring(0, 300)}...`);
+    console.warn(`📄 Raw content (first 500 chars):\n${response.content.substring(0, 500)}`);
+    console.warn(`📄 Cleaned content (first 500 chars):\n${cleanedContent.substring(0, 500)}`);
     return {
       ...response,
-      parsed: null
+      parsed: null,
+      rawContent: response.content  // ✅ Keep raw content for fallback
     };
   }
 }
