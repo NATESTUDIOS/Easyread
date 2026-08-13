@@ -1175,7 +1175,7 @@ async function updateArticle(req, res) {
 }
 
 // ============================================
-:/// ✏️ UPDATE ARTICLE STATUS
+// ✏️ UPDATE ARTICLE STATUS
 // ============================================
 async function updateArticleStatus(req, res) {
   const { article_id, status, embedding } = req.body;
