@@ -1,46 +1,38 @@
 {
-  "name": "easyread-api",
+  "name": "easyread-render",
   "version": "1.0.0",
-  "description": "EasyRead API - Vercel deployment with OpenRouter AI integration",
+  "description": "EasyRead Scraper & Processor Service for Render",
   "type": "module",
   "engines": {
     "node": ">=18.0.0"
   },
   "scripts": {
-    "dev": "vercel dev",
-    "build": "vercel build",
-    "start": "vercel start",
-    "deploy": "vercel deploy --prod"
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "scraper": "node server.js",
+    "processor": "node server.js",
+    "test": "node test.js"
   },
   "dependencies": {
+    "@openrouter/sdk": "^0.1.0",
     "@supabase/supabase-js": "^2.39.7",
-    "@vercel/node": "^2.0.0",
-    "bcryptjs": "^2.4.3",
+    "cheerio": "^1.0.0-rc.12",
     "cors": "^2.8.5",
-    "crypto": "^1.0.1",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
-    "openai": "^4.52.0",
-    "uuid": "^9.0.1"
+    "node-fetch": "^3.3.2"
   },
   "devDependencies": {
-    "vercel": "^32.0.0",
-    "nodemon": "^3.0.1",
-    "eslint": "^8.49.0",
-    "prettier": "^3.0.3"
-  },
-  "peerDependencies": {
-    "@vercel/node": "^2.0.0"
+    "nodemon": "^3.0.1"
   },
   "keywords": [
     "easyread",
+    "scraper",
+    "processor",
     "ai",
     "openrouter",
     "supabase",
-    "vercel",
-    "explanation",
-    "content-processing"
+    "render"
   ],
-  "author": "EasyRead Team",
-  "license": "MIT"
+  "author": "Fort"
 }
