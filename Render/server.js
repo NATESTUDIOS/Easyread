@@ -1,4 +1,4 @@
- // server.js
+// server.js
 // EasyRead Render Server - Manages Scraper and Processor
 
 import express from "express";
@@ -70,17 +70,24 @@ app.use((req, res, next) => {
 });
 
 // ============================================
-// API ROUTES
+// IMPORT ROUTES
 // ============================================
 
-import processorAPI from "./api/processor.js";
-import scraperAPI from "./api/scraper.js";
+// Processor - AI processing routes
+import processorRouter from "./api/processor.js";
 
-// Processor routes
-app.use("/api/processor", processorAPI);
+// Scraper - Scraping routes
+import scraperRouter from "./api/scraper.js";
 
-// Scraper routes  
-app.use("/api/scraper", scraperAPI);
+// ============================================
+// MOUNT ROUTES
+// ============================================
+
+// Mount processor routes at /api/processor
+app.use("/api/processor", processorRouter);
+
+// Mount scraper routes at /api/scraper
+app.use("/api/scraper", scraperRouter);
 
 // ============================================
 // HEALTH CHECK
@@ -93,7 +100,11 @@ app.get("/health", (req, res) => {
     version: "1.0.0",
     timestamp: new Date().toISOString(),
     environment: NODE_ENV,
-    baseUrl: BASE_URL
+    baseUrl: BASE_URL,
+    endpoints: {
+      processor: "/api/processor",
+      scraper: "/api/scraper"
+    }
   });
 });
 
@@ -111,7 +122,6 @@ app.get("/", (req, res) => {
       processor: "/api/processor",
       scraper: "/api/scraper"
     },
-    documentation: `${BASE_URL}/docs`,
     timestamp: new Date().toISOString()
   });
 });
