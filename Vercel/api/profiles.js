@@ -64,7 +64,7 @@ export default async function handler(req, res) {
 // GET HANDLER
 // ============================================
 async function handleGet(req, res, action) {
-  const { id, profile_id, name } = req.query;
+  const { id, name } = req.query;
 
   // Get all profiles (public)
   if (!action || action === 'list') {
@@ -162,6 +162,7 @@ async function handleDelete(req, res, action) {
 // ============================================
 async function listProfiles(req, res) {
   try {
+    // Use supabase directly instead of getAll to avoid issues
     const { data: profiles, error } = await supabase
       .from('profiles')
       .select('*')
@@ -173,7 +174,7 @@ async function listProfiles(req, res) {
     // Get usage count for each profile
     const { data: views, error: viewError } = await supabase
       .from('explanation_views')
-      .select('profile_id, count');
+      .select('profile_id');
 
     if (viewError) throw viewError;
 
@@ -204,19 +205,27 @@ async function listProfiles(req, res) {
 // ============================================
 async function getProfileById(req, res, id) {
   try {
-    const profile = await getById('profiles', id);
-    
-    if (!profile) {
-      return res.status(404).json({ error: 'Profile not found' });
+    // Use supabase directly
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('profile_id', parseInt(id))
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ error: 'Profile not found' });
+      }
+      throw error;
     }
 
     // Get usage count
-    const { count, error } = await supabase
+    const { count, error: countError } = await supabase
       .from('explanation_views')
       .select('view_id', { count: 'exact', head: true })
-      .eq('profile_id', id);
+      .eq('profile_id', parseInt(id));
 
-    if (error) throw error;
+    if (countError) throw countError;
 
     return res.json({
       success: true,
@@ -285,19 +294,22 @@ async function getDefaultProfile(req, res) {
       .eq('status', 'active')
       .single();
 
-    if (error) throw error;
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // Fallback: get first active profile
+        const { data: fallback, error: fallbackError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('status', 'active')
+          .limit(1)
+          .single();
 
-    if (!profile) {
-      // Fallback: get first active profile
-      const { data: fallback, error: fallbackError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('status', 'active')
-        .limit(1)
-        .single();
-
-      if (fallbackError) throw fallbackError;
-      return res.json({ success: true, profile: fallback });
+        if (fallbackError) {
+          return res.status(404).json({ error: 'No active profiles found' });
+        }
+        return res.json({ success: true, profile: fallback });
+      }
+      throw error;
     }
 
     return res.json({ success: true, profile });
@@ -460,9 +472,17 @@ async function updateProfile(req, res) {
 
   try {
     // Get existing profile
-    const profile = await getById('profiles', id);
-    if (!profile) {
-      return res.status(404).json({ error: 'Profile not found' });
+    const { data: profile, error: getError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('profile_id', parseInt(id))
+      .single();
+
+    if (getError) {
+      if (getError.code === 'PGRST116') {
+        return res.status(404).json({ error: 'Profile not found' });
+      }
+      throw getError;
     }
 
     // Check if system profile
@@ -520,7 +540,7 @@ async function updateProfile(req, res) {
     if (rules !== undefined) updateData.rules = rules || null;
     if (status) updateData.status = status;
 
-    // Don't allow changing is_system or is_default flags
+    // Don't allow deactivating default profile
     if (status === 'inactive' && profile.is_default) {
       return res.status(400).json({ 
         error: 'Cannot deactivate the default profile' 
@@ -560,9 +580,17 @@ async function setDefaultProfile(req, res) {
 
   try {
     // Check if profile exists and is active
-    const profile = await getById('profiles', id);
-    if (!profile) {
-      return res.status(404).json({ error: 'Profile not found' });
+    const { data: profile, error: getError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('profile_id', parseInt(id))
+      .single();
+
+    if (getError) {
+      if (getError.code === 'PGRST116') {
+        return res.status(404).json({ error: 'Profile not found' });
+      }
+      throw getError;
     }
 
     if (profile.status !== 'active') {
@@ -611,9 +639,17 @@ async function deleteProfile(req, res) {
 
   try {
     // Get profile
-    const profile = await getById('profiles', id);
-    if (!profile) {
-      return res.status(404).json({ error: 'Profile not found' });
+    const { data: profile, error: getError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('profile_id', parseInt(id))
+      .single();
+
+    if (getError) {
+      if (getError.code === 'PGRST116') {
+        return res.status(404).json({ error: 'Profile not found' });
+      }
+      throw getError;
     }
 
     // Check if system profile
@@ -649,10 +685,12 @@ async function deleteProfile(req, res) {
 
     // If force, delete associated explanations first
     if (force && count > 0) {
-      await supabase
+      const { error: deleteError } = await supabase
         .from('explanation_views')
         .delete()
         .eq('profile_id', parseInt(id));
+
+      if (deleteError) throw deleteError;
     }
 
     // Delete profile
