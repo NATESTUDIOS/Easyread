@@ -1,20 +1,19 @@
 // api/explanation.js
+// EasyRead Explanation Management - Vercel API Gateway
+// All AI processing is delegated to Render's processor service
 
-import { 
+import {
   supabase,
-  getAll, 
-  getById, 
-  getByColumn, 
-  insert, 
-  update, 
+  getAll,
+  getById,
+  getByColumn,
+  insert,
+  update,
   deleteRecord,
   exists,
   count,
   findSimilarExplanations
 } from '../utils/supabase.js';
-
-import openRouter from '../utils/openrouter.js';
-import crypto from 'crypto';
 
 // ============================================
 // CONSTANTS
@@ -23,6 +22,10 @@ const MAX_CATEGORIES_PER_ARTICLE = 5;
 const SIMILARITY_THRESHOLD = 0.7;
 const MAX_DEEP_DIVES_PER_ARTICLE = 10;
 const CACHE_TTL_DAYS = 30;
+
+// Render Processor URL
+const PROCESSOR_URL = process.env.PROCESSOR_URL || 'https://my-fcm-server.onrender.com/api/processor';
+const ADMIN_API_KEY = process.env.ADMIN_API_KEY;
 
 // ============================================
 // MAIN HANDLER
@@ -72,10 +75,10 @@ export default async function handler(req, res) {
 // GET HANDLER
 // ============================================
 async function handleGet(req, res, action) {
-  const { 
-    view_id, 
-    article_id, 
-    profile_id, 
+  const {
+    view_id,
+    article_id,
+    profile_id,
     user_id,
     deep_dive_id,
     search,
@@ -83,42 +86,52 @@ async function handleGet(req, res, action) {
     page = 1
   } = req.query;
 
+  // Get explanation by view ID
   if (action === 'get' && view_id) {
     return await getExplanationById(req, res, view_id, user_id);
   }
 
+  // Get explanation by article and profile
   if (action === 'get-by-article' && article_id && profile_id) {
     return await getExplanationByArticleProfile(req, res, article_id, profile_id);
   }
 
+  // List explanations for an article
   if (action === 'list' && article_id) {
     return await listExplanations(req, res, article_id);
   }
 
+  // Get deep dive by ID
   if (action === 'deep-dive' && deep_dive_id) {
     return await getDeepDiveById(req, res, deep_dive_id);
   }
 
+  // List deep dives for an explanation
   if (action === 'deep-dives' && view_id) {
     return await listDeepDives(req, res, view_id);
   }
 
+  // Search explanations
   if (action === 'search' && search) {
     return await searchExplanations(req, res, search);
   }
 
+  // Get similar explanations (vector search)
   if (action === 'similar' && view_id) {
     return await getSimilarExplanations(req, res, view_id);
   }
 
+  // Get user's explanation history
   if (action === 'history' && user_id) {
     return await getExplanationHistory(req, res, user_id);
   }
 
+  // Get explanation statistics
   if (action === 'stats') {
     return await getExplanationStats(req, res);
   }
 
+  // Check if explanation exists
   if (action === 'check' && article_id && profile_id) {
     return await checkExplanationExists(req, res, article_id, profile_id);
   }
@@ -132,14 +145,17 @@ async function handleGet(req, res, action) {
 async function handlePost(req, res, action) {
   const { user_id } = req.query;
 
+  // Generate explanation - calls Render
   if (action === 'generate') {
     return await generateExplanation(req, res, user_id);
   }
 
+  // Generate deep dive - calls Render
   if (action === 'deep-dive') {
     return await generateDeepDive(req, res, user_id);
   }
 
+  // Batch generate explanations - calls Render
   if (action === 'batch-generate') {
     const adminKey = req.headers['x-admin-key'];
     if (adminKey !== process.env.ADMIN_API_KEY) {
@@ -148,10 +164,12 @@ async function handlePost(req, res, action) {
     return await batchGenerateExplanations(req, res);
   }
 
+  // Regenerate explanation - calls Render
   if (action === 'regenerate') {
     return await regenerateExplanation(req, res, user_id);
   }
 
+  // Create explanation manually (admin only - direct DB)
   if (action === 'create') {
     const adminKey = req.headers['x-admin-key'];
     if (adminKey !== process.env.ADMIN_API_KEY) {
@@ -160,6 +178,7 @@ async function handlePost(req, res, action) {
     return await createExplanationManually(req, res);
   }
 
+  // Search by embedding (direct DB)
   if (action === 'search-by-embedding') {
     return await searchByEmbedding(req, res);
   }
@@ -173,6 +192,7 @@ async function handlePost(req, res, action) {
 async function handlePut(req, res, action) {
   const { user_id } = req.query;
 
+  // Update explanation (admin only - direct DB)
   if (action === 'update') {
     const adminKey = req.headers['x-admin-key'];
     if (adminKey !== process.env.ADMIN_API_KEY) {
@@ -181,6 +201,7 @@ async function handlePut(req, res, action) {
     return await updateExplanation(req, res);
   }
 
+  // Update deep dive (admin only - direct DB)
   if (action === 'update-deep-dive') {
     const adminKey = req.headers['x-admin-key'];
     if (adminKey !== process.env.ADMIN_API_KEY) {
@@ -189,6 +210,7 @@ async function handlePut(req, res, action) {
     return await updateDeepDive(req, res);
   }
 
+  // Increment view count (direct DB)
   if (action === 'view') {
     return await incrementViewCount(req, res);
   }
@@ -202,6 +224,7 @@ async function handlePut(req, res, action) {
 async function handleDelete(req, res, action) {
   const adminKey = req.headers['x-admin-key'];
 
+  // Delete explanation (admin only - direct DB)
   if (action === 'delete') {
     if (adminKey !== process.env.ADMIN_API_KEY) {
       return res.status(403).json({ error: 'Unauthorized' });
@@ -209,6 +232,7 @@ async function handleDelete(req, res, action) {
     return await deleteExplanation(req, res);
   }
 
+  // Delete deep dive (admin only - direct DB)
   if (action === 'delete-deep-dive') {
     if (adminKey !== process.env.ADMIN_API_KEY) {
       return res.status(403).json({ error: 'Unauthorized' });
@@ -216,6 +240,7 @@ async function handleDelete(req, res, action) {
     return await deleteDeepDive(req, res);
   }
 
+  // Clear explanation cache (admin only - direct DB)
   if (action === 'clear-cache') {
     if (adminKey !== process.env.ADMIN_API_KEY) {
       return res.status(403).json({ error: 'Unauthorized' });
@@ -231,7 +256,7 @@ async function handleDelete(req, res, action) {
 // ============================================
 
 // ============================================
-// 📖 GET EXPLANATION BY ID
+// 📖 GET EXPLANATION BY ID (Direct DB)
 // ============================================
 async function getExplanationById(req, res, view_id, user_id) {
   try {
@@ -240,15 +265,15 @@ async function getExplanationById(req, res, view_id, user_id) {
       .select(`
         *,
         articles:article_id (
-          canonical_title, 
-          slug, 
-          categories, 
+          canonical_title,
+          slug,
+          categories,
           source_domain,
           base_content,
           summary
         ),
         profiles:profile_id (
-          name, 
+          name,
           description,
           rules,
           created_at
@@ -309,7 +334,7 @@ async function getExplanationById(req, res, view_id, user_id) {
 }
 
 // ============================================
-// 📖 GET EXPLANATION BY ARTICLE & PROFILE
+// 📖 GET EXPLANATION BY ARTICLE & PROFILE (Direct DB)
 // ============================================
 async function getExplanationByArticleProfile(req, res, article_id, profile_id) {
   try {
@@ -318,13 +343,13 @@ async function getExplanationByArticleProfile(req, res, article_id, profile_id) 
       .select(`
         *,
         articles:article_id (
-          canonical_title, 
-          slug, 
+          canonical_title,
+          slug,
           categories,
           source_domain
         ),
         profiles:profile_id (
-          name, 
+          name,
           description,
           rules
         )
@@ -336,8 +361,8 @@ async function getExplanationByArticleProfile(req, res, article_id, profile_id) 
     if (error && error.code !== 'PGRST116') throw error;
 
     if (!view) {
-      return res.status(404).json({ 
-        error: 'Explanation not found for this article and profile' 
+      return res.status(404).json({
+        error: 'Explanation not found for this article and profile'
       });
     }
 
@@ -366,7 +391,7 @@ async function getExplanationByArticleProfile(req, res, article_id, profile_id) 
 }
 
 // ============================================
-// 📋 LIST EXPLANATIONS FOR ARTICLE
+// 📋 LIST EXPLANATIONS FOR ARTICLE (Direct DB)
 // ============================================
 async function listExplanations(req, res, article_id) {
   const { page = 1, limit = 20 } = req.query;
@@ -380,7 +405,7 @@ async function listExplanations(req, res, article_id) {
       .select(`
         *,
         profiles:profile_id (
-          name, 
+          name,
           description
         )
       `, { count: 'exact' })
@@ -408,12 +433,12 @@ async function listExplanations(req, res, article_id) {
 }
 
 // ============================================
-// 🚀 GENERATE EXPLANATION
+// 🚀 GENERATE EXPLANATION (Calls Render)
 // ============================================
 async function generateExplanation(req, res, user_id) {
-  const { 
-    article_id, 
-    profile_id, 
+  const {
+    article_id,
+    profile_id,
     force = false
   } = req.body;
 
@@ -422,7 +447,7 @@ async function generateExplanation(req, res, user_id) {
   }
 
   try {
-    // Check cache
+    // 1. Check cache (if not forcing regenerate)
     if (!force) {
       const { data: existing, error: checkError } = await supabase
         .from('explanation_views')
@@ -434,6 +459,7 @@ async function generateExplanation(req, res, user_id) {
       if (checkError && checkError.code !== 'PGRST116') throw checkError;
 
       if (existing) {
+        // Increment view count
         await update('explanation_views', existing.view_id, {
           view_count: (existing.view_count || 0) + 1
         });
@@ -447,25 +473,13 @@ async function generateExplanation(req, res, user_id) {
       }
     }
 
-    // Get article and profile
-    const article = await getById('articles', article_id);
-    const profile = await getById('profiles', profile_id);
-
-    if (!article) {
-      return res.status(404).json({ error: 'Article not found' });
-    }
-
-    if (!profile) {
-      return res.status(404).json({ error: 'Profile not found' });
-    }
-
-    // Check user credits
+    // 2. Check user credits (if authenticated)
     if (user_id) {
       const users = await getByColumn('users', 'user_id', user_id);
       if (users.length > 0) {
         const user = users[0];
         if (user.credits < 0.5) {
-          return res.status(402).json({ 
+          return res.status(402).json({
             error: 'Insufficient credits',
             required: 0.5,
             available: user.credits
@@ -474,81 +488,60 @@ async function generateExplanation(req, res, user_id) {
       }
     }
 
-    // Process content based on length
-    const wordCount = article.base_content?.split(/\s+/).length || 0;
-    let processedContent = article.base_content;
-    let processingNote = '';
-
-    if (wordCount > 10000 && wordCount <= 50000) {
-      processedContent = extractRelevantContent(article.base_content);
-      processingNote = 'Content was summarized from a longer article';
-    } else if (wordCount > 50000) {
-      processedContent = processChunks(article.base_content);
-      processingNote = 'Content was processed in chunks from a very long article';
-    }
-
-    // Build the prompt using the Explanation Engine prompt template
-    const prompt = buildExplanationPrompt(article, profile, processedContent);
-
-    // Call OpenRouter to generate explanation
-    const response = await openRouter.generateJSON(prompt, 'explanation', {
-      temperature: 0.7,
-      maxTokens: 4096
+    // 3. Call Render's processor API to generate explanation
+    const response = await fetch(`${PROCESSOR_URL}/generate-explanation`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-key': ADMIN_API_KEY
+      },
+      body: JSON.stringify({
+        article_id: parseInt(article_id),
+        profile_id: parseInt(profile_id),
+        user_id: user_id || null
+      }),
+      timeout: 120000 // 2 minutes timeout
     });
 
-    // Parse the response
-    const explanationData = response.parsed;
-
-    // Validate response structure
-    if (!explanationData || !explanationData.title || !explanationData.content) {
-      throw new Error('Invalid response from AI: Missing required fields');
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Processor returned ${response.status}`);
     }
 
-    // Convert content array to string if needed
-    let contentString = explanationData.content;
-    if (Array.isArray(contentString)) {
-      contentString = contentString
-        .map(section => `## ${section.heading}\n\n${section.body}`)
-        .join('\n\n');
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to generate explanation');
     }
 
-    // Generate embedding
-    const embeddingResult = await openRouter.generateEmbedding(contentString);
-
-    // Save explanation view
-    const view = await insert('explanation_views', {
-      article_id: parseInt(article_id),
-      profile_id: parseInt(profile_id),
-      title: explanationData.title,
-      content: contentString,
-      summary: explanationData.summary || '',
-      article_version: article.version || 1,
-      profile_version: 1,
-      embedding: embeddingResult.embedding,
-      view_count: 1,
-      rating_avg: 0,
-      rating_count: 0,
-      generated_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    });
-
-    // Deduct credits
-    if (user_id) {
+    // 4. Deduct credits if user (and not cached)
+    if (user_id && !data.cached) {
       await deductCredits(user_id, 0.5, 'explanation_generation', article_id);
     }
 
-    console.log(`✅ Explanation generated for article ${article_id} with profile ${profile_id}`);
+    // 5. Get the generated explanation from database
+    const { data: explanation, error: fetchError } = await supabase
+      .from('explanation_views')
+      .select('*')
+      .eq('article_id', article_id)
+      .eq('profile_id', profile_id)
+      .single();
 
-    res.status(201).json({
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      console.warn('Could not fetch generated explanation:', fetchError.message);
+    }
+
+    return res.json({
       success: true,
-      message: 'Explanation generated successfully',
-      processing_note: processingNote,
-      explanation: view
+      cached: data.cached || false,
+      explanation: explanation || data.explanation,
+      processing_note: data.processing_note || '',
+      message: data.message || 'Explanation generated successfully'
     });
 
   } catch (error) {
     console.error('Generate explanation error:', error);
-    res.status(500).json({ error: error.message || 'Failed to generate explanation' });
+    return res.status(500).json({ error: error.message || 'Failed to generate explanation' });
   }
 }
 
@@ -563,13 +556,13 @@ async function regenerateExplanation(req, res, user_id) {
   }
 
   try {
-    // Check credits
+    // Check credits for regeneration
     if (user_id) {
       const users = await getByColumn('users', 'user_id', user_id);
       if (users.length > 0) {
         const user = users[0];
         if (user.credits < 1) {
-          return res.status(402).json({ 
+          return res.status(402).json({
             error: 'Insufficient credits for regeneration',
             required: 1,
             available: user.credits
@@ -578,21 +571,22 @@ async function regenerateExplanation(req, res, user_id) {
       }
     }
 
-    // Delete existing
+    // Delete existing explanation
     await supabase
       .from('explanation_views')
       .delete()
       .eq('article_id', article_id)
       .eq('profile_id', profile_id);
 
-    // Generate new
+    // Call generate with force=true
     const result = await generateExplanation(
-      { body: { article_id, profile_id, force: true } }, 
-      res, 
+      { body: { article_id, profile_id, force: true } },
+      res,
       user_id
     );
 
     return result;
+
   } catch (error) {
     console.error('Regenerate explanation error:', error);
     res.status(500).json({ error: 'Failed to regenerate explanation' });
@@ -600,39 +594,24 @@ async function regenerateExplanation(req, res, user_id) {
 }
 
 // ============================================
-// 🐳 GENERATE DEEP DIVE
+// 🐳 GENERATE DEEP DIVE (Calls Render)
 // ============================================
 async function generateDeepDive(req, res, user_id) {
-  const { 
-    article_id, 
-    profile_id, 
+  const {
+    article_id,
+    profile_id,
     question,
     parent_section = 'General'
   } = req.body;
 
   if (!article_id || !profile_id || !question) {
-    return res.status(400).json({ 
-      error: 'article_id, profile_id, and question required' 
+    return res.status(400).json({
+      error: 'article_id, profile_id, and question required'
     });
   }
 
   try {
-    // Check credits
-    if (user_id) {
-      const users = await getByColumn('users', 'user_id', user_id);
-      if (users.length > 0) {
-        const user = users[0];
-        if (user.credits < 0.5) {
-          return res.status(402).json({ 
-            error: 'Insufficient credits',
-            required: 0.5,
-            available: user.credits
-          });
-        }
-      }
-    }
-
-    // Check cache
+    // 1. Check cache
     const { data: existing, error: checkError } = await supabase
       .from('deep_dives')
       .select('*')
@@ -652,7 +631,7 @@ async function generateDeepDive(req, res, user_id) {
       });
     }
 
-    // Check max deep dives
+    // 2. Check max deep dives per article (10 max)
     const { count: deepDiveCount, error: countError } = await supabase
       .from('deep_dives')
       .select('*', { count: 'exact', head: true })
@@ -660,71 +639,93 @@ async function generateDeepDive(req, res, user_id) {
 
     if (countError) throw countError;
 
-    if (deepDiveCount >= MAX_DEEP_DIVES_PER_ARTICLE) {
+    if (deepDiveCount >= 10) {
       return res.status(429).json({
-        error: `Maximum deep dives (${MAX_DEEP_DIVES_PER_ARTICLE}) reached for this article`,
-        max: MAX_DEEP_DIVES_PER_ARTICLE
+        error: `Maximum deep dives (10) reached for this article`
       });
     }
 
-    // Get article and explanation
-    const article = await getById('articles', article_id);
-    const { data: explanation, error: expError } = await supabase
-      .from('explanation_views')
-      .select('*')
-      .eq('article_id', article_id)
-      .eq('profile_id', profile_id)
-      .single();
-
-    if (expError && expError.code !== 'PGRST116') throw expError;
-
-    if (!article) {
-      return res.status(404).json({ error: 'Article not found' });
+    // 3. Check user credits
+    if (user_id) {
+      const users = await getByColumn('users', 'user_id', user_id);
+      if (users.length > 0) {
+        const user = users[0];
+        if (user.credits < 0.5) {
+          return res.status(402).json({
+            error: 'Insufficient credits',
+            required: 0.5,
+            available: user.credits
+          });
+        }
+      }
     }
 
-    // Build deep dive prompt
-    const prompt = buildDeepDivePrompt(article, explanation || null, question, parent_section);
-
-    // Generate deep dive with OpenRouter
-    const response = await openRouter.generate(prompt, 'deep_dive', {
-      temperature: 0.5,
-      maxTokens: 2048
+    // 4. Call Render's processor API for deep dive
+    const response = await fetch(`${PROCESSOR_URL}/generate-deep-dive`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-key': ADMIN_API_KEY
+      },
+      body: JSON.stringify({
+        article_id: parseInt(article_id),
+        profile_id: parseInt(profile_id),
+        question: question,
+        parent_section: parent_section,
+        user_id: user_id || null
+      }),
+      timeout: 60000 // 1 minute timeout
     });
 
-    // Save deep dive
-    const deepDiveRecord = await insert('deep_dives', {
-      article_id: parseInt(article_id),
-      profile_id: parseInt(profile_id),
-      parent_section: parent_section,
-      question: question,
-      answer: response.content,
-      created_at: new Date().toISOString()
-    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Processor returned ${response.status}`);
+    }
 
-    // Deduct credits
-    if (user_id) {
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to generate deep dive');
+    }
+
+    // 5. Deduct credits if user (and not cached)
+    if (user_id && !data.cached) {
       await deductCredits(user_id, 0.5, 'deep_dive', article_id);
     }
 
-    res.status(201).json({
+    // 6. Get the generated deep dive from database
+    const { data: deepDive, error: fetchError } = await supabase
+      .from('deep_dives')
+      .select('*')
+      .eq('article_id', article_id)
+      .eq('profile_id', profile_id)
+      .eq('question', question)
+      .single();
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      console.warn('Could not fetch generated deep dive:', fetchError.message);
+    }
+
+    return res.json({
       success: true,
-      message: 'Deep dive generated successfully',
-      deep_dive: deepDiveRecord
+      cached: data.cached || false,
+      deep_dive: deepDive || data.deep_dive,
+      message: data.message || 'Deep dive generated successfully'
     });
 
   } catch (error) {
     console.error('Generate deep dive error:', error);
-    res.status(500).json({ error: 'Failed to generate deep dive' });
+    return res.status(500).json({ error: error.message || 'Failed to generate deep dive' });
   }
 }
 
 // ============================================
-// 🐳 GET DEEP DIVE BY ID
+// 🐳 GET DEEP DIVE BY ID (Direct DB)
 // ============================================
 async function getDeepDiveById(req, res, deep_dive_id) {
   try {
     const deepDive = await getById('deep_dives', deep_dive_id);
-    
+
     if (!deepDive) {
       return res.status(404).json({ error: 'Deep dive not found' });
     }
@@ -754,7 +755,7 @@ async function getDeepDiveById(req, res, deep_dive_id) {
 }
 
 // ============================================
-// 📋 LIST DEEP DIVES
+// 📋 LIST DEEP DIVES (Direct DB)
 // ============================================
 async function listDeepDives(req, res, view_id) {
   const { page = 1, limit = 20 } = req.query;
@@ -795,11 +796,11 @@ async function listDeepDives(req, res, view_id) {
 }
 
 // ============================================
-// 🔍 SEARCH EXPLANATIONS
+// 🔍 SEARCH EXPLANATIONS (Direct DB)
 // ============================================
 async function searchExplanations(req, res, search) {
-  const { 
-    page = 1, 
+  const {
+    page = 1,
     limit = 20,
     profile_id,
     category,
@@ -875,7 +876,7 @@ async function searchExplanations(req, res, search) {
 }
 
 // ============================================
-// 🔍 GET SIMILAR EXPLANATIONS
+// 🔍 GET SIMILAR EXPLANATIONS (Direct DB)
 // ============================================
 async function getSimilarExplanations(req, res, view_id) {
   const { limit = 5, threshold = SIMILARITY_THRESHOLD } = req.query;
@@ -887,14 +888,14 @@ async function getSimilarExplanations(req, res, view_id) {
     }
 
     if (!view.embedding) {
-      return res.status(400).json({ 
-        error: 'Explanation has no embedding. Process it first.' 
+      return res.status(400).json({
+        error: 'Explanation has no embedding. Process it first.'
       });
     }
 
     const similar = await findSimilarExplanations(
-      view.embedding, 
-      parseFloat(threshold), 
+      view.embedding,
+      parseFloat(threshold),
       parseInt(limit) + 1
     );
 
@@ -930,7 +931,7 @@ async function getSimilarExplanations(req, res, view_id) {
 }
 
 // ============================================
-// 🔍 SEARCH BY EMBEDDING
+// 🔍 SEARCH BY EMBEDDING (Direct DB)
 // ============================================
 async function searchByEmbedding(req, res) {
   const { embedding, threshold = SIMILARITY_THRESHOLD, limit = 10 } = req.body;
@@ -941,8 +942,8 @@ async function searchByEmbedding(req, res) {
 
   try {
     const results = await findSimilarExplanations(
-      embedding, 
-      parseFloat(threshold), 
+      embedding,
+      parseFloat(threshold),
       parseInt(limit)
     );
 
@@ -975,7 +976,7 @@ async function searchByEmbedding(req, res) {
 }
 
 // ============================================
-// 📊 GET EXPLANATION STATS
+// 📊 GET EXPLANATION STATS (Direct DB)
 // ============================================
 async function getExplanationStats(req, res) {
   try {
@@ -1069,7 +1070,7 @@ async function getExplanationStats(req, res) {
 }
 
 // ============================================
-// 📖 GET EXPLANATION HISTORY
+// 📖 GET EXPLANATION HISTORY (Direct DB)
 // ============================================
 async function getExplanationHistory(req, res, user_id) {
   const { limit = 50 } = req.query;
@@ -1130,7 +1131,7 @@ async function getExplanationHistory(req, res, user_id) {
 }
 
 // ============================================
-// ✅ CHECK EXPLANATION EXISTS
+// ✅ CHECK EXPLANATION EXISTS (Direct DB)
 // ============================================
 async function checkExplanationExists(req, res, article_id, profile_id) {
   try {
@@ -1155,21 +1156,21 @@ async function checkExplanationExists(req, res, article_id, profile_id) {
 }
 
 // ============================================
-// ➕ CREATE EXPLANATION MANUALLY
+// ➕ CREATE EXPLANATION MANUALLY (Admin only - Direct DB)
 // ============================================
 async function createExplanationManually(req, res) {
-  const { 
-    article_id, 
-    profile_id, 
-    title, 
-    content, 
+  const {
+    article_id,
+    profile_id,
+    title,
+    content,
     summary,
     embedding = null
   } = req.body;
 
   if (!article_id || !profile_id || !title || !content) {
-    return res.status(400).json({ 
-      error: 'article_id, profile_id, title, and content required' 
+    return res.status(400).json({
+      error: 'article_id, profile_id, title, and content required'
     });
   }
 
@@ -1201,12 +1202,6 @@ async function createExplanationManually(req, res) {
       });
     }
 
-    let finalEmbedding = embedding;
-    if (!finalEmbedding) {
-      const embeddingResult = await openRouter.generateEmbedding(content);
-      finalEmbedding = embeddingResult.embedding;
-    }
-
     const view = await insert('explanation_views', {
       article_id: parseInt(article_id),
       profile_id: parseInt(profile_id),
@@ -1215,7 +1210,7 @@ async function createExplanationManually(req, res) {
       summary: summary || null,
       article_version: article.version || 1,
       profile_version: 1,
-      embedding: finalEmbedding,
+      embedding: embedding || null,
       view_count: 0,
       rating_avg: 0,
       rating_count: 0,
@@ -1234,7 +1229,7 @@ async function createExplanationManually(req, res) {
 }
 
 // ============================================
-// ✏️ UPDATE EXPLANATION
+// ✏️ UPDATE EXPLANATION (Admin only - Direct DB)
 // ============================================
 async function updateExplanation(req, res) {
   const { view_id, title, content, summary } = req.body;
@@ -1249,11 +1244,7 @@ async function updateExplanation(req, res) {
     };
 
     if (title) updateData.title = title;
-    if (content) {
-      updateData.content = content;
-      const embeddingResult = await openRouter.generateEmbedding(content);
-      updateData.embedding = embeddingResult.embedding;
-    }
+    if (content) updateData.content = content;
     if (summary !== undefined) updateData.summary = summary;
 
     const updated = await update('explanation_views', view_id, updateData);
@@ -1274,7 +1265,7 @@ async function updateExplanation(req, res) {
 }
 
 // ============================================
-// ✏️ UPDATE DEEP DIVE
+// ✏️ UPDATE DEEP DIVE (Admin only - Direct DB)
 // ============================================
 async function updateDeepDive(req, res) {
   const { deep_dive_id, answer, question } = req.body;
@@ -1309,7 +1300,7 @@ async function updateDeepDive(req, res) {
 }
 
 // ============================================
-// 🗑️ DELETE EXPLANATION
+// 🗑️ DELETE EXPLANATION (Admin only - Direct DB)
 // ============================================
 async function deleteExplanation(req, res) {
   const { view_id } = req.query;
@@ -1341,7 +1332,7 @@ async function deleteExplanation(req, res) {
 }
 
 // ============================================
-// 🗑️ DELETE DEEP DIVE
+// 🗑️ DELETE DEEP DIVE (Admin only - Direct DB)
 // ============================================
 async function deleteDeepDive(req, res) {
   const { deep_dive_id } = req.query;
@@ -1363,7 +1354,7 @@ async function deleteDeepDive(req, res) {
 }
 
 // ============================================
-// 🔄 CLEAR EXPLANATION CACHE
+// 🔄 CLEAR EXPLANATION CACHE (Admin only - Direct DB)
 // ============================================
 async function clearExplanationCache(req, res) {
   const { article_id } = req.query;
@@ -1389,7 +1380,7 @@ async function clearExplanationCache(req, res) {
           .eq('article_id', view.article_id)
           .eq('profile_id', view.profile_id);
       }
-      
+
       await deleteRecord('explanation_views', exp.view_id);
     }
 
@@ -1415,61 +1406,28 @@ async function batchGenerateExplanations(req, res) {
   }
 
   try {
-    const results = [];
-    const errors = [];
+    // Call Render's batch endpoint
+    const response = await fetch(`${PROCESSOR_URL}/generate-explanations-batch`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-key': ADMIN_API_KEY
+      },
+      body: JSON.stringify({
+        article_ids,
+        profile_ids
+      }),
+      timeout: 300000 // 5 minutes timeout
+    });
 
-    for (const article_id of article_ids) {
-      for (const profile_id of profile_ids) {
-        try {
-          const { data: existing, error: checkError } = await supabase
-            .from('explanation_views')
-            .select('view_id')
-            .eq('article_id', article_id)
-            .eq('profile_id', profile_id)
-            .single();
-
-          if (checkError && checkError.code !== 'PGRST116') throw checkError;
-
-          if (existing) {
-            results.push({
-              article_id,
-              profile_id,
-              status: 'skipped',
-              message: 'Already exists'
-            });
-            continue;
-          }
-
-          const reqObj = { body: { article_id, profile_id, force: false } };
-          const resObj = {
-            json: (data) => data,
-            status: (code) => ({ json: (data) => ({ ...data, status: code }) })
-          };
-
-          const result = await generateExplanation(reqObj, resObj, null);
-          
-          results.push({
-            article_id,
-            profile_id,
-            status: 'success',
-            view_id: result?.explanation?.view_id
-          });
-        } catch (error) {
-          errors.push({
-            article_id,
-            profile_id,
-            error: error.message
-          });
-        }
-      }
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Processor returned ${response.status}`);
     }
 
-    res.json({
-      success: true,
-      message: `Batch generation completed: ${results.length} successful, ${errors.length} failed`,
-      results,
-      errors
-    });
+    const data = await response.json();
+    res.json(data);
+
   } catch (error) {
     console.error('Batch generate explanations error:', error);
     res.status(500).json({ error: 'Failed to batch generate explanations' });
@@ -1477,7 +1435,7 @@ async function batchGenerateExplanations(req, res) {
 }
 
 // ============================================
-// 📈 INCREMENT VIEW COUNT
+// 📈 INCREMENT VIEW COUNT (Direct DB)
 // ============================================
 async function incrementViewCount(req, res) {
   const { view_id } = req.body;
@@ -1516,502 +1474,6 @@ function calculateReadingTime(content, wordsPerMinute = 200) {
   if (!content) return 0;
   const words = content.split(/\s+/).length;
   return Math.max(1, Math.ceil(words / wordsPerMinute));
-}
-
-// Extract relevant content from long articles
-function extractRelevantContent(content) {
-  const words = content.split(/\s+/);
-  if (words.length <= 10000) return content;
-  
-  const firstPart = words.slice(0, 5000).join(' ');
-  const lastPart = words.slice(-2000).join(' ');
-  return `${firstPart}\n\n...\n\n${lastPart}`;
-}
-
-// Process chunks for extremely large articles
-function processChunks(content) {
-  const words = content.split(/\s+/);
-  if (words.length <= 50000) return content;
-  
-  const firstPart = words.slice(0, 10000).join(' ');
-  const lastPart = words.slice(-5000).join(' ');
-  return `${firstPart}\n\n... [Content truncated for processing] ...\n\n${lastPart}`;
-}
-
-// ============================================
-// PROMPT BUILDERS
-// ============================================
-
-function buildExplanationPrompt(article, profile, processedContent) {
-  const sourceInfo = [
-    article.source_url ? `URL: ${article.source_url}` : '',
-    article.source_domain ? `Domain: ${article.source_domain}` : '',
-    article.source_published_at ? `Published: ${article.source_published_at}` : ''
-  ].filter(Boolean).join('\n');
-
-  return `You are the EasyRead Explanation Engine.
-
-Your job is to transform a factual, profile-agnostic Base Article into a clear, memorable Explanation View using the user's selected Explanation Profile.
-
-Your goal is NOT to rewrite the article word-for-word.
-
-Your goal is to make the underlying knowledge easier for this particular user to understand and remember.
-
-==================================================
-CORE PRINCIPLE
-==================================================
-
-EXPLAIN THE SAME KNOWLEDGE THROUGH A DIFFERENT MENTAL LENS.
-
-The Base Article contains the facts.
-
-The Explanation Profile determines how those facts should be taught.
-
-The profile may influence:
-- Analogies
-- Examples
-- Comparisons
-- Mental models
-- Storytelling
-- Choice of familiar situations
-- Order of explanation where appropriate
-- Tone and framing
-
-The profile MUST NOT:
-- Change facts
-- Invent facts
-- Remove important information merely to make the explanation easier
-- Present an analogy as literal fact
-- Force an analogy where it does not improve understanding
-- Distort technical terminology
-- Replace necessary technical explanations with oversimplified analogies
-
-ACCURACY ALWAYS HAS PRIORITY OVER PERSONALIZATION.
-
-If the profile does not provide a useful analogy for a concept, explain that concept directly.
-
-==================================================
-THE EASYREAD STANDARD
-==================================================
-
-Every explanation must pass this test:
-
-"Would this make sense to someone reading it on their phone while half-paying attention on a bus?"
-
-If the answer is no, rewrite it.
-
-The explanation should feel:
-
-- Human
-- Warm
-- Clear
-- Conversational
-- Intuitive
-- Structured
-- Memorable
-- Mobile-friendly
-- Easy to scan
-- Technically responsible
-
-Avoid unnecessary academic language.
-
-Do not make the explanation childish simply because it is easy to understand.
-
-EasyRead means:
-
-SIMPLE LANGUAGE ≠ SHALLOW THINKING.
-
-Preserve the depth of the underlying subject while making the path to understanding easier.
-
-==================================================
-INPUTS
-==================================================
-
-BASE ARTICLE
-
-Title:
-${article.canonical_title}
-
-Canonical Topic:
-${article.canonical_title || 'General'}
-
-Content:
-${processedContent.substring(0, 8000)}
-
-Summary:
-${article.summary || 'No summary provided'}
-
-Categories:
-${article.categories?.join(', ') || 'General'}
-
-Source:
-${sourceInfo || 'No source information available'}
-
-
-EXPLANATION PROFILE
-
-Name:
-${profile.name}
-
-Description:
-${profile.description}
-
-Rules:
-${profile.rules || 'No specific rules'}
-
-Profile Version:
-${profile.profile_version || 1}
-
-==================================================
-STEP 1 — UNDERSTAND BEFORE WRITING
-==================================================
-
-Before generating the explanation, internally determine:
-
-1. What is the main subject?
-2. What is the central idea?
-3. What are the most important concepts?
-4. What concepts depend on other concepts?
-5. What would a beginner most likely misunderstand?
-6. Which concepts are abstract?
-7. Which concepts can benefit from the selected profile?
-8. Which concepts should simply be explained directly?
-9. What must NOT be omitted for the explanation to remain accurate?
-
-Do not expose this internal analysis in the final response.
-
-==================================================
-STEP 2 — BUILD A MENTAL MODEL
-==================================================
-
-Construct the simplest accurate mental model of the subject.
-
-Identify:
-
-- The thing being explained
-- Its purpose
-- Its major components
-- How the components relate
-- What causes what
-- What happens before and after
-- Why it matters
-- Important exceptions or limitations
-
-Use this mental model as the backbone of the explanation.
-
-==================================================
-STEP 3 — APPLY THE EXPLANATION PROFILE
-==================================================
-
-Use the Explanation Profile as a teaching lens.
-
-For this profile (${profile.name}), use relevant concepts from:
-
-${profile.description}
-
-However:
-
-DO NOT force analogies into every paragraph.
-
-Use them only when they make the underlying concept easier to understand.
-
-Bad:
-"Inflation is like a ${profile.name} concept because..."
-
-when the analogy provides no meaningful understanding.
-
-Good:
-Use ${profile.name} concepts to explain ranking, competition, or relative performance when that comparison genuinely clarifies the concept.
-
-==================================================
-ANALOGY SAFETY RULE
-==================================================
-
-Whenever an analogy is used, ensure that the reader can distinguish:
-
-REAL CONCEPT
-from
-EXPLANATORY ANALOGY.
-
-If there is a risk of confusion, explicitly signal the analogy with phrases such as:
-
-"Think of it like..."
-"Imagine..."
-"A useful way to picture this is..."
-"This is similar to..."
-
-Never allow an analogy to become a substitute for the actual definition.
-
-==================================================
-STEP 4 — PRESERVE THE KNOWLEDGE
-==================================================
-
-The Base Article is the source of truth.
-
-Do not introduce factual claims that are not supported by the Base Article unless they are necessary for basic clarification and are highly reliable.
-
-Do not fabricate:
-
-- Statistics
-- Dates
-- Names
-- Events
-- Definitions
-- Examples presented as facts
-- Causes
-- Relationships
-- Technical details
-
-If the Base Article does not contain enough information to confidently explain something, do not invent it.
-
-Instead, explain only what can be supported.
-
-Use wording such as:
-
-"The source explains..."
-"The article describes..."
-"According to the source..."
-
-when attribution is appropriate.
-
-==================================================
-STEP 5 — CREATE THE EXPLANATION STRUCTURE
-==================================================
-
-Create an explanation that naturally progresses from simple to complex.
-
-Prefer this general progression:
-
-1. What is it?
-2. Why does it matter?
-3. How does it work?
-4. What are its important parts?
-5. How do those parts connect?
-6. What does it look like in real life?
-7. What commonly causes confusion?
-8. What should the reader remember?
-
-Do not mechanically use this structure if the subject requires a different order.
-
-The structure should serve understanding.
-
-==================================================
-TITLE
-==================================================
-
-Generate a title that:
-
-- Creates curiosity
-- Is clear
-- Is not clickbait
-- Does not exaggerate
-- Does not overwhelm
-- Reflects the actual subject
-
-The title should make the reader want to understand the concept.
-
-==================================================
-CONTENT
-==================================================
-
-Write the explanation using short, readable sections.
-
-Each section should have a useful heading.
-
-Avoid:
-
-- Giant paragraphs
-- Unnecessary introductions
-- Repetitive explanations
-- Excessive jargon
-- Empty motivational language
-- Artificially clever analogies
-- Filler
-
-When a technical term is necessary:
-
-1. Give the term.
-2. Explain it simply.
-3. Connect it to the bigger idea.
-
-Example:
-
-"Liquidity sounds technical, but the idea is simple: how easily something can be turned into cash without losing much of its value."
-
-Then continue with the deeper explanation.
-
-==================================================
-EXAMPLES
-==================================================
-
-Use examples strategically.
-
-Examples should make an abstract idea concrete.
-
-Prefer:
-
-- Everyday situations
-- Simple scenarios
-- Profile-related examples
-- Small numerical examples where useful
-- Cause-and-effect scenarios
-
-Do not add examples merely to increase length.
-
-Every example must help answer:
-
-"Why should I care?"
-
-or
-
-"How does this actually work?"
-
-==================================================
-TECHNICAL DEPTH
-==================================================
-
-Do not oversimplify a subject to the point of becoming inaccurate.
-
-If the subject is technical:
-
-Start with intuition.
-
-Then introduce the formal concept.
-
-Then explain the relationship between the parts.
-
-Then provide the deeper detail.
-
-Use the pattern:
-
-INTUITION
-↓
-SIMPLE EXPLANATION
-↓
-FORMAL CONCEPT
-↓
-EXAMPLE
-↓
-DEEPER UNDERSTANDING
-
-==================================================
-"SO BASICALLY..." SUMMARY
-==================================================
-
-End with a concise summary that ties everything together.
-
-The summary should answer:
-
-"If I remember only the main idea, what should I remember?"
-
-It should feel like the moment where the entire explanation clicks.
-
-Do not simply repeat the introduction.
-
-==================================================
-QUALITY CHECK
-==================================================
-
-Before returning the answer, silently evaluate it against these questions:
-
-1. Is every important fact preserved?
-2. Did the explanation change the meaning of anything?
-3. Did I accidentally invent information?
-4. Did I force the Explanation Profile into places where it does not help?
-5. Are analogies clearly distinguishable from facts?
-6. Would a beginner understand the explanation?
-7. Is the explanation still technically responsible?
-8. Does each section have a purpose?
-9. Is unnecessary jargon removed or explained?
-10. Does the explanation work well on a phone?
-11. Does the explanation actually feel personalized to the selected profile?
-12. Is the summary genuinely useful?
-13. Is anything unnecessarily repetitive?
-14. Could any paragraph be made clearer without losing important information?
-
-If any answer is unsatisfactory, revise before returning the result.
-
-==================================================
-OUTPUT FORMAT
-==================================================
-
-Return ONLY valid JSON.
-
-{
-  "title": "Hook that makes you curious instead of overwhelmed",
-  "content": [
-    {
-      "heading": "What is [topic]?",
-      "body": "Clear explanation..."
-    },
-    {
-      "heading": "Why does [topic] matter?",
-      "body": "Explanation of importance..."
-    },
-    {
-      "heading": "How does [topic] work?",
-      "body": "Detailed breakdown..."
-    }
-  ],
-  "summary": "The 'so basically...' moment that ties it all together."
-}
-
-Do not include:
-
-- Markdown fences
-- Commentary
-- Analysis
-- Internal reasoning
-- Notes about the prompt
-- Information outside the requested JSON structure
-
-==================================================
-FINAL PRINCIPLE
-==================================================
-
-Do not make the reader feel like they are reading an AI-generated explanation.
-
-Make them feel like someone finally explained the subject in a way that makes sense to them.
-
-The objective is not:
-
-"Make this article simpler."
-
-The objective is:
-
-"Make this knowledge click."`;
-}
-
-// Build deep dive prompt
-function buildDeepDivePrompt(article, explanation, question, parentSection) {
-  return `You are the EasyRead Deep Dive Engine.
-
-Your job is to extend an existing Explanation View by answering a specific user question in greater depth.
-
-The user has already read this explanation:
-
-Article: ${article.canonical_title}
-${explanation ? `Existing Explanation: ${explanation.title}` : 'No existing explanation found'}
-
-Parent Section: ${parentSection}
-
-User Question: ${question}
-
-Provide a thorough, extended answer that:
-
-1. Directly addresses the question
-2. Goes deeper than the main explanation
-3. Uses more examples and analogies
-4. Maintains the same style and tone as the explanation
-5. Is clear and easy to understand
-
-Rules:
-- Only use information from the source article
-- Never invent information
-- Use "source says" instead of "AI says" when appropriate
-- Keep it conversational and warm
-
-Return the answer as formatted markdown.`;
 }
 
 // Deduct credits helper
