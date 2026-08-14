@@ -454,7 +454,7 @@ async function generateExplanation(req, res, user_id) {
         .select('*')
         .eq('article_id', article_id)
         .eq('profile_id', profile_id)
-        .single();
+        .maybeSingle();
 
       if (checkError && checkError.code !== 'PGRST116') throw checkError;
 
@@ -519,22 +519,30 @@ async function generateExplanation(req, res, user_id) {
       await deductCredits(user_id, 0.5, 'explanation_generation', article_id);
     }
 
-    // 5. Get the generated explanation from database
+    // 5. Try to get the generated explanation from database (maybeSingle)
     const { data: explanation, error: fetchError } = await supabase
       .from('explanation_views')
       .select('*')
       .eq('article_id', article_id)
       .eq('profile_id', profile_id)
-      .single();
+      .maybeSingle();
 
-    if (fetchError && fetchError.code !== 'PGRST116') {
-      console.warn('Could not fetch generated explanation:', fetchError.message);
+    // If explanation not found in DB yet, use what Render returned
+    if (fetchError || !explanation) {
+      console.log('ℹ️ Explanation not found in DB yet, using Render response');
+      return res.json({
+        success: true,
+        cached: data.cached || false,
+        explanation: data.explanation,
+        processing_note: data.processing_note || '',
+        message: data.message || 'Explanation generated successfully'
+      });
     }
 
     return res.json({
       success: true,
       cached: data.cached || false,
-      explanation: explanation || data.explanation,
+      explanation: explanation,
       processing_note: data.processing_note || '',
       message: data.message || 'Explanation generated successfully'
     });
@@ -544,7 +552,6 @@ async function generateExplanation(req, res, user_id) {
     return res.status(500).json({ error: error.message || 'Failed to generate explanation' });
   }
 }
-
 // ============================================
 // 🔄 REGENERATE EXPLANATION
 // ============================================
@@ -693,25 +700,25 @@ async function generateDeepDive(req, res, user_id) {
       await deductCredits(user_id, 0.5, 'deep_dive', article_id);
     }
 
-    // 6. Get the generated deep dive from database
-    const { data: deepDive, error: fetchError } = await supabase
-      .from('deep_dives')
-      .select('*')
-      .eq('article_id', article_id)
-      .eq('profile_id', profile_id)
-      .eq('question', question)
-      .single();
+// 6. Get the generated deep dive from database
+const { data: deepDive, error: fetchError } = await supabase
+  .from('deep_dives')
+  .select('*')
+  .eq('article_id', article_id)
+  .eq('profile_id', profile_id)
+  .eq('question', question)
+  .maybeSingle();  // ✅ This returns null if not found instead of throwing
 
-    if (fetchError && fetchError.code !== 'PGRST116') {
-      console.warn('Could not fetch generated deep dive:', fetchError.message);
-    }
-
-    return res.json({
-      success: true,
-      cached: data.cached || false,
-      deep_dive: deepDive || data.deep_dive,
-      message: data.message || 'Deep dive generated successfully'
-    });
+// If deep dive not found in DB yet, use what Render returned
+if (fetchError || !deepDive) {
+  console.log('ℹ️ Deep dive not found in DB yet, using Render response');
+  return res.json({
+    success: true,
+    cached: data.cached || false,
+    deep_dive: data.deep_dive,
+    message: data.message || 'Deep dive generated successfully'
+  });
+}
 
   } catch (error) {
     console.error('Generate deep dive error:', error);
