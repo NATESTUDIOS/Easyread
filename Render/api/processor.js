@@ -21,6 +21,7 @@ const router = Router();
 // ============================================
 
 const ADMIN_API_KEY = process.env.ADMIN_API_KEY;
+const DEFAULT_PROFILE_NAME = 'Everyday Life'; // Only auto-generate this profile
 
 // ============================================
 // LOGGING
@@ -90,6 +91,169 @@ router.post("/", async (req, res) => {
 });
 
 // ============================================
+// GENERATE EXPLANATION ON-DEMAND
+// ============================================
+
+router.post("/generate-explanation", async (req, res) => {
+  const apiKey = req.headers["x-admin-key"];
+
+  if (apiKey !== ADMIN_API_KEY) {
+    return res.status(401).json({
+      success: false,
+      error: "Unauthorized",
+      message: "Invalid or missing API key"
+    });
+  }
+
+  const { article_id, profile_id, profile_name } = req.body;
+
+  if (!article_id) {
+    return res.status(400).json({
+      success: false,
+      error: "article_id is required"
+    });
+  }
+
+  try {
+    // Get article
+    const { data: article, error: articleError } = await supabase
+      .from("articles")
+      .select("*")
+      .eq("article_id", article_id)
+      .single();
+
+    if (articleError) throw articleError;
+    if (!article) throw new Error(`Article ${article_id} not found`);
+
+    // Get profile(s) to generate
+    let profiles = [];
+    
+    if (profile_id) {
+      // Generate for specific profile
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("profile_id", profile_id)
+        .single();
+      
+      if (profileError) throw profileError;
+      if (profile) profiles = [profile];
+    } else if (profile_name) {
+      // Generate for profile by name
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("name", profile_name)
+        .single();
+      
+      if (profileError) throw profileError;
+      if (profile) profiles = [profile];
+    } else {
+      // Generate for ALL active profiles
+      const { data: allProfiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("status", "active");
+      
+      if (profilesError) throw profilesError;
+      profiles = allProfiles || [];
+    }
+
+    if (profiles.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: "No profiles found to generate explanations for"
+      });
+    }
+
+    // Prepare base article object for explanation generation
+    const baseArticle = {
+      title: article.canonical_title || article.source_title || "Untitled",
+      canonical_topic: article.canonical_title || article.source_title || "Untitled",
+      content: article.base_content,
+      summary: article.summary || "",
+      categories: article.categories || ["General"]
+    };
+
+    // Generate explanations for each profile
+    const generated = [];
+    const skipped = [];
+    const failed = [];
+
+    for (const profile of profiles) {
+      try {
+        const result = await generateExplanationView(article_id, profile, baseArticle);
+        
+        if (result === 'exists') {
+          skipped.push(profile.name);
+        } else if (result === 'generated') {
+          generated.push(profile.name);
+        }
+      } catch (error) {
+        console.error(`Failed to generate for ${profile.name}:`, error);
+        failed.push({ profile: profile.name, error: error.message });
+      }
+    }
+
+    return res.json({
+      success: true,
+      article_id,
+      generated,
+      skipped,
+      failed,
+      total_profiles: profiles.length
+    });
+
+  } catch (error) {
+    console.error("❌ Generate explanation error:", error);
+    return res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// ============================================
+// GET EXPLANATION (Check if exists)
+// ============================================
+
+router.get("/explanation/:articleId/:profileId", async (req, res) => {
+  const { articleId, profileId } = req.params;
+
+  try {
+    const { data: explanation, error } = await supabase
+      .from("explanation_views")
+      .select("*")
+      .eq("article_id", articleId)
+      .eq("profile_id", profileId)
+      .single();
+
+    if (error && error.code !== "PGRST116") throw error;
+
+    if (explanation) {
+      return res.json({
+        success: true,
+        cached: true,
+        explanation
+      });
+    }
+
+    return res.status(404).json({
+      success: false,
+      cached: false,
+      message: "Explanation not generated yet. Use POST /api/processor/generate-explanation to create it."
+    });
+
+  } catch (error) {
+    console.error("❌ Get explanation error:", error);
+    return res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// ============================================
 // PROCESS QUESTION (User Question)
 // ============================================
 
@@ -150,12 +314,12 @@ export async function processArticle(data) {
   log(`🔄 Processing article ${article_id}: "${title || 'Untitled'}"`, "process");
 
   try {
-    // ✅ STEP 0: Ensure we have content
+    // STEP 0: Ensure we have content
     let articleContent = content;
-    
+
     if (!articleContent) {
       log(`⚠️ No content provided, fetching from database for article ${article_id}`, "warn");
-      
+
       const { data: article, error: fetchError } = await supabase
         .from("articles")
         .select("base_content, canonical_title, source_url, source_domain, categories, source_published_at")
@@ -174,7 +338,7 @@ export async function processArticle(data) {
       log(`✅ Retrieved content from database (${articleContent.length} characters)`, "success");
     }
 
-    // ✅ Ensure content is a string
+    // Ensure content is a string
     if (typeof articleContent !== 'string') {
       articleContent = String(articleContent || '');
     }
@@ -188,7 +352,7 @@ export async function processArticle(data) {
 
     // STEP 2: Build Base Article
     const baseArticle = await generateBaseArticle(
-      articleContent,  // ✅ Pass the validated content
+      articleContent,
       title, 
       url, 
       domain, 
@@ -201,10 +365,10 @@ export async function processArticle(data) {
     }
     log(`✅ Base Article generated: "${baseArticle.title}"`, "success");
 
-    // ✅ STEP 2.5: Validate baseArticle content (safe now)
+    // STEP 2.5: Validate baseArticle content
     if (!baseArticle.content || baseArticle.content.length === 0) {
       log(`⚠️ Base Article content is empty, using original content`, "warn");
-      baseArticle.content = articleContent.substring(0, 30000);  // ✅ Safe now
+      baseArticle.content = articleContent.substring(0, 30000);
       baseArticle.title = baseArticle.title || title || "Untitled";
       baseArticle.summary = baseArticle.summary || "No summary available";
     }
@@ -234,22 +398,43 @@ export async function processArticle(data) {
 
     if (updateError) throw updateError;
 
-    // STEP 5: Generate Explanation Views
-    const { data: profiles, error: profileError } = await supabase
+    // STEP 5: Generate ONLY default profile explanation
+    log(`📝 Generating default explanation for profile: ${DEFAULT_PROFILE_NAME}`, "ai");
+
+    const { data: defaultProfile, error: profileError } = await supabase
       .from("profiles")
       .select("*")
-      .eq("status", "active");
+      .eq("name", DEFAULT_PROFILE_NAME)
+      .eq("status", "active")
+      .single();
 
-    if (profiles && profiles.length > 0) {
-      for (const profile of profiles) {
-        await generateExplanationView(article_id, profile, baseArticle);
+    if (profileError && profileError.code !== "PGRST116") {
+      log(`Profile fetch error: ${profileError.message}`, "warn");
+    }
+
+    if (defaultProfile) {
+      await generateExplanationView(article_id, defaultProfile, baseArticle);
+    } else {
+      // Fallback: Get first active profile
+      const { data: firstProfile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("status", "active")
+        .limit(1)
+        .single();
+      
+      if (firstProfile) {
+        await generateExplanationView(article_id, firstProfile, baseArticle);
       }
     }
 
+    log(`✅ Article processed with default explanation only`, "success");
+
     return {
       success: true,
-      message: "Article processed successfully",
-      article: updated
+      message: "Article processed successfully (default explanation generated)",
+      article: updated,
+      note: "Other profile explanations can be generated on-demand via POST /api/processor/generate-explanation"
     };
 
   } catch (error) {
@@ -271,10 +456,7 @@ export async function processArticle(data) {
 // GENERATE BASE ARTICLE (2.0 Prompt)
 // ============================================
 
-// api/processor.js
-
 async function generateBaseArticle(content, title, url, domain, existingCategories, publishedAt) {
-  // ✅ Ensure content exists
   if (!content) {
     log("❌ No content provided to generateBaseArticle", "error");
     return null;
@@ -293,44 +475,36 @@ async function generateBaseArticle(content, title, url, domain, existingCategori
       return null;
     }
 
-    // ✅ If parsing failed but we have raw content, use it
     if (!response.parsed) {
       log(`❌ Failed to parse AI response`, "error");
-      
-      // ✅ Try to use raw content (from response.rawContent or response.content)
+
       const rawContent = response.rawContent || response.content;
-      
+
       if (rawContent && typeof rawContent === 'string' && rawContent.length > 0) {
         log("⚠️ Using raw response content as fallback", "warn");
         log(`📄 Raw content length: ${rawContent.length}`, "info");
-        
-        // ✅ Try to extract meaningful content from raw response
+
         let cleanContent = rawContent;
-        
-        // Remove markdown code blocks
         cleanContent = cleanContent.replace(/```json\s*/g, '').replace(/```\s*/g, '');
-        
-        // Try to extract the JSON part
+
         const start = cleanContent.indexOf('{');
         const end = cleanContent.lastIndexOf('}');
         if (start !== -1 && end !== -1 && end > start) {
           cleanContent = cleanContent.substring(start, end + 1);
         }
-        
-        // Try to extract title from raw content
+
         let extractedTitle = title || "Untitled Article";
         const titleMatch = cleanContent.match(/"title"\s*:\s*"([^"]+)"/);
         if (titleMatch) {
           extractedTitle = titleMatch[1];
         }
-        
-        // Try to extract summary
+
         let extractedSummary = "No summary available";
         const summaryMatch = cleanContent.match(/"summary"\s*:\s*"([^"]+)"/);
         if (summaryMatch) {
           extractedSummary = summaryMatch[1];
         }
-        
+
         return {
           canonical_topic: extractedTitle,
           title: extractedTitle,
@@ -341,20 +515,18 @@ async function generateBaseArticle(content, title, url, domain, existingCategori
           source_facts: []
         };
       }
-      
+
       return null;
     }
 
     const parsed = response.parsed;
 
-    // ✅ Debug logging
     log(`📊 AI Response keys: ${Object.keys(parsed).join(', ')}`, "info");
     log(`📊 Content type: ${typeof parsed.content}`, "info");
     if (Array.isArray(parsed.content)) {
       log(`📊 Content array length: ${parsed.content.length}`, "info");
     }
 
-    // ✅ Check if content is null or undefined
     if (!parsed.content) {
       log("⚠️ AI returned null content, using original content", "warn");
       return {
@@ -404,6 +576,7 @@ async function generateBaseArticle(content, title, url, domain, existingCategori
     return null;
   }
 }
+
 // ============================================
 // GENERATE EXPLANATION VIEW
 // ============================================
@@ -424,7 +597,7 @@ async function generateExplanationView(articleId, profile, baseArticle) {
 
     if (existing) {
       log(`⏭️ Explanation already exists for profile: ${profile.name}`, "info");
-      return;
+      return 'exists';
     }
 
     log(`📝 Generating explanation for profile: ${profile.name}`, "ai");
@@ -468,9 +641,11 @@ async function generateExplanationView(articleId, profile, baseArticle) {
       });
 
     log(`✅ Explanation saved for profile: ${profile.name}`, "success");
+    return 'generated';
 
   } catch (error) {
     log(`❌ Failed to generate explanation for ${profile.name}: ${error.message}`, "error");
+    throw error;
   }
 }
 
@@ -525,6 +700,9 @@ export async function processQuestion(data) {
       if (view) {
         knowledgeAction = "reuse";
         explanationViewId = view.view_id;
+      } else {
+        // Generate explanation on-demand if it doesn't exist
+        knowledgeAction = "create_explanation";
       }
     }
 
@@ -595,6 +773,36 @@ export async function processQuestion(data) {
 
       if (viewError) throw viewError;
       viewId = view.view_id;
+    } else if (knowledgeAction === "create_explanation") {
+      // Generate explanation for existing article with different profile
+      const { data: article, error: articleError } = await supabase
+        .from("articles")
+        .select("*")
+        .eq("article_id", articleId)
+        .single();
+
+      if (articleError) throw articleError;
+
+      const baseArticle = {
+        title: article.canonical_title,
+        canonical_topic: article.canonical_title,
+        content: article.base_content,
+        summary: article.summary || "",
+        categories: article.categories || ["General"]
+      };
+
+      await generateExplanationView(articleId, profile, baseArticle);
+
+      // Get the newly created view
+      const { data: newView, error: newViewError } = await supabase
+        .from("explanation_views")
+        .select("view_id")
+        .eq("article_id", articleId)
+        .eq("profile_id", profile_id || 1)
+        .single();
+
+      if (newViewError) throw newViewError;
+      viewId = newView.view_id;
     }
 
     // STEP 8: Deduct credits if user
@@ -717,7 +925,6 @@ async function getExistingCategories() {
 // ============================================
 
 function buildBaseArticlePrompt(content, title, url, domain, existingCategories, publishedAt) {
-  // ✅ Safe content handling
   const safeContent = content && typeof content === 'string' && content.length > 0
     ? content.substring(0, 25000)
     : 'No content available from source.';
