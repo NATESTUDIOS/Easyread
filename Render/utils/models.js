@@ -70,20 +70,20 @@ export const MODEL_CONFIG = {
 
   // ---------- EMBEDDING MODELS ----------
   embedding: {
-    primary: {
-      id: 'nvidia/llama-nemotron-embed-vl-1b-v2:free',
-      context: 131072, // 131K tokens
-      dimensions: 2048,
-      weeklyTokens: '4.47B'
-    },
-    fallback: {
-      id: 'nvidia/nemotron-3-embed-1b:free',
-      context: 32768, // 33K tokens
-      dimensions: 768,
-      weeklyTokens: '6.89B'
-    },
-    maxTokens: 131072
+  primary: {
+    id: 'nvidia/nemotron-3-embed-1b:free',  // ✅ Switch to this
+    context: 32768,
+    dimensions: 768,  // ✅ Matches your DB
+    weeklyTokens: '6.53B'
   },
+  fallback: {
+    id: 'nvidia/llama-nemotron-embed-vl-1b-v2:free',
+    context: 131072,
+    dimensions: 2048,
+    weeklyTokens: '3.93B'
+  },
+  maxTokens: 32768
+},
 
   // ---------- TASK TO MODEL GROUP MAPPING ----------
   tasks: {
