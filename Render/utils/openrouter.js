@@ -151,7 +151,7 @@ class OpenRouterService {
         throw new Error(`Daily rate limit reached (${this.dailyLimit} requests/day)`);
       }
 
-      // ✅ FIX: Use direct fetch API instead of SDK method
+      // ✅ Use direct fetch API
       const response = await fetch('https://openrouter.ai/api/v1/embeddings', {
         method: 'POST',
         headers: {
@@ -175,10 +175,15 @@ class OpenRouterService {
       const data = await response.json();
       this.trackRequest();
 
+      // ✅ FIX: Use actual embedding length
+      const actualDimensions = data.data[0].embedding.length;
+      
+      console.log(`✅ Embedding generated: ${actualDimensions} dimensions`);
+
       return {
         embedding: data.data[0].embedding,
         model: modelId,
-        dimensions: config.primary.dimensions,
+        dimensions: actualDimensions, // ✅ Use actual length
         usage: data.usage
       };
 
@@ -210,10 +215,15 @@ class OpenRouterService {
         const data = await response.json();
         this.trackRequest();
 
+        // ✅ FIX: Use actual embedding length for fallback too
+        const actualDimensions = data.data[0].embedding.length;
+        
+        console.log(`✅ Fallback embedding generated: ${actualDimensions} dimensions`);
+
         return {
           embedding: data.data[0].embedding,
           model: config.fallback.id,
-          dimensions: config.primary.dimensions,
+          dimensions: actualDimensions, // ✅ Use actual length
           usage: data.usage
         };
       } catch (fallbackError) {
@@ -227,75 +237,73 @@ class OpenRouterService {
   // ⚙️ CONVENIENCE METHODS
   // ============================================
 
-  // ✅ Fixed code
-// utils/openrouter.js
+  async generateJSON(prompt, task = 'generation', options = {}) {
+    const jsonPrompt = `${prompt}\n\nReturn ONLY valid JSON. Do not include any other text.`;
+    const response = await this.generate(jsonPrompt, task, options);
 
-async generateJSON(prompt, task = 'generation', options = {}) {
-  const jsonPrompt = `${prompt}\n\nReturn ONLY valid JSON. Do not include any other text.`;
-  const response = await this.generate(jsonPrompt, task, options);
+    // ✅ Check if response exists
+    if (!response) {
+      console.warn('⚠️ No response from AI');
+      return { parsed: null };
+    }
 
-  // ✅ Check if response exists
-  if (!response) {
-    console.warn('⚠️ No response from AI');
-    return { parsed: null };
-  }
-
-  // ✅ Check if content exists
-  if (!response.content) {
-    console.warn('⚠️ No content in response');
-    return { ...response, parsed: null };
-  }
-
-  // ✅ LOG THE FULL RESPONSE CONTENT (for debugging)
-  console.log(`📄 Full response content length: ${response.content.length}`);
-  console.log(`📄 Response preview (first 500 chars):\n${response.content.substring(0, 500)}`);
-  
-  // ✅ Try to clean the response
-  let cleanedContent = response.content;
-  
-  // Remove markdown code blocks
-  cleanedContent = cleanedContent.replace(/```json\s*/g, '').replace(/```\s*/g, '');
-  
-  // Try to extract JSON (find first { to last })
-  const start = cleanedContent.indexOf('{');
-  const end = cleanedContent.lastIndexOf('}');
-  if (start !== -1 && end !== -1 && end > start) {
-    cleanedContent = cleanedContent.substring(start, end + 1);
-    console.log(`📄 Extracted JSON length: ${cleanedContent.length}`);
-  }
-
-  try {
-    const parsed = JSON.parse(cleanedContent);
-    
-    // ✅ Validate parsed structure
-    if (!parsed || typeof parsed !== 'object') {
-      console.warn('⚠️ Parsed result is not an object');
+    // ✅ Check if content exists
+    if (!response.content) {
+      console.warn('⚠️ No content in response');
       return { ...response, parsed: null };
     }
 
-    // ✅ Ensure content array exists
-    if (!parsed.content) {
-      console.warn('⚠️ Missing content field, adding empty array');
-      parsed.content = [];
+    // ✅ LOG THE FULL RESPONSE CONTENT (for debugging)
+    console.log(`📄 Full response content length: ${response.content.length}`);
+    console.log(`📄 Response preview (first 500 chars):\n${response.content.substring(0, 500)}`);
+
+    // ✅ Try to clean the response
+    let cleanedContent = response.content;
+
+    // Remove markdown code blocks
+    cleanedContent = cleanedContent.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+
+    // Try to extract JSON (find first { to last })
+    const start = cleanedContent.indexOf('{');
+    const end = cleanedContent.lastIndexOf('}');
+    if (start !== -1 && end !== -1 && end > start) {
+      cleanedContent = cleanedContent.substring(start, end + 1);
+      console.log(`📄 Extracted JSON length: ${cleanedContent.length}`);
     }
 
-    console.log(`✅ JSON parsed successfully. Keys: ${Object.keys(parsed).join(', ')}`);
-    
-    return {
-      ...response,
-      parsed
-    };
-  } catch (error) {
-    console.warn('❌ JSON parsing failed:', error.message);
-    console.warn(`📄 Raw content (first 500 chars):\n${response.content.substring(0, 500)}`);
-    console.warn(`📄 Cleaned content (first 500 chars):\n${cleanedContent.substring(0, 500)}`);
-    return {
-      ...response,
-      parsed: null,
-      rawContent: response.content  // ✅ Keep raw content for fallback
-    };
+    try {
+      const parsed = JSON.parse(cleanedContent);
+
+      // ✅ Validate parsed structure
+      if (!parsed || typeof parsed !== 'object') {
+        console.warn('⚠️ Parsed result is not an object');
+        return { ...response, parsed: null };
+      }
+
+      // ✅ Ensure content array exists
+      if (!parsed.content) {
+        console.warn('⚠️ Missing content field, adding empty array');
+        parsed.content = [];
+      }
+
+      console.log(`✅ JSON parsed successfully. Keys: ${Object.keys(parsed).join(', ')}`);
+
+      return {
+        ...response,
+        parsed
+      };
+    } catch (error) {
+      console.warn('❌ JSON parsing failed:', error.message);
+      console.warn(`📄 Raw content (first 500 chars):\n${response.content.substring(0, 500)}`);
+      console.warn(`📄 Cleaned content (first 500 chars):\n${cleanedContent.substring(0, 500)}`);
+      return {
+        ...response,
+        parsed: null,
+        rawContent: response.content  // ✅ Keep raw content for fallback
+      };
+    }
   }
-}
+
   // ============================================
   // 📊 RATE LIMITING
   // ============================================
