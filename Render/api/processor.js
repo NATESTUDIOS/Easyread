@@ -304,6 +304,100 @@ router.post("/question", async (req, res) => {
 // PROCESS ARTICLE FUNCTION
 // ============================================
 
+
+/**
+ * POST /api/processor/generate-deep-dive
+ * Generate a deep dive for an article
+ */
+router.post("/generate-deep-dive", async (req, res) => {
+  const apiKey = req.headers["x-admin-key"];
+
+  if (apiKey !== ADMIN_API_KEY) {
+    return res.status(401).json({
+      success: false,
+      error: "Unauthorized",
+      message: "Invalid or missing API key"
+    });
+  }
+
+  const { article_id, profile_id, question, parent_section, user_id } = req.body;
+
+  if (!article_id || !profile_id || !question) {
+    return res.status(400).json({
+      success: false,
+      error: "article_id, profile_id, and question required"
+    });
+  }
+
+  try {
+    // Get article and explanation
+    const { data: article, error: articleError } = await supabase
+      .from("articles")
+      .select("*")
+      .eq("article_id", article_id)
+      .single();
+
+    if (articleError) throw articleError;
+    if (!article) throw new Error(`Article ${article_id} not found`);
+
+    const { data: explanation, error: expError } = await supabase
+      .from("explanation_views")
+      .select("*")
+      .eq("article_id", article_id)
+      .eq("profile_id", profile_id)
+      .single();
+
+    if (expError && expError.code !== "PGRST116") {
+      log(`Explanation fetch error: ${expError.message}`, "warn");
+    }
+
+    // Build deep dive prompt
+    const prompt = buildDeepDivePrompt(article, explanation || null, question, parent_section || "General");
+
+    // Generate deep dive
+    const response = await openRouter.generate(prompt, "deep_dive", {
+      temperature: 0.5,
+      maxTokens: 2048
+    });
+
+    if (!response || !response.content) {
+      throw new Error("Failed to generate deep dive");
+    }
+
+    // Save to database
+    const { data: deepDive, error: saveError } = await supabase
+      .from("deep_dives")
+      .insert({
+        article_id: parseInt(article_id),
+        profile_id: parseInt(profile_id),
+        parent_section: parent_section || "General",
+        question: question,
+        answer: response.content,
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (saveError) throw saveError;
+
+    log(`✅ Deep dive generated for article ${article_id}`, "success");
+
+    return res.json({
+      success: true,
+      cached: false,
+      deep_dive: deepDive,
+      message: "Deep dive generated successfully"
+    });
+
+  } catch (error) {
+    console.error("❌ Deep dive generation error:", error);
+    return res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 export async function processArticle(data) {
   const { article_id, content, title, url, domain, word_count, processing_mode, categories, published_at } = data;
 
@@ -1951,7 +2045,53 @@ The user should finish reading and feel:
 
 "Now I actually get it."`;
 }
+// ============================================
+// DEEP DIVE PROMPT BUILDER
+// ============================================
 
+function buildDeepDivePrompt(article, explanation, question, parentSection) {
+  const explanationContent = explanation ? explanation.content : "No existing explanation found";
+
+  return `You are the EasyRead Deep Dive Engine.
+
+Your job is to extend an existing Explanation View by answering a specific user question in greater depth.
+
+The user has already read this explanation:
+
+Article: ${article.canonical_title}
+${explanation ? `Existing Explanation: ${explanation.title}` : 'No existing explanation found'}
+
+Parent Section: ${parentSection}
+
+User Question: ${question}
+
+Provide a thorough, extended answer that:
+
+1. Directly addresses the question
+2. Goes deeper than the main explanation
+3. Uses more examples and analogies
+4. Maintains the same style and tone as the explanation
+5. Is clear and easy to understand
+
+Rules:
+- Only use information from the source article
+- Never invent information
+- Use "source says" instead of "AI says" when appropriate
+- Keep it conversational and warm
+
+Return the answer as formatted markdown.
+
+---
+ARTICLE CONTENT:
+${article.base_content.substring(0, 5000)}
+
+${explanation ? `EXISTING EXPLANATION:
+${explanation.content.substring(0, 2000)}` : ''}
+
+USER QUESTION: ${question}
+
+Please provide a deep dive answer that addresses the user's specific question in detail.`;
+}
 // ============================================
 // HELPER FUNCTIONS
 // ============================================
