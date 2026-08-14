@@ -73,7 +73,7 @@ export const MODEL_CONFIG = {
     primary: {
       id: 'nvidia/llama-nemotron-embed-vl-1b-v2:free',
       context: 131072, // 131K tokens
-      dimensions: 768,
+      dimensions: 2048,
       weeklyTokens: '4.47B'
     },
     fallback: {
@@ -91,13 +91,13 @@ export const MODEL_CONFIG = {
     content_processing: 'generation',
     explanation: 'generation',
     deep_dive: 'generation',
-    
+
     // Fast tasks (speed first)
     user_questions: 'fast',
     category_detection: 'fast',
     summarization: 'fast',
     rating_analysis: 'fast',
-    
+
     // Embedding tasks
     embedding: 'embedding'
   }
@@ -121,12 +121,12 @@ export function getModelConfig(task) {
 export function getModelIds(task) {
   const config = getModelConfig(task);
   const models = [];
-  
+
   if (config.primary) models.push(config.primary.id);
   if (config.fallback1) models.push(config.fallback1.id);
   if (config.fallback2) models.push(config.fallback2.id);
   if (config.fallback3) models.push(config.fallback3.id);
-  
+
   return models;
 }
 
@@ -154,7 +154,7 @@ export function getModelDetails(modelId) {
     MODEL_CONFIG.fast,
     MODEL_CONFIG.embedding
   ];
-  
+
   for (const config of allConfigs) {
     const fields = ['primary', 'fallback1', 'fallback2', 'fallback3'];
     for (const field of fields) {
