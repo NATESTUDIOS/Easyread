@@ -1,4 +1,5 @@
 // api/articles.js
+// EasyRead Article Management - Database operations only
 
 import { 
   supabase,
@@ -100,7 +101,7 @@ async function handleGet(req, res, action) {
     return await getArticleVersions(req, res, id);
   }
 
-  // Get similar articles
+  // Get similar articles (internal use only)
   if (action === 'similar' && id) {
     return await getSimilarArticles(req, res, id);
   }
@@ -252,7 +253,7 @@ async function listArticles(req, res) {
 
     let query = supabase
       .from('articles')
-      .select('*', { count: 'exact' });
+      .select('article_id, canonical_title, slug, base_content, summary, source_url, source_domain, source_title, categories, word_count, view_count, version, status, retrieved_at, created_at, updated_at, next_refresh_at', { count: 'exact' });
 
     if (status) {
       query = query.eq('status', status);
@@ -299,22 +300,30 @@ async function listArticles(req, res) {
 // ============================================
 async function getArticleById(req, res, id, user_id) {
   try {
-    const article = await getById('articles', id);
+    // Exclude embedding from the response
+    const { data: article, error } = await supabase
+      .from('articles')
+      .select('article_id, canonical_title, slug, base_content, summary, source_url, source_domain, source_title, source_published_at, categories, content_hash, word_count, view_count, version, status, retrieved_at, created_at, updated_at, next_refresh_at')
+      .eq('article_id', id)
+      .single();
 
-    if (!article) {
-      return res.status(404).json({ error: 'Article not found' });
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ error: 'Article not found' });
+      }
+      throw error;
     }
 
     // Increment view count
     await trackViewForArticle(id, user_id);
 
     // Get explanations for this article (just the view metadata)
-    const { data: explanations, error } = await supabase
+    const { data: explanations, error: expError } = await supabase
       .from('explanation_views')
       .select('view_id, profile_id, title, summary, view_count, rating_avg, rating_count, generated_at')
       .eq('article_id', id);
 
-    if (error) throw error;
+    if (expError) throw expError;
 
     res.json({
       success: true,
@@ -336,24 +345,30 @@ async function getArticleById(req, res, id, user_id) {
 // ============================================
 async function getArticleBySlug(req, res, slug, user_id) {
   try {
-    const articles = await getByColumn('articles', 'slug', slug);
+    // Exclude embedding from the response
+    const { data: article, error } = await supabase
+      .from('articles')
+      .select('article_id, canonical_title, slug, base_content, summary, source_url, source_domain, source_title, source_published_at, categories, content_hash, word_count, view_count, version, status, retrieved_at, created_at, updated_at, next_refresh_at')
+      .eq('slug', slug)
+      .single();
 
-    if (articles.length === 0) {
-      return res.status(404).json({ error: 'Article not found' });
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ error: 'Article not found' });
+      }
+      throw error;
     }
-
-    const article = articles[0];
 
     // Increment view count
     await trackViewForArticle(article.article_id, user_id);
 
     // Get explanations for this article
-    const { data: explanations, error } = await supabase
+    const { data: explanations, error: expError } = await supabase
       .from('explanation_views')
       .select('view_id, profile_id, title, summary, view_count, rating_avg, rating_count, generated_at')
       .eq('article_id', article.article_id);
 
-    if (error) throw error;
+    if (expError) throw expError;
 
     res.json({
       success: true,
@@ -506,7 +521,7 @@ async function searchArticles(req, res, search) {
 
     let query = supabase
       .from('articles')
-      .select('*', { count: 'exact' })
+      .select('article_id, canonical_title, slug, base_content, summary, source_url, source_domain, source_title, categories, word_count, view_count, version, status, retrieved_at, created_at, updated_at, next_refresh_at', { count: 'exact' })
       .eq('status', 'processed');
 
     if (search) {
@@ -550,15 +565,24 @@ async function searchArticles(req, res, search) {
 }
 
 // ============================================
-// 🔍 GET SIMILAR ARTICLES
+// 🔍 GET SIMILAR ARTICLES (Internal use only)
 // ============================================
 async function getSimilarArticles(req, res, id) {
   const { limit = 5, threshold = SIMILARITY_THRESHOLD } = req.query;
 
   try {
-    const article = await getById('articles', id);
-    if (!article) {
-      return res.status(404).json({ error: 'Article not found' });
+    // Get the article's embedding
+    const { data: article, error } = await supabase
+      .from('articles')
+      .select('article_id, embedding')
+      .eq('article_id', id)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ error: 'Article not found' });
+      }
+      throw error;
     }
 
     if (!article.embedding) {
@@ -574,12 +598,12 @@ async function getSimilarArticles(req, res, id) {
     );
 
     const articleIds = similar.map(s => s.article_id);
-    const { data: articles, error } = await supabase
+    const { data: articles, error: articlesError } = await supabase
       .from('articles')
-      .select('*')
+      .select('article_id, canonical_title, slug, summary, source_domain, categories, view_count, created_at')
       .in('article_id', articleIds);
 
-    if (error) throw error;
+    if (articlesError) throw articlesError;
 
     const similarWithScores = articles.map(a => ({
       ...a,
@@ -693,13 +717,19 @@ async function getArticleVersions(req, res, id) {
   try {
     const { data: versions, error } = await supabase
       .from('article_versions')
-      .select('*')
+      .select('version_id, article_id, content, change_reason, created_at')
       .eq('article_id', id)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
 
-    const article = await getById('articles', id);
+    const { data: article, error: articleError } = await supabase
+      .from('articles')
+      .select('article_id, canonical_title, version')
+      .eq('article_id', id)
+      .single();
+
+    if (articleError) throw articleError;
 
     res.json({
       success: true,
@@ -729,7 +759,7 @@ async function getArticlesByCategory(req, res, category) {
 
     const { data: articles, error, count } = await supabase
       .from('articles')
-      .select('*', { count: 'exact' })
+      .select('article_id, canonical_title, slug, summary, source_domain, categories, word_count, view_count, version, status, created_at, updated_at', { count: 'exact' })
       .contains('categories', [category])
       .eq('status', 'processed')
       .range(from, to)
@@ -828,7 +858,7 @@ async function getRandomArticles(req, res) {
   try {
     const { data: articles, error } = await supabase
       .from('articles')
-      .select('*')
+      .select('article_id, canonical_title, slug, summary, source_domain, categories, word_count, view_count, created_at')
       .eq('status', 'processed')
       .order('created_at', { ascending: false })
       .limit(parseInt(limit) * 3);
@@ -856,17 +886,27 @@ async function getRandomArticles(req, res) {
 // ============================================
 async function checkArticleExists(req, res, slug) {
   try {
-    const articles = await getByColumn('articles', 'slug', slug);
-    const exists = articles.length > 0;
+    const { data: article, error } = await supabase
+      .from('articles')
+      .select('article_id, slug, canonical_title')
+      .eq('slug', slug)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.json({ success: true, exists: false, article: null });
+      }
+      throw error;
+    }
 
     res.json({
       success: true,
-      exists,
-      article: exists ? {
-        id: articles[0].article_id,
-        slug: articles[0].slug,
-        title: articles[0].canonical_title
-      } : null
+      exists: true,
+      article: {
+        id: article.article_id,
+        slug: article.slug,
+        title: article.canonical_title
+      }
     });
   } catch (error) {
     console.error('Check article exists error:', error);
@@ -967,7 +1007,11 @@ async function getReadingHistory(req, res, user_id) {
     const { data: history, error } = await supabase
       .from('reading_history')
       .select(`
-        *,
+        history_id,
+        user_id,
+        article_id,
+        date,
+        viewed_at,
         articles:article_id (
           canonical_title,
           slug,
