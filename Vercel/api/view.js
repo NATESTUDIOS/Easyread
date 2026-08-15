@@ -98,7 +98,7 @@ function getGuestIdentifier(req) {
 
 async function checkGuestLimit(guestId, actionType) {
   const today = new Date().toISOString().split('T')[0];
-  
+
   const { data: existing, error } = await supabase
     .from('usage')
     .select('*')
@@ -193,7 +193,7 @@ async function checkGuestLimit(guestId, actionType) {
 
 async function trackGuestUsage(guestId, actionType) {
   const today = new Date().toISOString().split('T')[0];
-  
+
   const { data: existing, error } = await supabase
     .from('usage')
     .select('*')
@@ -342,7 +342,7 @@ async function trackRead(req, res) {
 
       const usageRecords = await getByColumn('usage', 'user_id', user_id);
       const todayUsage = usageRecords.find(u => u.date === today);
-      
+
       if (todayUsage) {
         await update('usage', todayUsage.usage_id, {
           articles_read: (todayUsage.articles_read || 0) + 1
@@ -558,6 +558,7 @@ async function getGuestStatus(req, res) {
 // ============================================
 // RENDER FULL ARTICLE PAGE
 // ============================================
+
 async function renderArticlePage(req, res) {
   const { id, slug } = req.query;
   const user_id = req.headers['x-user-id'] || req.query.user_id;
@@ -577,6 +578,7 @@ async function renderArticlePage(req, res) {
       return res.status(404).send(renderNotFoundPage());
     }
 
+    // GUEST TRACKING
     if (!user_id && guestId) {
       const limitCheck = await checkGuestLimit(guestId, 'read');
       if (!limitCheck.allowed) {
@@ -604,19 +606,21 @@ async function renderArticlePage(req, res) {
           guestId: guestId
         }));
       }
-      
+
       await trackGuestUsage(guestId, 'read');
     } else if (user_id) {
       const today = new Date().toISOString().split('T')[0];
-      const existing = await supabase
+      const { data: existing, error: historyError } = await supabase
         .from('reading_history')
         .select('history_id')
         .eq('user_id', user_id)
         .eq('article_id', article.article_id)
         .eq('date', today)
-        .single();
+        .maybeSingle();
 
-      if (!existing.data) {
+      if (historyError && historyError.code !== 'PGRST116') throw historyError;
+
+      if (!existing) {
         await insert('reading_history', {
           user_id,
           article_id: article.article_id,
@@ -627,7 +631,7 @@ async function renderArticlePage(req, res) {
 
       const usageRecords = await getByColumn('usage', 'user_id', user_id);
       const todayUsage = usageRecords.find(u => u.date === today);
-      
+
       if (todayUsage) {
         await update('usage', todayUsage.usage_id, {
           articles_read: (todayUsage.articles_read || 0) + 1
@@ -644,9 +648,13 @@ async function renderArticlePage(req, res) {
       }
     }
 
-    await update('articles', article.article_id, {
-      view_count: (article.view_count || 0) + 1
-    });
+    // ✅ FIX: Use direct supabase update instead of the imported update function
+    const { error: updateError } = await supabase
+      .from('articles')
+      .update({ view_count: (article.view_count || 0) + 1 })
+      .eq('article_id', article.article_id);
+
+    if (updateError) throw updateError;
 
     const colorPair = getColorPairForArticle(article.article_id);
     const ogImageUrl = generateOgImageUrl(
@@ -684,12 +692,14 @@ async function renderArticlePage(req, res) {
 
     let userRating = null;
     if (user_id && explanations && explanations.length > 0) {
-      const { data: ur } = await supabase
+      const { data: ur, error: urError } = await supabase
         .from('ratings')
         .select('rating, feedback, view_id')
         .eq('user_id', user_id)
         .in('view_id', explanations.map(e => e.view_id))
         .maybeSingle();
+      
+      if (urError && urError.code !== 'PGRST116') throw urError;
       userRating = ur;
     }
 
@@ -703,12 +713,14 @@ async function renderArticlePage(req, res) {
 
     let isBookmarked = false;
     if (user_id) {
-      const { data: bookmark } = await supabase
+      const { data: bookmark, error: bmError } = await supabase
         .from('bookmarks')
         .select('bookmark_id')
         .eq('user_id', user_id)
         .eq('article_id', article.article_id)
         .maybeSingle();
+      
+      if (bmError && bmError.code !== 'PGRST116') throw bmError;
       isBookmarked = !!bookmark;
     }
 
@@ -904,7 +916,7 @@ async function toggleBookmark(req, res) {
 
     if (existing) {
       await deleteRecord('bookmarks', existing.bookmark_id);
-      
+
       const { count, error: countError } = await supabase
         .from('bookmarks')
         .select('*', { count: 'exact', head: true })
@@ -1284,7 +1296,7 @@ function buildArticleHTML({
   const title = article.canonical_title || 'Untitled Article';
   const description = article.summary || 'Read this article on EasyRead';
   const slug = article.slug || `article-${article.article_id}`;
-  
+
   const imageUrl = ogImageUrl || `https://placehold.co/1200x630/1A1A2E/FFFFFF?text=${encodeURIComponent(title.substring(0, 60))}`;
 
   // Use simple string concatenation to avoid Unicode issues
@@ -1317,11 +1329,11 @@ function buildArticleHTML({
   html += '  <style>' + getCSSStyles() + '</style>\n';
   html += '</head>\n';
   html += '<body>\n';
-  
+
   // Progress Bar
   html += '  <div class="progress-bar" id="progressBar"></div>\n';
   html += '  <div class="toast" id="toast"></div>\n';
-  
+
   // Login Modal
   html += '  <div class="login-overlay" id="loginOverlay">\n';
   html += '    <div class="login-modal">\n';
@@ -1337,66 +1349,66 @@ function buildArticleHTML({
   html += '      </div>\n';
   html += '    </div>\n';
   html += '  </div>\n';
-  
+
   html += '  <div class="full-screen-reader">\n';
-  
+
   // Header
   html += buildHeaderHTML(userCredits, user_id, profiles, isGuest, guestLimitInfo);
-  
+
   // Guest limit warning
   if (guestLimitInfo && guestLimitInfo.used >= guestLimitInfo.limit) {
     html += '    <div style="background: #ff3b30; color: #fff; padding: 12px 16px; border-radius: 12px; margin-bottom: 1rem; text-align: center; font-weight: 600;">\n';
     html += '      ' + guestLimitInfo.message + '\n';
     html += '    </div>\n';
   }
-  
+
   // Guest remaining info
   if (isGuest && guestLimitInfo) {
     html += '    <div style="display: flex; gap: 16px; margin-bottom: 1rem; font-size: 0.85rem; color: var(--text-secondary); flex-wrap: wrap;">\n';
     html += '      <span>Articles remaining: ' + guestLimitInfo.remaining + '</span>\n';
     html += '    </div>\n';
   }
-  
+
   // Hero
   html += buildHeroHTML(title, article.categories);
-  
+
   // Profile pills
   html += buildProfilePillsHTML(profiles);
-  
+
   // Gradient card
   html += buildGradientCardHTML();
-  
+
   // Article content
   html += buildArticleContentHTML(article, explanations);
-  
+
   // Summary
   html += buildSummaryHTML(article);
-  
+
   // Metadata
   html += buildMetadataHTML(article);
-  
+
   // Reader section
   html += buildReaderSectionHTML();
-  
+
   // Footer
   html += buildFooterHTML(article, user_id, userCredits, isBookmarked, isGuest);
-  
+
   // Review modal
   html += buildReviewModalHTML(userRating, user_id, isGuest);
-  
+
   // Deep dive modal
   html += buildDeepDiveModalHTML(isGuest);
-  
+
   html += '  </div>\n';
-  
+
   // JavaScript
   html += '  <script>\n';
   html += getJavaScript(article, explanations, userRating, user_id, sessionToken, isBookmarked, isGuest, guestLimitInfo, guestId);
   html += '  </script>\n';
-  
+
   html += '</body>\n';
   html += '</html>\n';
-  
+
   return html;
 }
 
@@ -1418,7 +1430,7 @@ function buildHeaderHTML(userCredits, user_id, profiles, isGuest, guestLimitInfo
   html += '            <path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.5 5.5 0 0 1-7.64-1.56 5.5 5.5 0 0 1-1.56-7.64A9.02 9.02 0 0 0 12 3z"/>\n';
   html += '          </svg>\n';
   html += '        </button>\n';
-  
+
   if (isAuthenticated) {
     html += '        <div class="credits-badge" id="userCreditsBadge" title="Credit Balance">\n';
     html += '          <span class="lightning-icon">⚡</span>\n';
@@ -1435,7 +1447,7 @@ function buildHeaderHTML(userCredits, user_id, profiles, isGuest, guestLimitInfo
     html += '          Sign In\n';
     html += '        </a>\n';
   }
-  
+
   html += '      </div>\n';
   html += '    </header>\n';
   return html;
@@ -1459,7 +1471,7 @@ function buildProfilePillsHTML(profiles) {
 
   let html = '    <div class="profile-pills-wrapper">\n';
   html += '      <div class="profile-pills-scroll" id="profilePills">\n';
-  
+
   profiles.forEach((p, index) => {
     const isActive = p.is_default || index === 0;
     const icon = getProfileIcon(p.name);
@@ -1468,7 +1480,7 @@ function buildProfilePillsHTML(profiles) {
     html += '          ' + escapeHtml(p.name) + '\n';
     html += '        </button>\n';
   });
-  
+
   html += '      </div>\n';
   html += '    </div>\n';
   return html;
@@ -1484,9 +1496,9 @@ function buildGradientCardHTML() {
 function buildArticleContentHTML(article, explanations) {
   const defaultExplanation = explanations?.find(e => e.profile_id === 1) || explanations?.[0];
   const content = defaultExplanation?.content || article.base_content || 'No content available.';
-  
+
   const sections = parseContentIntoSections(content);
-  
+
   let html = '    <article class="article-body" id="articleContent">\n';
   html += '      <div class="content-shimmer" id="contentShimmer">\n';
   for (let i = 0; i < 8; i++) {
@@ -1494,7 +1506,7 @@ function buildArticleContentHTML(article, explanations) {
   }
   html += '      </div>\n';
   html += '      <div id="articleText" style="display: none;">\n';
-  
+
   sections.forEach((section, i) => {
     if (section.type === 'heading') {
       html += '        <h2 class="subheading">' + section.content + '</h2>\n';
@@ -1503,7 +1515,7 @@ function buildArticleContentHTML(article, explanations) {
       html += '        <p class="' + (isFirst ? 'dropcap' : '') + '">' + section.content + '</p>\n';
     }
   });
-  
+
   html += '      </div>\n';
   html += '    </article>\n';
   return html;
@@ -1525,7 +1537,7 @@ function buildMetadataHTML(article) {
     month: 'long',
     day: 'numeric'
   }) : 'Recently';
-  
+
   const wordCount = article.word_count || article.base_content?.split(/\s+/).length || 0;
   const readTime = Math.ceil(wordCount / 200) || 3;
 
@@ -1576,7 +1588,7 @@ function buildFooterHTML(article, user_id, userCredits, isBookmarked, isGuest) {
   html += '          <button class="glass-icon-btn bookmark-btn ' + (isBookmarked ? 'bookmarked' : '') + '" id="bookmarkBtn" onclick="handleBookmark()" title="' + (isBookmarked ? 'Remove bookmark' : 'Add bookmark') + '">\n';
   html += '            ' + bookmarkIcon + '\n';
   html += '          </button>\n';
-  
+
   if (isAuthenticated) {
     html += '          <button class="glass-icon-btn" onclick="openDeepDiveModal()" title="Deep Dive">\n';
     html += '            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>\n';
@@ -1586,7 +1598,7 @@ function buildFooterHTML(article, user_id, userCredits, isBookmarked, isGuest) {
     html += '            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>\n';
     html += '          </button>\n';
   }
-  
+
   html += '        </div>\n';
   html += '      </div>\n';
   html += '    </div>\n';
@@ -1596,7 +1608,7 @@ function buildFooterHTML(article, user_id, userCredits, isBookmarked, isGuest) {
 function buildReviewModalHTML(userRating, user_id, isGuest) {
   const hasRated = !!userRating;
   const isAuthenticated = !!user_id;
-  
+
   if (!isAuthenticated || isGuest) {
     return '    <div class="review-overlay" id="reviewModal">\n' +
            '      <div class="review-modal">\n' +
@@ -1609,7 +1621,7 @@ function buildReviewModalHTML(userRating, user_id, isGuest) {
            '      </div>\n' +
            '    </div>\n';
   }
-  
+
   if (hasRated) {
     return '    <div class="review-overlay" id="reviewModal">\n' +
            '      <div class="review-modal">\n' +
@@ -1671,7 +1683,7 @@ function buildDeepDiveModalHTML(isGuest) {
   html += '        <div style="text-align: center;">\n';
   html += '          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔍</div>\n';
   html += '          <h3>Deep Dive</h3>\n';
-  
+
   if (isGuest) {
     html += '          <p style="color: var(--text-secondary); margin: 0.5rem 0 1.5rem;">Sign in to unlock deep dive questions!</p>\n';
     html += '          <a href="' + SITE_URL + '#login" class="btn-modal-primary" style="display: inline-block; text-decoration: none; padding: 0.75rem 2rem;">Sign In</a>\n';
@@ -1686,7 +1698,7 @@ function buildDeepDiveModalHTML(isGuest) {
     html += '            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.8rem;">Cost: 0.5 credits</p>\n';
     html += '          </form>\n';
   }
-  
+
   html += '        </div>\n';
   html += '      </div>\n';
   html += '    </div>\n';
@@ -1720,10 +1732,10 @@ function getProfileIcon(name) {
 
 function parseContentIntoSections(content) {
   if (!content) return [{ type: 'paragraph', content: 'No content available.' }];
-  
+
   const lines = content.split('\n').filter(line => line.trim());
   const sections = [];
-  
+
   for (const line of lines) {
     if (line.startsWith('## ')) {
       sections.push({ type: 'heading', content: line.replace('## ', '') });
@@ -1733,7 +1745,7 @@ function parseContentIntoSections(content) {
       sections.push({ type: 'paragraph', content: line.trim() });
     }
   }
-  
+
   return sections.length > 0 ? sections : [{ type: 'paragraph', content: content }];
 }
 
@@ -1746,7 +1758,7 @@ function getJavaScript(article, explanations, userRating, user_id, sessionToken,
   const hasRated = !!userRating;
   const explanationViews = explanations?.map(e => e.view_id) || [];
   const bookmarked = isBookmarked || false;
-  
+
   // Use string concatenation to avoid template literal issues
   let js = '';
 
