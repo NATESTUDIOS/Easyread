@@ -1,0 +1,16 @@
+{
+  "routes": [
+    {
+      "src": "/article/(.*)",
+      "dest": "https://easytoread.vercel.app/api/view?slug=$1"
+    },
+    {
+      "src": "/(.*)\\.(html|css|js|png|jpg|jpeg|gif|svg|ico|json|xml|txt|pdf|doc|docx|zip|mp4|webm|woff|woff2|ttf|eot)",
+      "dest": "/public/$1.$2"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/$1"
+    }
+  ]
+}
