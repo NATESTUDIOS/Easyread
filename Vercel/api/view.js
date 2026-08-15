@@ -660,7 +660,7 @@ async function renderArticlePage(req, res) {
       return res.status(404).send(renderNotFoundPage());
     }
 
-    // Guest vs Auth tracking
+    // Guest tracking
     if (!user_id && guestId) {
       const limitCheck = await checkGuestLimit(guestId, 'read');
       if (!limitCheck.allowed) {
@@ -709,28 +709,9 @@ async function renderArticlePage(req, res) {
           viewed_at: new Date().toISOString()
         });
       }
-
-      const usageRecords = await getByColumn('usage', 'user_id', user_id);
-      const todayUsage = usageRecords.find(u => u.date === today);
-
-      if (todayUsage) {
-        await supabase
-          .from('usage')
-          .update({ articles_read: (todayUsage.articles_read || 0) + 1 })
-          .eq('usage_id', todayUsage.usage_id);
-      } else {
-        await insert('usage', {
-          user_id,
-          date: today,
-          articles_read: 1,
-          questions: 0,
-          deep_dives: 0,
-          credits_used: 0
-        });
-      }
     }
 
-    // Increment article view count directly
+    // Increment article view count
     const currentViewCount = (article.view_count || 0) + 1;
     await supabase
       .from('articles')
@@ -816,19 +797,6 @@ async function renderArticlePage(req, res) {
 
     if (profileError) throw profileError;
 
-    let guestLimitInfo = null;
-    if (!user_id && guestId) {
-      const readLimitCheck = await checkGuestLimit(guestId, 'read');
-      const questionLimitCheck = await checkGuestLimit(guestId, 'question');
-      guestLimitInfo = {
-        limit: readLimitCheck.limit,
-        used: readLimitCheck.used,
-        remaining: readLimitCheck.remaining,
-        question_remaining: questionLimitCheck.remaining,
-        message: readLimitCheck.message
-      };
-    }
-
     const html = buildArticleHTML({
       article,
       explanations: explanations || [],
@@ -842,7 +810,6 @@ async function renderArticlePage(req, res) {
       colorPair,
       isBookmarked,
       guestId,
-      guestLimitInfo,
       isGuest: !user_id
     });
 
@@ -861,7 +828,6 @@ async function renderArticlePage(req, res) {
 async function getArticleData(req, res) {
   const { id, slug } = req.query;
   const user_id = req.headers['x-user-id'] || req.query.user_id;
-  const guestId = req.headers['x-guest-id'] || req.query.guest_id || getGuestIdentifier(req);
 
   try {
     let article;
@@ -875,13 +841,6 @@ async function getArticleData(req, res) {
     if (!article) {
       return res.status(404).json({ error: 'Article not found' });
     }
-
-    const colorPair = getColorPairForArticle(article.article_id);
-    const ogImageUrl = generateOgImageUrl(
-      article.canonical_title || 'EasyRead Article',
-      colorPair.bg,
-      colorPair.text
-    );
 
     const { data: explanations, error: expError } = await supabase
       .from('explanation_views')
@@ -900,55 +859,6 @@ async function getArticleData(req, res) {
 
     if (expError) throw expError;
 
-    const { data: ratings, error: ratingError } = await supabase
-      .from('ratings')
-      .select('rating, feedback, user_id, created_at')
-      .in('view_id', explanations?.map(e => e.view_id) || [])
-      .order('created_at', { ascending: false })
-      .limit(50);
-
-    if (ratingError) throw ratingError;
-
-    let userRating = null;
-    if (user_id && explanations && explanations.length > 0) {
-      const { data: ur } = await supabase
-        .from('ratings')
-        .select('rating, feedback, view_id')
-        .eq('user_id', user_id)
-        .in('view_id', explanations.map(e => e.view_id))
-        .maybeSingle();
-      userRating = ur;
-    }
-
-    let userCredits = null;
-    if (user_id) {
-      const users = await getByColumn('users', 'user_id', user_id);
-      if (users.length > 0) {
-        userCredits = users[0].credits;
-      }
-    }
-
-    let isBookmarked = false;
-    if (user_id) {
-      const { data: bookmark } = await supabase
-        .from('bookmarks')
-        .select('bookmark_id')
-        .eq('user_id', user_id)
-        .eq('article_id', article.article_id)
-        .maybeSingle();
-      isBookmarked = !!bookmark;
-    }
-
-    let guestLimitInfo = null;
-    if (!user_id && guestId) {
-      const limitCheck = await checkGuestLimit(guestId, 'read');
-      guestLimitInfo = {
-        limit: limitCheck.limit,
-        used: limitCheck.used,
-        remaining: limitCheck.remaining
-      };
-    }
-
     const defaultExp = explanations?.find(e => e.profile_id === 1) || explanations?.[0];
     const readingTime = calculateReadingTime(defaultExp?.content || article.base_content);
 
@@ -956,16 +866,9 @@ async function getArticleData(req, res) {
       success: true,
       article: {
         ...article,
-        reading_time: readingTime,
-        og_image: ogImageUrl
+        reading_time: readingTime
       },
-      explanations: explanations || [],
-      ratings: ratings || [],
-      userRating,
-      userCredits,
-      isBookmarked,
-      isGuest: !user_id,
-      guestLimitInfo
+      explanations: explanations || []
     });
 
   } catch (error) {
@@ -1004,37 +907,14 @@ async function toggleBookmark(req, res) {
 
     if (existing) {
       await deleteRecord('bookmarks', existing.bookmark_id);
-
-      const { count } = await supabase
-        .from('bookmarks')
-        .select('*', { count: 'exact', head: true })
-        .eq('article_id', parseInt(article_id));
-
-      return res.json({
-        success: true,
-        bookmarked: false,
-        bookmark_count: count || 0,
-        message: 'Bookmark removed'
-      });
+      return res.json({ success: true, bookmarked: false, message: 'Bookmark removed' });
     } else {
       const bookmark = await insert('bookmarks', {
         user_id,
         article_id: parseInt(article_id),
         created_at: new Date().toISOString()
       });
-
-      const { count } = await supabase
-        .from('bookmarks')
-        .select('*', { count: 'exact', head: true })
-        .eq('article_id', parseInt(article_id));
-
-      return res.status(201).json({
-        success: true,
-        bookmarked: true,
-        bookmark_id: bookmark.bookmark_id,
-        bookmark_count: count || 0,
-        message: 'Bookmark added'
-      });
+      return res.status(201).json({ success: true, bookmarked: true, bookmark_id: bookmark.bookmark_id, message: 'Bookmark added' });
     }
   } catch (error) {
     console.error('Toggle bookmark error:', error);
@@ -1050,38 +930,22 @@ async function removeBookmark(req, res) {
   const user_id = req.headers['x-user-id'] || req.query.user_id;
 
   if (!user_id) {
-    return res.status(401).json({ 
-      error: 'Authentication required',
-      redirect: `${SITE_URL}#login`
-    });
-  }
-
-  if (!article_id) {
-    return res.status(400).json({ error: 'article_id required' });
+    return res.status(401).json({ error: 'Authentication required' });
   }
 
   try {
-    const { data: existing, error: checkError } = await supabase
+    const { data: existing } = await supabase
       .from('bookmarks')
       .select('bookmark_id')
       .eq('user_id', user_id)
       .eq('article_id', parseInt(article_id))
       .maybeSingle();
 
-    if (checkError) throw checkError;
-
-    if (!existing) {
-      return res.status(404).json({ error: 'Bookmark not found' });
-    }
-
+    if (!existing) return res.status(404).json({ error: 'Bookmark not found' });
     await deleteRecord('bookmarks', existing.bookmark_id);
 
-    return res.json({
-      success: true,
-      message: 'Bookmark removed'
-    });
+    return res.json({ success: true, message: 'Bookmark removed' });
   } catch (error) {
-    console.error('Remove bookmark error:', error);
     return res.status(500).json({ error: error.message });
   }
 }
@@ -1093,32 +957,18 @@ async function getBookmarkStatus(req, res) {
   const { article_id } = req.query;
   const user_id = req.headers['x-user-id'] || req.query.user_id;
 
-  if (!user_id) {
-    return res.json({ isBookmarked: false, isAuthenticated: false });
-  }
-
-  if (!article_id) {
-    return res.status(400).json({ error: 'article_id required' });
-  }
+  if (!user_id) return res.json({ isBookmarked: false, isAuthenticated: false });
 
   try {
-    const { data: bookmark, error } = await supabase
+    const { data: bookmark } = await supabase
       .from('bookmarks')
-      .select('bookmark_id, created_at')
+      .select('bookmark_id')
       .eq('user_id', user_id)
       .eq('article_id', parseInt(article_id))
       .maybeSingle();
 
-    if (error) throw error;
-
-    return res.json({
-      isBookmarked: !!bookmark,
-      bookmark_id: bookmark?.bookmark_id,
-      created_at: bookmark?.created_at,
-      isAuthenticated: true
-    });
+    return res.json({ isBookmarked: !!bookmark, isAuthenticated: true });
   } catch (error) {
-    console.error('Get bookmark status error:', error);
     return res.status(500).json({ error: error.message });
   }
 }
@@ -1131,36 +981,10 @@ async function submitRating(req, res) {
   const user_id = req.headers['x-user-id'] || req.query.user_id;
 
   if (!user_id) {
-    return res.status(401).json({ 
-      error: 'Authentication required',
-      redirect: `${SITE_URL}#login`
-    });
-  }
-
-  if (!view_id || !rating) {
-    return res.status(400).json({ error: 'view_id and rating required' });
-  }
-
-  if (rating < 1 || rating > 5) {
-    return res.status(400).json({ error: 'Rating must be between 1 and 5' });
+    return res.status(401).json({ error: 'Authentication required' });
   }
 
   try {
-    const { data: existing } = await supabase
-      .from('ratings')
-      .select('rating_id, rating')
-      .eq('user_id', user_id)
-      .eq('view_id', view_id)
-      .maybeSingle();
-
-    if (existing) {
-      return res.status(409).json({
-        error: 'Already rated this article',
-        rating_id: existing.rating_id,
-        rating: existing.rating
-      });
-    }
-
     const ratingRecord = await insert('ratings', {
       user_id,
       view_id: parseInt(view_id),
@@ -1168,53 +992,28 @@ async function submitRating(req, res) {
       feedback: feedback || null
     });
 
-    const { data: viewData, error: viewError } = await supabase
+    const { data: viewData } = await supabase
       .from('explanation_views')
       .select('rating_avg, rating_count')
       .eq('view_id', view_id)
       .single();
 
-    if (viewError) throw viewError;
-
-    const newCount = (viewData.rating_count || 0) + 1;
-    const newAvg = ((viewData.rating_avg || 0) * (viewData.rating_count || 0) + rating) / newCount;
+    const newCount = (viewData?.rating_count || 0) + 1;
+    const newAvg = ((viewData?.rating_avg || 0) * (viewData?.rating_count || 0) + rating) / newCount;
 
     await supabase
       .from('explanation_views')
-      .update({
-        rating_avg: Math.round(newAvg * 100) / 100,
-        rating_count: newCount
-      })
+      .update({ rating_avg: Math.round(newAvg * 100) / 100, rating_count: newCount })
       .eq('view_id', view_id);
 
     const users = await getByColumn('users', 'user_id', user_id);
     if (users.length > 0) {
       const user = users[0];
-      const bonus = CREDIT_COSTS.RATING_BONUS;
-
-      await supabase
-        .from('users')
-        .update({ credits: user.credits + bonus })
-        .eq('user_id', user_id);
-
-      await insert('credit_transactions', {
-        user_id,
-        amount: bonus,
-        reason: 'Rating bonus',
-        balance_after: user.credits + bonus,
-        item_id: view_id
-      });
+      await supabase.from('users').update({ credits: user.credits + CREDIT_COSTS.RATING_BONUS }).eq('user_id', user_id);
     }
 
-    return res.status(201).json({
-      success: true,
-      message: 'Rating submitted successfully',
-      rating_id: ratingRecord.rating_id,
-      bonus_earned: CREDIT_COSTS.RATING_BONUS
-    });
-
+    return res.status(201).json({ success: true, bonus_earned: CREDIT_COSTS.RATING_BONUS });
   } catch (error) {
-    console.error('Submit rating error:', error);
     return res.status(500).json({ error: error.message });
   }
 }
@@ -1227,64 +1026,10 @@ async function handleDeepDive(req, res) {
   const user_id = req.headers['x-user-id'] || req.query.user_id;
 
   if (!user_id) {
-    return res.status(401).json({ 
-      error: 'Authentication required',
-      redirect: `${SITE_URL}#login`
-    });
-  }
-
-  if (!article_id || !profile_id || !question) {
-    return res.status(400).json({ error: 'article_id, profile_id, and question required' });
+    return res.status(401).json({ error: 'Authentication required' });
   }
 
   try {
-    const { data: existing, error: checkError } = await supabase
-      .from('deep_dives')
-      .select('*')
-      .eq('article_id', article_id)
-      .eq('profile_id', profile_id)
-      .eq('question', question)
-      .maybeSingle();
-
-    if (checkError && checkError.code !== 'PGRST116') throw checkError;
-
-    if (existing) {
-      return res.json({
-        success: true,
-        cached: true,
-        deep_dive: existing,
-        message: 'Deep dive retrieved from cache'
-      });
-    }
-
-    const users = await getByColumn('users', 'user_id', user_id);
-    if (users.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    const user = users[0];
-    if (user.credits < CREDIT_COSTS.DEEP_DIVE) {
-      return res.status(402).json({
-        error: 'Insufficient credits',
-        required: CREDIT_COSTS.DEEP_DIVE,
-        available: user.credits
-      });
-    }
-
-    const today = new Date().toISOString().split('T')[0];
-    const usageRecords = await getByColumn('usage', 'user_id', user_id);
-    const todayUsage = usageRecords.find(u => u.date === today);
-    const dailyCreditsUsed = todayUsage ? todayUsage.credits_used : 0;
-
-    if (dailyCreditsUsed + CREDIT_COSTS.DEEP_DIVE > AUTHENTICATED_DAILY_CREDITS) {
-      return res.status(429).json({
-        error: 'Daily credit limit exceeded',
-        limit: AUTHENTICATED_DAILY_CREDITS,
-        used: dailyCreditsUsed,
-        remaining: AUTHENTICATED_DAILY_CREDITS - dailyCreditsUsed
-      });
-    }
-
     const response = await fetch(`${PROCESSOR_URL}/generate-deep-dive`, {
       method: 'POST',
       headers: {
@@ -1296,70 +1041,13 @@ async function handleDeepDive(req, res) {
         profile_id: parseInt(profile_id),
         question,
         parent_section: 'General',
-        user_id: user_id || null
-      }),
-      timeout: 60000
+        user_id: user_id
+      })
     });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `Processor returned ${response.status}`);
-    }
 
     const data = await response.json();
-
-    if (!data.success) {
-      throw new Error(data.error || 'Failed to generate deep dive');
-    }
-
-    await supabase
-      .from('users')
-      .update({ credits: user.credits - CREDIT_COSTS.DEEP_DIVE })
-      .eq('user_id', user_id);
-
-    if (todayUsage) {
-      await supabase
-        .from('usage')
-        .update({
-          deep_dives: (todayUsage.deep_dives || 0) + 1,
-          credits_used: (todayUsage.credits_used || 0) + CREDIT_COSTS.DEEP_DIVE
-        })
-        .eq('usage_id', todayUsage.usage_id);
-    } else {
-      await insert('usage', {
-        user_id,
-        date: today,
-        deep_dives: 1,
-        credits_used: CREDIT_COSTS.DEEP_DIVE
-      });
-    }
-
-    await insert('credit_transactions', {
-      user_id,
-      amount: -CREDIT_COSTS.DEEP_DIVE,
-      reason: 'deep_dive',
-      balance_after: user.credits - CREDIT_COSTS.DEEP_DIVE,
-      item_id: article_id
-    });
-
-    const { data: deepDive } = await supabase
-      .from('deep_dives')
-      .select('*')
-      .eq('article_id', article_id)
-      .eq('profile_id', profile_id)
-      .eq('question', question)
-      .maybeSingle();
-
-    return res.json({
-      success: true,
-      cached: false,
-      deep_dive: deepDive || data.deep_dive,
-      credits_remaining: user.credits - CREDIT_COSTS.DEEP_DIVE,
-      message: 'Deep dive generated successfully'
-    });
-
+    return res.json(data);
   } catch (error) {
-    console.error('Deep dive error:', error);
     return res.status(500).json({ error: error.message });
   }
 }
@@ -1378,10 +1066,8 @@ function buildArticleHTML({
   user_id,
   sessionToken,
   ogImageUrl,
-  colorPair,
   isBookmarked,
   guestId,
-  guestLimitInfo,
   isGuest
 }) {
   const title = article.canonical_title || 'Untitled Article';
@@ -1389,12 +1075,11 @@ function buildArticleHTML({
 
   const defaultExplanation = explanations?.find(e => e.profile_id === 1) || explanations?.[0];
   const activeProfile = profiles?.find(p => p.profile_id === (defaultExplanation?.profile_id || 1)) || profiles?.[0];
-
   const readingTime = calculateReadingTime(defaultExplanation?.content || article.base_content);
   const imageUrl = ogImageUrl || `https://placehold.co/1200x630/1A1A2E/FFFFFF?text=${encodeURIComponent(title.substring(0, 60))}`;
 
   let html = `<!DOCTYPE html>
-<html lang="en" data-theme="auto">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
@@ -1403,25 +1088,9 @@ function buildArticleHTML({
   <meta property="og:title" content="${escapeHtml(title)} | EasyRead">
   <meta property="og:description" content="${escapeHtml(description)}">
   <meta property="og:image" content="${imageUrl}">
-  <meta property="og:url" content="${SITE_URL}/view?id=${article.article_id}">
+  <meta property="og:url" content="${SITE_URL}/article/${article.slug || article.article_id}">
   <meta property="og:type" content="article">
-  <meta property="og:site_name" content="EasyRead">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="${escapeHtml(title)} | EasyRead">
-  <meta name="twitter:description" content="${escapeHtml(description)}">
-  <meta name="twitter:image" content="${imageUrl}">
-  <meta property="article:published_time" content="${article.created_at || ''}">
-  <meta property="article:modified_time" content="${article.updated_at || ''}">
-  <meta property="article:author" content="EasyRead">
-`;
-
-  if (Array.isArray(article.categories)) {
-    article.categories.forEach(cat => {
-      html += `  <meta property="article:tag" content="${escapeHtml(cat)}">\n`;
-    });
-  }
-
-  html += `  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>${getCSSStyles()}</style>
 </head>
 <body>
@@ -1433,31 +1102,31 @@ function buildArticleHTML({
     <div class="login-modal">
       <button class="login-close" onclick="closeLoginModal()">✕</button>
       <div class="login-modal-content">
-        <h2>Sign in to continue</h2>
+        <h2>Sign in to EasyRead</h2>
         <p>Unlock custom explanation profiles, interactive deep dives, bookmarks, and ask personalized questions.</p>
         <div class="login-modal-buttons">
-          <a href="${SITE_URL}#login" class="login-btn-primary">Sign In</a>
-          <a href="${SITE_URL}#signup" class="login-btn-secondary">Create Account</a>
+          <a href="/#profile" class="login-btn-primary">Sign In</a>
         </div>
       </div>
     </div>
   </div>
 
   <div class="full-screen-reader">
-    ${buildHeaderHTML(userCredits, user_id, isGuest, guestLimitInfo)}
+    ${buildHeaderHTML(userCredits, user_id)}
     ${buildHeroHTML(title, article.categories)}
     ${buildProfilePillsHTML(profiles, defaultExplanation?.profile_id || 1)}
     ${buildGradientCardHTML(activeProfile)}
+    ${buildLoginCalloutBannerHTML(user_id)}
     ${buildArticleContentHTML(article, explanations)}
     ${buildSummaryHTML(article, defaultExplanation)}
     ${buildMetadataHTML(article, defaultExplanation, readingTime)}
     ${buildFooterHTML(article, user_id, isBookmarked)}
-    ${buildReviewModalHTML(userRating, user_id, isGuest)}
-    ${buildDeepDiveModalHTML(isGuest)}
+    ${buildReviewModalHTML(userRating)}
+    ${buildDeepDiveModalHTML()}
   </div>
 
   <script>
-    ${getJavaScript(article, explanations, profiles, userRating, user_id, sessionToken, isBookmarked, isGuest, guestLimitInfo, guestId, userCredits)}
+    ${getJavaScript(article, explanations, profiles, userRating, user_id, sessionToken, isBookmarked, userCredits)}
   </script>
 </body>
 </html>`;
@@ -1466,39 +1135,38 @@ function buildArticleHTML({
 }
 
 // ============================================
-// HTML COMPONENT BUILDERS
+// CLEAN REDESIGNED HEADER
 // ============================================
 
-function buildHeaderHTML(userCredits, user_id, isGuest, guestLimitInfo) {
-  const isAuthenticated = !!user_id;
-  let html = `    <header class="reader-header">
-      <div class="category-breadcrumb">
+function buildHeaderHTML(userCredits, user_id) {
+  return `    <header class="reader-header">
+      <div class="header-left">
         <a href="/" class="brand-link">Easy<span>Read</span></a>
-        <span>›</span>
-        <span class="current">Reading</span>
+        <span class="header-divider">/</span>
+        <span class="header-breadcrumb">Article</span>
       </div>
-      <div class="header-actions">
-        <button onclick="window.toggleTheme()" class="glass-icon-btn" title="Toggle theme" aria-label="Toggle theme">
-          <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.5 5.5 0 0 1-7.64-1.56 5.5 5.5 0 0 1-1.56-7.64A9.02 9.02 0 0 0 12 3z"/></svg>
-        </button>
-`;
-
-  if (isAuthenticated) {
-    html += `        <div class="credits-badge" id="userCreditsBadge" title="Credit Balance">
+      <div class="header-right">
+        <div class="credits-badge" id="userCreditsBadge" style="${user_id ? 'display: inline-flex;' : 'display: none;'}" title="Credits Balance">
           <span class="lightning-icon">⚡</span>
-          <span class="credits-val" id="creditsValueDisplay">${(userCredits !== null ? userCredits : 50).toFixed(1)}</span>
-          <span class="credits-label">credits</span>
-        </div>\n`;
-  } else {
-    if (isGuest && guestLimitInfo) {
-      html += `        <div class="guest-badge">Guest · ${guestLimitInfo.remaining} reads left</div>\n`;
-    }
-    html += `        <a href="${SITE_URL}#login" class="auth-link">Sign In</a>\n`;
-  }
-
-  html += `      </div>
+          <span class="credits-val" id="creditsValueDisplay">${(userCredits !== null && userCredits !== undefined ? userCredits : 0).toFixed(1)}</span>
+        </div>
+      </div>
     </header>\n`;
-  return html;
+}
+
+// ============================================
+// DEDICATED SIGN-IN CALLOUT BANNER
+// ============================================
+
+function buildLoginCalloutBannerHTML(user_id) {
+  return `    <div class="guest-login-card" id="guestLoginCard" style="${user_id ? 'display: none;' : 'display: flex;'}">
+      <div class="guest-card-icon">⚡</div>
+      <div class="guest-card-content">
+        <h4>Sign in to unlock full features</h4>
+        <p>Unlock custom explanation personas, interactive deep dives, bookmarks, and earn bonus read credits.</p>
+      </div>
+      <a href="/#profile" class="guest-signin-btn">Sign In</a>
+    </div>\n`;
 }
 
 function buildHeroHTML(title, categories) {
@@ -1516,9 +1184,7 @@ function buildHeroHTML(title, categories) {
 }
 
 function buildProfilePillsHTML(profiles, activeProfileId) {
-  if (!profiles || profiles.length === 0) {
-    return '';
-  }
+  if (!profiles || profiles.length === 0) return '';
 
   let html = `    <div class="profile-pills-wrapper">
       <div class="profile-pills-scroll" id="profilePills">
@@ -1552,7 +1218,6 @@ function buildGradientCardHTML(activeProfile) {
 function buildArticleContentHTML(article, explanations) {
   const defaultExplanation = explanations?.find(e => e.profile_id === 1) || explanations?.[0];
   const content = defaultExplanation?.content || article.base_content || 'No content available.';
-
   const renderedHTML = renderMarkdownToHtml(content);
 
   return `    <article class="article-body" id="articleContent">
@@ -1560,7 +1225,6 @@ function buildArticleContentHTML(article, explanations) {
         <div class="shimmer-line line-1"></div>
         <div class="shimmer-line line-2"></div>
         <div class="shimmer-line line-3"></div>
-        <div class="shimmer-line line-4"></div>
       </div>
       <div id="articleText">
         ${renderedHTML}
@@ -1607,27 +1271,22 @@ function buildMetadataHTML(article, defaultExplanation, readingTime) {
 }
 
 function buildFooterHTML(article, user_id, isBookmarked) {
-  const isAuthenticated = !!user_id;
-
   return `    <div class="glass-footer">
       <div class="footer-content">
         <div class="link-pill" title="${escapeHtml(article.source_url || '')}">
-          <span>🔗 ${escapeHtml(article.source_domain || 'easytoread.vercel.app')}/</span>${escapeHtml((article.slug || 'article').substring(0, 18))}...
+          <span>🔗 ${escapeHtml(article.source_domain || 'easytoread.vercel.app')}</span>
         </div>
         <div class="glass-actions">
           <button class="glass-icon-btn" onclick="copyLink()" title="Copy link" aria-label="Copy link">
             <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
           </button>
-          <button class="glass-icon-btn" onclick="shareLink()" title="Share" aria-label="Share article">
-            <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
-          </button>
-          <button class="glass-icon-btn bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" id="bookmarkBtn" onclick="handleBookmark()" title="${isBookmarked ? 'Remove bookmark' : 'Bookmark'}" aria-label="Bookmark">
+          <button class="glass-icon-btn bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" id="bookmarkBtn" onclick="handleBookmark()" title="Bookmark" aria-label="Bookmark">
             <svg viewBox="0 0 24 24"><path d="${isBookmarked ? 'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' : 'M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z'}"/></svg>
           </button>
           <button class="glass-icon-btn rate-btn" onclick="openReview()" title="Rate Explanation" aria-label="Rate article">
             <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
           </button>
-          <button class="glass-icon-btn deep-dive-trigger" onclick="${isAuthenticated ? 'openDeepDiveModal()' : 'showLoginModal(\'deep-dive\')'}" title="Deep Dive Questions" aria-label="Deep Dive">
+          <button class="glass-icon-btn deep-dive-trigger" onclick="openDeepDiveModal()" title="Deep Dive Questions" aria-label="Deep Dive">
             <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
           </button>
         </div>
@@ -1635,37 +1294,7 @@ function buildFooterHTML(article, user_id, isBookmarked) {
     </div>\n`;
 }
 
-function buildReviewModalHTML(userRating, user_id, isGuest) {
-  const hasRated = !!userRating;
-  const isAuthenticated = !!user_id;
-
-  if (!isAuthenticated || isGuest) {
-    return `    <div class="review-overlay" id="reviewModal">
-      <div class="review-modal">
-        <button class="modal-close" onclick="closeReview()">✕</button>
-        <div class="login-modal-content">
-          <h3>Sign in to rate</h3>
-          <p>Sign in to rate explanations, give feedback, and earn bonus read credits!</p>
-          <a href="${SITE_URL}#login" class="btn-modal-primary">Sign In</a>
-        </div>
-      </div>
-    </div>\n`;
-  }
-
-  if (hasRated) {
-    return `    <div class="review-overlay" id="reviewModal">
-      <div class="review-modal">
-        <button class="modal-close" onclick="closeReview()">✕</button>
-        <div class="review-submitted-state">
-          <div class="star-big">⭐</div>
-          <h3>Feedback Recorded</h3>
-          <p>Thank you! Your feedback helps continuously improve our explanations.</p>
-          <button class="btn-modal-primary" onclick="closeReview()">Close</button>
-        </div>
-      </div>
-    </div>\n`;
-  }
-
+function buildReviewModalHTML(userRating) {
   return `    <div class="review-overlay" id="reviewModal">
       <div class="review-modal" id="reviewModalBody">
         <button class="modal-close" onclick="closeReview()">✕</button>
@@ -1687,15 +1316,6 @@ function buildReviewModalHTML(userRating, user_id, isGuest) {
           <label for="mRate5" title="Insightful">🤯</label>
         </div>
         <div class="rating-description" id="ratingDesc">Tap an emoji to rate</div>
-        <div class="feedback-options" id="feedbackOptions">
-          <p>What could be better?</p>
-          <div class="feedback-grid">
-            <div class="feedback-chip" onclick="this.classList.toggle('selected')">Too complex</div>
-            <div class="feedback-chip" onclick="this.classList.toggle('selected')">Needs better analogies</div>
-            <div class="feedback-chip" onclick="this.classList.toggle('selected')">Missing context</div>
-            <div class="feedback-chip" onclick="this.classList.toggle('selected')">Too brief</div>
-          </div>
-        </div>
         <div class="modal-actions">
           <button class="btn-modal-secondary" onclick="closeReview()">Cancel</button>
           <button class="btn-modal-primary" onclick="submitReview()">Submit</button>
@@ -1704,26 +1324,21 @@ function buildReviewModalHTML(userRating, user_id, isGuest) {
     </div>\n`;
 }
 
-function buildDeepDiveModalHTML(isGuest) {
+function buildDeepDiveModalHTML() {
   return `    <div class="deep-dive-overlay" id="deepDiveModal">
       <div class="deep-dive-modal">
         <button class="modal-close" onclick="closeDeepDiveModal()">✕</button>
         <div class="deep-dive-header">
           <div class="deep-dive-icon">🔍</div>
           <h3>Deep Dive Question</h3>
-          ${isGuest ? `
-            <p>Sign in to ask questions and explore this topic in greater detail.</p>
-            <a href="${SITE_URL}#login" class="btn-modal-primary">Sign In</a>
-          ` : `
-            <p>Ask anything about this topic tailored to your active perspective.</p>
-            <form id="deepDiveForm" onsubmit="submitDeepDive(event)">
-              <textarea id="deepDiveQuestion" placeholder="What specific concept would you like to explore?" required></textarea>
-              <div class="modal-actions">
-                <button type="button" class="btn-modal-secondary" onclick="closeDeepDiveModal()">Cancel</button>
-                <button type="submit" class="btn-modal-primary">Ask (0.5 Credits)</button>
-              </div>
-            </form>
-          `}
+          <p>Ask anything about this topic tailored to your active perspective.</p>
+          <form id="deepDiveForm" onsubmit="submitDeepDive(event)">
+            <textarea id="deepDiveQuestion" placeholder="What specific concept would you like to explore?" required></textarea>
+            <div class="modal-actions">
+              <button type="button" class="btn-modal-secondary" onclick="closeDeepDiveModal()">Cancel</button>
+              <button type="submit" class="btn-modal-primary">Ask (0.5 Credits)</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>\n`;
@@ -1733,51 +1348,64 @@ function buildDeepDiveModalHTML(isGuest) {
 // CLIENT JAVASCRIPT GENERATOR
 // ============================================
 
-function getJavaScript(article, explanations, profiles, userRating, user_id, sessionToken, isBookmarked, isGuest, guestLimitInfo, guestId, userCredits) {
-  const initialCredits = userCredits !== null ? userCredits : 50;
+function getJavaScript(article, explanations, profiles, userRating, user_id, sessionToken, isBookmarked, userCredits) {
   const activeExp = explanations?.find(e => e.profile_id === 1) || explanations?.[0];
 
   return `
-let currentThemeSetting = localStorage.getItem("easyread-theme") || "auto";
-let currentCredits = ${initialCredits};
+let currentCredits = ${userCredits || 0};
 let currentViewId = ${activeExp?.view_id || 'null'};
 let currentProfileId = ${activeExp?.profile_id || 1};
 const currentArticleId = ${article.article_id};
-const isAuthenticated = ${!!user_id};
-const isGuest = ${isGuest};
+let isAuthenticated = ${!!user_id};
 let isBookmarked = ${isBookmarked};
-const userId = "${escapeJs(user_id || '')}";
-const sessionToken = "${escapeJs(sessionToken || '')}";
-const guestId = "${escapeJs(guestId || '')}";
-let guestRemainingReads = ${guestLimitInfo?.remaining || 0};
+let userId = "${escapeJs(user_id || '')}";
+let sessionToken = "${escapeJs(sessionToken || '')}";
 
 const explanationsData = ${JSON.stringify(explanations || [])};
 const profilesData = ${JSON.stringify(profiles || [])};
 
-function applyTheme(theme) {
-  currentThemeSetting = theme;
-  if (theme === 'dark') {
-    document.documentElement.setAttribute('data-theme', 'dark');
-  } else if (theme === 'light') {
-    document.documentElement.setAttribute('data-theme', 'light');
+// Synchronize with client-side localStorage login saved by profile.html / index.html
+function syncClientAuthState() {
+  const localLoggedIn = localStorage.getItem('easyread-logged-in') === 'true';
+  const localUserId = localStorage.getItem('easyread_user_id');
+  const localSessionToken = localStorage.getItem('easyread_session_token');
+  const localCredits = parseFloat(localStorage.getItem('easyread-credits'));
+
+  if (localLoggedIn && localUserId) {
+    isAuthenticated = true;
+    userId = localUserId;
+    sessionToken = localSessionToken || '';
+    if (!isNaN(localCredits)) currentCredits = localCredits;
+
+    const guestCard = document.getElementById('guestLoginCard');
+    if (guestCard) guestCard.style.display = 'none';
+
+    const creditsBadge = document.getElementById('userCreditsBadge');
+    if (creditsBadge) {
+      creditsBadge.style.display = 'inline-flex';
+      const display = document.getElementById('creditsValueDisplay');
+      if (display) display.textContent = currentCredits.toFixed(1);
+    }
+
+    // Check user bookmark status directly
+    fetch('/api/view?action=bookmark-status&article_id=' + currentArticleId, {
+      headers: { 'x-user-id': userId, 'x-session-token': sessionToken }
+    }).then(res => res.json()).then(data => {
+      if (data.isAuthenticated) {
+        isBookmarked = data.isBookmarked;
+        updateBookmarkButtonUI();
+      }
+    }).catch(() => {});
   } else {
-    document.documentElement.removeAttribute('data-theme');
+    isAuthenticated = false;
+    const guestCard = document.getElementById('guestLoginCard');
+    if (guestCard) guestCard.style.display = 'flex';
+    const creditsBadge = document.getElementById('userCreditsBadge');
+    if (creditsBadge) creditsBadge.style.display = 'none';
   }
 }
 
-applyTheme(currentThemeSetting);
-
-window.toggleTheme = function() {
-  if (currentThemeSetting === 'auto') {
-    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    applyTheme(isDark ? 'light' : 'dark');
-  } else if (currentThemeSetting === 'dark') {
-    applyTheme('light');
-  } else {
-    applyTheme('auto');
-  }
-  localStorage.setItem('easyread-theme', currentThemeSetting);
-};
+syncClientAuthState();
 
 function showToast(message, type) {
   type = type || 'info';
@@ -1788,19 +1416,17 @@ function showToast(message, type) {
   clearTimeout(toast._timeout);
   toast._timeout = setTimeout(function() {
     toast.classList.remove('show');
-  }, 3000);
+  }, 2500);
 }
 
 window.showLoginModal = function() {
   const overlay = document.getElementById('loginOverlay');
   if (overlay) overlay.classList.add('active');
-  document.body.style.overflow = 'hidden';
 };
 
 window.closeLoginModal = function() {
   const overlay = document.getElementById('loginOverlay');
   if (overlay) overlay.classList.remove('active');
-  document.body.style.overflow = '';
 };
 
 window.openDeepDiveModal = function() {
@@ -1810,48 +1436,37 @@ window.openDeepDiveModal = function() {
   }
   const modal = document.getElementById('deepDiveModal');
   if (modal) modal.classList.add('active');
-  document.body.style.overflow = 'hidden';
-  setTimeout(function() {
-    const input = document.getElementById('deepDiveQuestion');
-    if (input) input.focus();
-  }, 200);
 };
 
 window.closeDeepDiveModal = function() {
   const modal = document.getElementById('deepDiveModal');
   if (modal) modal.classList.remove('active');
-  document.body.style.overflow = '';
 };
 
 window.openReview = function() {
+  if (!isAuthenticated) {
+    showLoginModal();
+    return;
+  }
   const modal = document.getElementById('reviewModal');
   if (modal) modal.classList.add('active');
-  document.body.style.overflow = 'hidden';
 };
 
 window.closeReview = function() {
   const modal = document.getElementById('reviewModal');
   if (modal) modal.classList.remove('active');
-  document.body.style.overflow = '';
 };
 
 window.updateRatingFeedback = function(rating) {
   const ratingDesc = document.getElementById('ratingDesc');
-  const feedbackOptions = document.getElementById('feedbackOptions');
-  const modalBody = document.getElementById('reviewModalBody');
   const map = {
-    1: 'Extremely confusing or complicated',
-    2: 'Hard to follow',
-    3: 'Standard explanation',
+    1: 'Needs clearer analogies',
+    2: 'A bit confusing',
+    3: 'Average explanation',
     4: 'Clear and insightful',
     5: 'Brilliant explanation!'
   };
   if (ratingDesc) ratingDesc.textContent = map[rating] || 'Select your reaction';
-  if (modalBody) modalBody.className = 'review-modal rating-glow-' + rating;
-  if (feedbackOptions) {
-    if (rating <= 3) feedbackOptions.classList.add('visible');
-    else feedbackOptions.classList.remove('visible');
-  }
 };
 
 window.submitReview = async function() {
@@ -1861,9 +1476,6 @@ window.submitReview = async function() {
     return;
   }
   const rating = parseInt(selected.value);
-  const feedbackChips = document.querySelectorAll('.feedback-chip.selected');
-  let feedback = [];
-  feedbackChips.forEach(c => feedback.push(c.textContent.trim()));
 
   try {
     const response = await fetch('/api/view?action=rate', {
@@ -1873,17 +1485,14 @@ window.submitReview = async function() {
         'x-user-id': userId,
         'x-session-token': sessionToken
       },
-      body: JSON.stringify({
-        view_id: currentViewId,
-        rating: rating,
-        feedback: feedback.join(', ') || null
-      })
+      body: JSON.stringify({ view_id: currentViewId, rating: rating })
     });
     const data = await response.json();
     if (response.status === 201) {
       showToast('Rating submitted! +0.2 Credits', 'success');
       if (data.bonus_earned) {
         currentCredits += data.bonus_earned;
+        localStorage.setItem('easyread-credits', currentCredits.toString());
         const display = document.getElementById('creditsValueDisplay');
         if (display) display.textContent = currentCredits.toFixed(1);
       }
@@ -1895,6 +1504,13 @@ window.submitReview = async function() {
     showToast('Network error: ' + error.message, 'error');
   }
 };
+
+function updateBookmarkButtonUI() {
+  const btn = document.getElementById('bookmarkBtn');
+  if (!btn) return;
+  btn.classList.toggle('bookmarked', isBookmarked);
+  btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="' + (isBookmarked ? 'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' : 'M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z') + '"/></svg>';
+}
 
 window.handleBookmark = async function() {
   if (!isAuthenticated) {
@@ -1914,11 +1530,7 @@ window.handleBookmark = async function() {
     const data = await response.json();
     if (data.success) {
       isBookmarked = data.bookmarked;
-      const btn = document.getElementById('bookmarkBtn');
-      if (btn) {
-        btn.classList.toggle('bookmarked', isBookmarked);
-        btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="' + (isBookmarked ? 'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' : 'M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z') + '"/></svg>';
-      }
+      updateBookmarkButtonUI();
       showToast(data.message, 'success');
     }
   } catch (error) {
@@ -1953,7 +1565,7 @@ window.submitDeepDive = async function(e) {
     });
     const data = await response.json();
     if (data.success && data.deep_dive) {
-      showToast('Deep dive generated!', 'success');
+      showToast('Deep dive ready!', 'success');
       displayDeepDiveResult(data.deep_dive, question);
     } else {
       showToast(data.error || 'Failed to generate deep dive', 'error');
@@ -1966,7 +1578,6 @@ window.submitDeepDive = async function(e) {
 function displayDeepDiveResult(deepDive, question) {
   const container = document.createElement('div');
   container.className = 'deep-dive-overlay active';
-  container.id = 'deepDiveResultOverlay';
 
   const modal = document.createElement('div');
   modal.className = 'deep-dive-modal result-modal';
@@ -1974,11 +1585,10 @@ function displayDeepDiveResult(deepDive, question) {
   const closeBtn = document.createElement('button');
   closeBtn.className = 'modal-close';
   closeBtn.textContent = '✕';
-  closeBtn.onclick = function() { container.remove(); document.body.style.overflow = ''; };
+  closeBtn.onclick = function() { container.remove(); };
 
   const heading = document.createElement('h3');
   heading.textContent = 'Deep Dive Result';
-  heading.style.color = 'var(--accent-color)';
 
   const qElem = document.createElement('p');
   qElem.className = 'sub-text';
@@ -1995,7 +1605,6 @@ function displayDeepDiveResult(deepDive, question) {
   container.appendChild(modal);
 
   document.body.appendChild(container);
-  document.body.style.overflow = 'hidden';
 }
 
 window.switchProfile = function(profileId, buttonElem) {
@@ -2029,12 +1638,12 @@ window.switchProfile = function(profileId, buttonElem) {
         textElem.innerHTML = renderMarkdownClient(explanation.content);
         textElem.style.display = 'block';
       } else {
-        textElem.innerHTML = '<div class="no-explanation-box"><p>No tailored explanation generated for this profile yet.</p>' +
-          (isAuthenticated ? '<button onclick="generateExplanation(' + profileId + ')" class="btn-modal-primary" style="margin-top:12px;">Generate Now</button>' : '<a href="${SITE_URL}#login" class="auth-link" style="margin-top:12px;display:inline-block;">Sign in to generate</a>') + '</div>';
+        textElem.innerHTML = '<div class="no-explanation-box"><p>No explanation generated for this profile yet.</p>' +
+          (isAuthenticated ? '<button onclick="generateExplanation(' + profileId + ')" class="btn-modal-primary" style="margin-top:12px;">Generate Now</button>' : '<a href="/#profile" class="guest-signin-btn" style="margin-top:12px;display:inline-block;">Sign in to generate</a>') + '</div>';
         textElem.style.display = 'block';
       }
     }
-  }, 250);
+  }, 200);
 };
 
 window.generateExplanation = async function(profileId) {
@@ -2060,7 +1669,7 @@ window.generateExplanation = async function(profileId) {
     const data = await response.json();
     if (data.success) {
       showToast('Explanation ready!', 'success');
-      setTimeout(function() { window.location.reload(); }, 600);
+      setTimeout(function() { window.location.reload(); }, 500);
     } else {
       showToast(data.error || 'Failed to generate', 'error');
     }
@@ -2102,21 +1711,7 @@ function renderMarkdownClient(content) {
 window.copyLink = function() {
   navigator.clipboard.writeText(window.location.href).then(function() {
     showToast('Link copied to clipboard!', 'success');
-  }).catch(function() {
-    showToast('Failed to copy link', 'error');
   });
-};
-
-window.shareLink = function() {
-  if (navigator.share) {
-    navigator.share({
-      title: document.title,
-      text: 'Read this simplified article on EasyRead!',
-      url: window.location.href
-    }).catch(function() {});
-  } else {
-    window.copyLink();
-  }
 };
 
 window.addEventListener('scroll', function() {
@@ -2202,88 +1797,80 @@ function getProfileIcon(name) {
 
 function getCSSStyles() {
   return `
-:root{--bg-color:#f6f7f9;--bg-glow:radial-gradient(circle at 50% 0%,rgba(255,255,255,0.9) 0%,transparent 70%);--text-main:#1c1c1e;--text-secondary:#5c5c60;--text-muted:#8e8e93;--border-color:rgba(0,0,0,0.12);--border-subtle:rgba(0,0,0,0.08);--card-bg:rgba(242,242,247,0.75);--card-blur:blur(20px);--input-bg:rgba(0,0,0,0.04);--shadow-color:rgba(0,0,0,0.05);--glass-border:1.5px solid rgba(0,0,0,0.12);--glass-border-subtle:1px solid rgba(0,0,0,0.08);--glass-shadow:0 10px 30px rgba(0,0,0,0.05);--accent-color:#f59847;--accent-hover:#e08735;--accent-glow:rgba(245,152,71,0.15);--icon-color:#5c5c60;--gradient-color-1:#ffd3b6;--gradient-color-2:#ffaaa5;--gradient-color-3:#f59847;--gradient-color-4:#d4e5f7}
-@media(prefers-color-scheme:dark){:root{--bg-color:#000000;--bg-glow:radial-gradient(circle at 50% 0%,rgba(40,40,42,0.4) 0%,transparent 60%);--text-main:#e8e8ea;--text-secondary:#9a9a9e;--text-muted:#6c6c70;--border-color:#2a2a2a;--border-subtle:rgba(255,255,255,0.06);--card-bg:rgba(18,18,18,0.95);--card-blur:blur(16px);--input-bg:#181818;--shadow-color:rgba(0,0,0,0.8);--glass-border:1px solid rgba(255,255,255,0.08);--glass-border-subtle:1px solid rgba(255,255,255,0.04);--glass-shadow:0 8px 32px rgba(0,0,0,0.6);--accent-color:#f59847;--accent-hover:#e08735;--icon-color:#9aa0a6;--gradient-color-1:#1f130f;--gradient-color-2:#30170a;--gradient-color-3:#c49a45;--gradient-color-4:#12161f}}
-[data-theme="dark"]{--bg-color:#000000 !important;--bg-glow:radial-gradient(circle at 50% 0%,rgba(40,40,42,0.4) 0%,transparent 60%) !important;--text-main:#e8e8ea !important;--text-secondary:#9a9a9e !important;--text-muted:#6c6c70 !important;--border-color:#2a2a2a !important;--border-subtle:rgba(255,255,255,0.06) !important;--card-bg:rgba(18,18,18,0.95) !important;--input-bg:#181818 !important;--shadow-color:rgba(0,0,0,0.8) !important;--glass-border:1px solid rgba(255,255,255,0.08) !important;--glass-border-subtle:1px solid rgba(255,255,255,0.04) !important;--glass-shadow:0 8px 32px rgba(0,0,0,0.6) !important;--accent-color:#f59847 !important;--accent-hover:#e08735 !important;--icon-color:#9aa0a6 !important;--gradient-color-1:#1f130f !important;--gradient-color-2:#30170a !important;--gradient-color-3:#c49a45 !important;--gradient-color-4:#12161f !important}
+:root{--bg-color:#f6f7f9;--bg-glow:radial-gradient(circle at 50% 0%,rgba(255,255,255,0.9) 0%,transparent 70%);--text-main:#1c1c1e;--text-secondary:#5c5c60;--text-muted:#8e8e93;--border-color:rgba(0,0,0,0.1);--border-subtle:rgba(0,0,0,0.06);--card-bg:rgba(242,242,247,0.8);--card-blur:blur(16px);--input-bg:rgba(0,0,0,0.04);--shadow-color:rgba(0,0,0,0.04);--glass-border:1.5px solid rgba(0,0,0,0.1);--glass-border-subtle:1px solid rgba(0,0,0,0.06);--glass-shadow:0 8px 24px rgba(0,0,0,0.04);--accent-color:#f59847;--accent-hover:#e08735;--accent-glow:rgba(245,152,71,0.15);--icon-color:#5c5c60;--gradient-color-1:#ffd3b6;--gradient-color-2:#ffaaa5;--gradient-color-3:#f59847;--gradient-color-4:#d4e5f7}
+@media(prefers-color-scheme:dark){:root{--bg-color:#000000;--bg-glow:radial-gradient(circle at 50% 0%,rgba(40,40,42,0.4) 0%,transparent 60%);--text-main:#e8e8ea;--text-secondary:#9a9a9e;--text-muted:#6c6c70;--border-color:#2a2a2a;--border-subtle:rgba(255,255,255,0.06);--card-bg:rgba(18,18,18,0.9);--card-blur:blur(16px);--input-bg:#181818;--shadow-color:rgba(0,0,0,0.8);--glass-border:1px solid rgba(255,255,255,0.08);--glass-border-subtle:1px solid rgba(255,255,255,0.04);--glass-shadow:0 8px 32px rgba(0,0,0,0.6);--accent-color:#f59847;--accent-hover:#e08735;--icon-color:#9aa0a6;--gradient-color-1:#1f130f;--gradient-color-2:#30170a;--gradient-color-3:#c49a45;--gradient-color-4:#12161f}}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background-color:var(--bg-color);background-image:var(--bg-glow);background-repeat:no-repeat;background-size:100% 100%;color:var(--text-main);font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh;width:100%;display:flex;justify-content:center;padding:2.5rem 1.5rem 6rem 1.5rem;transition:background-color 0.3s ease,color 0.3s ease}
-.full-screen-reader{max-width:760px;width:100%}
+body{background-color:var(--bg-color);background-image:var(--bg-glow);background-repeat:no-repeat;background-size:100% 100%;color:var(--text-main);font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh;width:100%;display:flex;justify-content:center;padding:1.5rem 1.25rem 5.5rem 1.25rem;transition:background 0.3s ease}
+.full-screen-reader{max-width:680px;width:100%}
 .progress-bar{position:fixed;top:0;left:0;height:3px;background:var(--accent-color);width:0%;z-index:100;transition:width 0.1s linear}
-.reader-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem}
+.reader-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;padding-bottom:0.8rem;border-bottom:1px solid var(--border-subtle)}
+.header-left{display:flex;align-items:center;gap:8px}
 .brand-link{font-weight:800;color:var(--text-main);text-decoration:none;font-size:1.1rem;letter-spacing:-0.5px}
 .brand-link span{color:var(--accent-color)}
-.category-breadcrumb{font-size:0.85rem;color:var(--text-secondary);display:flex;align-items:center;gap:6px;font-weight:600}
-.category-breadcrumb span{color:var(--text-muted)}
-.category-breadcrumb .current{color:var(--accent-color)}
-.header-actions{display:flex;align-items:center;gap:10px}
-.credits-badge{display:inline-flex;align-items:center;gap:6px;background:var(--card-bg);backdrop-filter:var(--card-blur);border:var(--glass-border-subtle);border-radius:20px;padding:0.4rem 0.9rem;font-size:0.8rem;font-weight:700}
+.header-divider{color:var(--text-muted);font-size:0.9rem}
+.header-breadcrumb{font-size:0.85rem;color:var(--text-secondary);font-weight:600}
+.header-right{display:flex;align-items:center;gap:8px}
+.credits-badge{display:inline-flex;align-items:center;gap:5px;background:var(--card-bg);backdrop-filter:var(--card-blur);border:var(--glass-border-subtle);border-radius:20px;padding:0.35rem 0.75rem;font-size:0.78rem;font-weight:700}
 .lightning-icon{color:var(--accent-color)}
-.guest-badge{font-size:0.75rem;color:var(--text-muted);padding:0.3rem 0.7rem;border:var(--glass-border-subtle);border-radius:14px;background:var(--input-bg)}
-.auth-link{color:var(--accent-color);font-weight:600;text-decoration:none;font-size:0.85rem;padding:0.4rem 0.9rem;border:1.5px solid var(--accent-color);border-radius:20px;transition:all 0.2s}
-.auth-link:hover{background:var(--accent-color);color:#fff}
-.glass-icon-btn{background:var(--input-bg);border:var(--glass-border-subtle);border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--icon-color);transition:all 0.2s ease}
-.glass-icon-btn svg{width:18px;height:18px;fill:currentColor}
-.glass-icon-btn:hover{background:var(--accent-color);color:#fff;border-color:var(--accent-color);transform:scale(1.05)}
-.glass-icon-btn.bookmarked{color:var(--accent-color);background:rgba(245,152,71,0.15)}
-.category-tags-list{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:0.75rem}
-.category-tag{font-size:0.75rem;text-transform:uppercase;letter-spacing:0.8px;color:var(--accent-color);font-weight:700;background:rgba(245,152,71,0.12);padding:0.25rem 0.65rem;border-radius:12px}
-.hero-title{font-size:2.4rem;font-weight:800;line-height:1.2;margin-bottom:1.5rem;color:var(--text-main);letter-spacing:-1px}
-.profile-pills-wrapper{margin-bottom:1.5rem;overflow:hidden}
-.profile-pills-scroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.guest-login-card{display:flex;align-items:center;gap:14px;background:var(--card-bg);backdrop-filter:var(--card-blur);border:var(--glass-border);border-radius:18px;padding:14px 18px;margin-bottom:1.8rem;box-shadow:var(--glass-shadow)}
+.guest-card-icon{font-size:1.4rem;color:var(--accent-color);flex-shrink:0}
+.guest-card-content{flex:1}
+.guest-card-content h4{font-size:0.88rem;font-weight:700;color:var(--text-main);margin-bottom:2px}
+.guest-card-content p{font-size:0.75rem;color:var(--text-secondary);line-height:1.4;margin:0}
+.guest-signin-btn{background:var(--accent-color);color:#fff;text-decoration:none;font-size:0.78rem;font-weight:700;padding:7px 14px;border-radius:12px;white-space:nowrap;transition:background 0.2s}
+.guest-signin-btn:hover{background:var(--accent-hover)}
+.category-tags-list{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:0.6rem}
+.category-tag{font-size:0.72rem;text-transform:uppercase;letter-spacing:0.8px;color:var(--accent-color);font-weight:700;background:rgba(245,152,71,0.12);padding:0.2rem 0.6rem;border-radius:10px}
+.hero-title{font-size:1.9rem;font-weight:800;line-height:1.25;margin-bottom:1.2rem;color:var(--text-main);letter-spacing:-0.5px}
+.profile-pills-wrapper{margin-bottom:1.2rem;overflow:hidden}
+.profile-pills-scroll{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
 .profile-pills-scroll::-webkit-scrollbar{display:none}
-.profile-pill{flex:0 0 auto;background:var(--card-bg);backdrop-filter:var(--card-blur);border:var(--glass-border-subtle);border-radius:30px;padding:0.5rem 1.1rem;font-size:0.85rem;font-weight:600;color:var(--text-secondary);cursor:pointer;transition:all 0.2s ease;display:inline-flex;align-items:center;gap:6px}
-.profile-pill svg{width:16px;height:16px;fill:currentColor}
+.profile-pill{flex:0 0 auto;background:var(--card-bg);backdrop-filter:var(--card-blur);border:var(--glass-border-subtle);border-radius:24px;padding:0.45rem 0.95rem;font-size:0.8rem;font-weight:600;color:var(--text-secondary);cursor:pointer;transition:all 0.2s ease;display:inline-flex;align-items:center;gap:6px}
+.profile-pill svg{width:14px;height:14px;fill:currentColor}
 .profile-pill:hover{color:var(--text-main);background:var(--input-bg)}
-.profile-pill.active{background:var(--accent-color);color:#fff;border-color:var(--accent-color);box-shadow:0 4px 12px var(--accent-glow)}
-.featured-gradient-card{width:100%;min-height:180px;position:relative;border-radius:20px;overflow:hidden;border:var(--glass-border-subtle);background:linear-gradient(-45deg,var(--gradient-color-1),var(--gradient-color-2),var(--gradient-color-3),var(--gradient-color-4));background-size:300% 300%;animation:gradientShift 15s ease infinite;display:flex;align-items:center;justify-content:center;padding:2rem;margin-bottom:2rem}
+.profile-pill.active{background:var(--accent-color);color:#fff;border-color:var(--accent-color)}
+.featured-gradient-card{width:100%;min-height:130px;position:relative;border-radius:18px;overflow:hidden;border:var(--glass-border-subtle);background:linear-gradient(-45deg,var(--gradient-color-1),var(--gradient-color-2),var(--gradient-color-3),var(--gradient-color-4));background-size:300% 300%;animation:gradientShift 15s ease infinite;display:flex;align-items:center;justify-content:center;padding:1.4rem;margin-bottom:1.5rem}
 @keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 .gradient-card-overlay{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.2)}
-.catch-line-content{position:relative;z-index:2;text-align:center;max-width:560px}
-.profile-badge-small{display:inline-block;font-size:0.75rem;font-weight:700;color:rgba(255,255,255,0.9);text-transform:uppercase;letter-spacing:1px;margin-bottom:0.5rem;background:rgba(0,0,0,0.25);padding:0.2rem 0.7rem;border-radius:20px}
-.catch-line-text{font-size:1.35rem;font-weight:700;line-height:1.4;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,0.3);letter-spacing:-0.3px}
-.article-body p{font-size:1.12rem;line-height:1.75;color:var(--text-secondary);margin-bottom:1.5rem}
-.subheading{font-size:1.5rem;font-weight:700;color:var(--text-main);margin-top:2.2rem;margin-bottom:1rem;letter-spacing:-0.5px}
-.subheading-h3{font-size:1.25rem;font-weight:600;color:var(--text-main);margin-top:1.8rem;margin-bottom:0.8rem}
-.content-list{padding-left:1.5rem;margin-bottom:1.5rem;color:var(--text-secondary);line-height:1.75}
-.content-list li{margin-bottom:0.5rem}
-.summary-wrapper{margin-top:2.5rem;margin-bottom:1.5rem}
-.summary-content{background:var(--card-bg);backdrop-filter:var(--card-blur);border-radius:16px;padding:1.5rem;border:var(--glass-border-subtle)}
-.summary-content h4{font-size:0.8rem;text-transform:uppercase;letter-spacing:1px;color:var(--accent-color);margin-bottom:0.5rem;font-weight:700}
-.summary-content p{font-size:1rem;line-height:1.6;color:var(--text-secondary);margin:0}
-.article-metadata{display:flex;align-items:center;justify-content:space-between;margin:1.5rem 0 2rem;padding:1rem 0;border-top:1px solid var(--border-subtle);border-bottom:1px solid var(--border-subtle);font-size:0.85rem;color:var(--text-muted);flex-wrap:wrap;gap:10px}
-.meta-left{display:flex;align-items:center;gap:8px}
+.catch-line-content{position:relative;z-index:2;text-align:center;max-width:520px}
+.profile-badge-small{display:inline-block;font-size:0.68rem;font-weight:700;color:rgba(255,255,255,0.9);text-transform:uppercase;letter-spacing:1px;margin-bottom:0.35rem;background:rgba(0,0,0,0.25);padding:0.15rem 0.6rem;border-radius:14px}
+.catch-line-text{font-size:1.15rem;font-weight:700;line-height:1.4;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.3)}
+.article-body p{font-size:1.02rem;line-height:1.7;color:var(--text-secondary);margin-bottom:1.25rem}
+.subheading{font-size:1.35rem;font-weight:700;color:var(--text-main);margin-top:1.8rem;margin-bottom:0.8rem;letter-spacing:-0.3px}
+.subheading-h3{font-size:1.15rem;font-weight:600;color:var(--text-main);margin-top:1.4rem;margin-bottom:0.6rem}
+.content-list{padding-left:1.4rem;margin-bottom:1.25rem;color:var(--text-secondary);line-height:1.7}
+.summary-wrapper{margin-top:2rem;margin-bottom:1.2rem}
+.summary-content{background:var(--card-bg);backdrop-filter:var(--card-blur);border-radius:16px;padding:1.25rem;border:var(--glass-border-subtle)}
+.summary-content h4{font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--accent-color);margin-bottom:0.4rem;font-weight:700}
+.summary-content p{font-size:0.95rem;line-height:1.55;color:var(--text-secondary);margin:0}
+.article-metadata{display:flex;align-items:center;justify-content:space-between;margin:1.2rem 0 1.8rem;padding:0.8rem 0;border-top:1px solid var(--border-subtle);border-bottom:1px solid var(--border-subtle);font-size:0.78rem;color:var(--text-muted);flex-wrap:wrap;gap:8px}
+.meta-left,.meta-right{display:flex;align-items:center;gap:6px}
 .source-badge{font-weight:600;color:var(--text-main)}
-.meta-right{display:flex;align-items:center;gap:8px}
-.glass-footer{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);width:90%;max-width:720px;background:var(--card-bg);backdrop-filter:var(--card-blur);border:var(--glass-border);border-radius:24px;padding:0.75rem 1.25rem;box-shadow:var(--glass-shadow);z-index:100}
-.footer-content{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.link-pill{background:var(--input-bg);border:var(--glass-border-subtle);border-radius:30px;padding:0.35rem 0.9rem;font-size:0.8rem;color:var(--text-secondary);max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.glass-actions{display:flex;align-items:center;gap:8px}
-.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(50px);background:var(--card-bg);backdrop-filter:var(--card-blur);border:var(--glass-border);border-radius:14px;padding:10px 20px;color:var(--text-main);font-size:0.88rem;box-shadow:var(--glass-shadow);z-index:2000;opacity:0;transition:all 0.3s ease;pointer-events:none;font-weight:600}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
-.toast.toast-success{border-color:#34c759}
-.toast.toast-error{border-color:#ff3b30}
-.login-overlay,.deep-dive-overlay,.review-overlay{position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.5);backdrop-filter:blur(16px);display:none;align-items:center;justify-content:center;z-index:1000;padding:1.5rem;opacity:0;transition:opacity 0.2s ease}
+.glass-footer{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);width:92%;max-width:640px;background:var(--card-bg);backdrop-filter:blur(20px);border:var(--glass-border);border-radius:20px;padding:0.6rem 1rem;box-shadow:var(--glass-shadow);z-index:100}
+.footer-content{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.link-pill{background:var(--input-bg);border:var(--glass-border-subtle);border-radius:20px;padding:0.3rem 0.75rem;font-size:0.75rem;color:var(--text-secondary);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.glass-actions{display:flex;align-items:center;gap:6px}
+.glass-icon-btn{background:var(--input-bg);border:var(--glass-border-subtle);border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--icon-color);transition:all 0.2s}
+.glass-icon-btn svg{width:16px;height:16px;fill:currentColor}
+.glass-icon-btn:hover{background:var(--accent-color);color:#fff;border-color:var(--accent-color)}
+.glass-icon-btn.bookmarked{color:var(--accent-color);background:rgba(245,152,71,0.15)}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(40px);background:var(--card-bg);backdrop-filter:var(--card-blur);border:var(--glass-border);border-radius:12px;padding:8px 16px;color:var(--text-main);font-size:0.82rem;box-shadow:var(--glass-shadow);z-index:2000;opacity:0;transition:all 0.3s ease;pointer-events:none;font-weight:600}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.login-overlay,.deep-dive-overlay,.review-overlay{position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.4);backdrop-filter:blur(16px);display:none;align-items:center;justify-content:center;z-index:1000;padding:1.2rem;opacity:0;transition:opacity 0.2s}
 .login-overlay.active,.deep-dive-overlay.active,.review-overlay.active{display:flex;opacity:1}
-.login-modal,.deep-dive-modal,.review-modal{background:var(--card-bg);backdrop-filter:var(--card-blur);border:var(--glass-border);border-radius:24px;padding:32px 24px;max-width:440px;width:100%;position:relative;text-align:center;box-shadow:0 20px 40px rgba(0,0,0,0.2)}
-.modal-close,.login-close{position:absolute;top:16px;right:16px;background:transparent;border:none;font-size:1.2rem;color:var(--text-muted);cursor:pointer}
-.btn-modal-primary{background:var(--accent-color);color:#fff;border:none;padding:0.75rem 1.6rem;border-radius:30px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block;transition:background 0.2s}
+.login-modal,.deep-dive-modal,.review-modal{background:var(--card-bg);backdrop-filter:var(--card-blur);border:var(--glass-border);border-radius:20px;padding:24px 20px;max-width:380px;width:100%;position:relative;text-align:center}
+.modal-close,.login-close{position:absolute;top:14px;right:14px;background:transparent;border:none;font-size:1.1rem;color:var(--text-muted);cursor:pointer}
+.btn-modal-primary{background:var(--accent-color);color:#fff;border:none;padding:0.65rem 1.4rem;border-radius:24px;font-weight:700;font-size:0.85rem;cursor:pointer;text-decoration:none;display:inline-block}
 .btn-modal-primary:hover{background:var(--accent-hover)}
-.btn-modal-secondary{background:transparent;border:var(--glass-border-subtle);color:var(--text-secondary);padding:0.75rem 1.6rem;border-radius:30px;font-weight:600;cursor:pointer}
-.modal-actions{display:flex;gap:10px;justify-content:center;margin-top:1.5rem}
-.modal-actions button{flex:1}
-.rating-scale{display:flex;gap:10px;justify-content:center;margin:1.5rem 0 0.5rem}
-.rating-scale label{font-size:2rem;cursor:pointer;opacity:0.5;transition:transform 0.2s,opacity 0.2s}
+.btn-modal-secondary{background:transparent;border:var(--glass-border-subtle);color:var(--text-secondary);padding:0.65rem 1.4rem;border-radius:24px;font-weight:700;font-size:0.85rem;cursor:pointer}
+.modal-actions{display:flex;gap:8px;justify-content:center;margin-top:1.2rem}
+.rating-scale{display:flex;gap:8px;justify-content:center;margin:1.2rem 0 0.4rem}
+.rating-scale label{font-size:1.8rem;cursor:pointer;opacity:0.5;transition:transform 0.2s}
 .rating-scale input{display:none}
-.rating-scale input:checked+label,.rating-scale label:hover{opacity:1;transform:scale(1.2)}
-.rating-description{font-size:0.85rem;color:var(--accent-color);font-weight:600;margin-bottom:1rem}
-.feedback-options{display:none;margin-top:1rem}
-.feedback-options.visible{display:block}
-.feedback-grid{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:0.5rem}
-.feedback-chip{background:var(--input-bg);border:var(--glass-border-subtle);color:var(--text-secondary);padding:6px 12px;border-radius:20px;font-size:12px;cursor:pointer}
-.feedback-chip.selected{background:var(--accent-color);color:#fff}
-.deep-dive-modal textarea{width:100%;padding:12px;border-radius:12px;border:var(--glass-border-subtle);background:var(--input-bg);color:var(--text-main);font-family:inherit;font-size:0.95rem;resize:vertical;min-height:90px;outline:none;margin-top:1rem}
-.deep-dive-answer-box{background:var(--input-bg);border-radius:12px;padding:16px;text-align:left;color:var(--text-main);max-height:60vh;overflow-y:auto;line-height:1.6;font-size:0.95rem;margin-top:1rem}
-@media(max-width:600px){body{padding:1.5rem 1rem 5.5rem}.hero-title{font-size:1.8rem}.featured-gradient-card{min-height:140px;padding:1.2rem}.catch-line-text{font-size:1.1rem}.link-pill{max-width:140px}}
+.rating-scale input:checked+label,.rating-scale label:hover{opacity:1;transform:scale(1.15)}
+.rating-description{font-size:0.8rem;color:var(--accent-color);font-weight:600;margin-bottom:0.8rem}
+.deep-dive-modal textarea{width:100%;padding:10px;border-radius:10px;border:var(--glass-border-subtle);background:var(--input-bg);color:var(--text-main);font-family:inherit;font-size:0.9rem;resize:vertical;min-height:80px;margin-top:0.8rem;outline:none}
+.deep-dive-answer-box{background:var(--input-bg);border-radius:10px;padding:14px;text-align:left;color:var(--text-main);max-height:55vh;overflow-y:auto;line-height:1.55;font-size:0.9rem;margin-top:0.8rem}
 `;
 }
 
@@ -2292,11 +1879,11 @@ body{background-color:var(--bg-color);background-image:var(--bg-glow);background
 // ============================================
 
 function renderNotFoundPage() {
-  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Article Not Found | EasyRead</title><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet"><style>body{font-family:'Plus Jakarta Sans',sans-serif;background:#f6f7f9;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;text-align:center}h1{font-size:3rem;color:#f59847}p{color:#5c5c60;margin:1rem 0 2rem}a{background:#f59847;color:#fff;padding:12px 24px;border-radius:24px;text-decoration:none;font-weight:600}</style></head><body><div><h1>404</h1><p>The requested article could not be found.</p><a href="/">Back to Home</a></div></body></html>`;
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Article Not Found | EasyRead</title><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;800&display=swap" rel="stylesheet"><style>body{font-family:'Plus Jakarta Sans',sans-serif;background:#f6f7f9;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;text-align:center}h1{font-size:2.5rem;color:#f59847}p{color:#5c5c60;margin:0.8rem 0 1.5rem}a{background:#f59847;color:#fff;padding:10px 20px;border-radius:20px;text-decoration:none;font-weight:700}</style></head><body><div><h1>404</h1><p>Article not found.</p><a href="/">Return Home</a></div></body></html>`;
 }
 
 function renderErrorPage(message) {
-  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Error | EasyRead</title><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet"><style>body{font-family:'Plus Jakarta Sans',sans-serif;background:#f6f7f9;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;text-align:center}h1{font-size:2rem;color:#ff3b30}p{color:#5c5c60;margin:1rem 0 2rem}a{background:#f59847;color:#fff;padding:12px 24px;border-radius:24px;text-decoration:none;font-weight:600}</style></head><body><div><h1>Unable to Load Article</h1><p>${escapeHtml(message || 'An unexpected error occurred.')}</p><a href="/">Back to Home</a></div></body></html>`;
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Error | EasyRead</title><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;800&display=swap" rel="stylesheet"><style>body{font-family:'Plus Jakarta Sans',sans-serif;background:#f6f7f9;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;text-align:center}h1{font-size:2rem;color:#ff3b30}p{color:#5c5c60;margin:0.8rem 0 1.5rem}a{background:#f59847;color:#fff;padding:10px 20px;border-radius:20px;text-decoration:none;font-weight:700}</style></head><body><div><h1>Unable to Load</h1><p>${escapeHtml(message || 'An error occurred.')}</p><a href="/">Return Home</a></div></body></html>`;
 }
 
 // ============================================
