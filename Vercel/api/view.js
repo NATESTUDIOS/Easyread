@@ -344,9 +344,12 @@ async function trackRead(req, res) {
       const todayUsage = usageRecords.find(u => u.date === today);
 
       if (todayUsage) {
-        await update('usage', todayUsage.usage_id, {
-          articles_read: (todayUsage.articles_read || 0) + 1
-        });
+        const { error: updateError } = await supabase
+          .from('usage')
+          .update({ articles_read: (todayUsage.articles_read || 0) + 1 })
+          .eq('usage_id', todayUsage.usage_id);
+        
+        if (updateError) throw updateError;
       } else {
         await insert('usage', {
           user_id,
@@ -439,13 +442,23 @@ async function trackQuestion(req, res) {
         });
       }
 
-      await update('users', user_id, { credits: user.credits - CREDIT_COSTS.ASK_QUESTION });
+      const { error: updateUserError } = await supabase
+        .from('users')
+        .update({ credits: user.credits - CREDIT_COSTS.ASK_QUESTION })
+        .eq('user_id', user_id);
+      
+      if (updateUserError) throw updateUserError;
 
       if (todayUsage) {
-        await update('usage', todayUsage.usage_id, {
-          questions: (todayUsage.questions || 0) + 1,
-          credits_used: (todayUsage.credits_used || 0) + CREDIT_COSTS.ASK_QUESTION
-        });
+        const { error: updateUsageError } = await supabase
+          .from('usage')
+          .update({
+            questions: (todayUsage.questions || 0) + 1,
+            credits_used: (todayUsage.credits_used || 0) + CREDIT_COSTS.ASK_QUESTION
+          })
+          .eq('usage_id', todayUsage.usage_id);
+        
+        if (updateUsageError) throw updateUsageError;
       } else {
         await insert('usage', {
           user_id,
@@ -633,9 +646,12 @@ async function renderArticlePage(req, res) {
       const todayUsage = usageRecords.find(u => u.date === today);
 
       if (todayUsage) {
-        await update('usage', todayUsage.usage_id, {
-          articles_read: (todayUsage.articles_read || 0) + 1
-        });
+        const { error: updateError } = await supabase
+          .from('usage')
+          .update({ articles_read: (todayUsage.articles_read || 0) + 1 })
+          .eq('usage_id', todayUsage.usage_id);
+        
+        if (updateError) throw updateError;
       } else {
         await insert('usage', {
           user_id,
@@ -1095,18 +1111,27 @@ async function submitRating(req, res) {
     const newCount = (viewData.rating_count || 0) + 1;
     const newAvg = ((viewData.rating_avg || 0) * (viewData.rating_count || 0) + rating) / newCount;
 
-    await update('explanation_views', view_id, {
-      rating_avg: Math.round(newAvg * 100) / 100,
-      rating_count: newCount
-    });
+    const { error: updateViewError } = await supabase
+      .from('explanation_views')
+      .update({
+        rating_avg: Math.round(newAvg * 100) / 100,
+        rating_count: newCount
+      })
+      .eq('view_id', view_id);
+
+    if (updateViewError) throw updateViewError;
 
     const users = await getByColumn('users', 'user_id', user_id);
     if (users.length > 0) {
       const user = users[0];
       const bonus = CREDIT_COSTS.RATING_BONUS;
-      await update('users', user_id, { 
-        credits: user.credits + bonus 
-      });
+      
+      const { error: updateUserError } = await supabase
+        .from('users')
+        .update({ credits: user.credits + bonus })
+        .eq('user_id', user_id);
+      
+      if (updateUserError) throw updateUserError;
 
       await insert('credit_transactions', {
         user_id,
@@ -1222,15 +1247,24 @@ async function handleDeepDive(req, res) {
     }
 
     const user = users[0];
-    await update('users', user_id, { 
-      credits: user.credits - CREDIT_COSTS.DEEP_DIVE 
-    });
+    
+    const { error: updateUserError } = await supabase
+      .from('users')
+      .update({ credits: user.credits - CREDIT_COSTS.DEEP_DIVE })
+      .eq('user_id', user_id);
+    
+    if (updateUserError) throw updateUserError;
 
     if (todayUsage) {
-      await update('usage', todayUsage.usage_id, {
-        deep_dives: (todayUsage.deep_dives || 0) + 1,
-        credits_used: (todayUsage.credits_used || 0) + CREDIT_COSTS.DEEP_DIVE
-      });
+      const { error: updateUsageError } = await supabase
+        .from('usage')
+        .update({
+          deep_dives: (todayUsage.deep_dives || 0) + 1,
+          credits_used: (todayUsage.credits_used || 0) + CREDIT_COSTS.DEEP_DIVE
+        })
+        .eq('usage_id', todayUsage.usage_id);
+      
+      if (updateUsageError) throw updateUsageError;
     } else {
       await insert('usage', {
         user_id,
