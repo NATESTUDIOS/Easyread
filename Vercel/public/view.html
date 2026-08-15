@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>The Art of the Exchange | Editorial</title>
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>EasyRead | Article Viewer</title>
     
     <!-- Modern standard non-italic grotesque typeface (Plus Jakarta Sans) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -44,6 +47,7 @@
             /* Shimmer details */
             --shimmer-color: rgba(255,255,255,0.4);
             --shimmer-bg: linear-gradient(90deg, var(--card-bg) 0%, var(--shimmer-color) 50%, var(--card-bg) 100%);
+            --divider: rgba(0,0,0,0.08);
         }
 
         /* Dark Theme (Auto system override) */
@@ -76,6 +80,7 @@
                 --gradient-color-4: #12161f;
                 
                 --shimmer-color: rgba(255,255,255,0.1);
+                --divider: rgba(255,255,255,0.06);
             }
         }
 
@@ -102,11 +107,12 @@
             --gradient-color-2: #ffaaa5 !important;
             --gradient-color-3: #f59847 !important;
             --gradient-color-4: #d4e5f7 !important;
+            --divider: rgba(0,0,0,0.08) !important;
         }
         
         [data-theme="dark"] {
             --bg-color: #000000 !important;
-            --bg-glow: radial-gradient(circle at 50% 0%, rgba(40, 40, 42, 0.4) 0%, transparent 60%) !important;
+            --bg-glow: radial-gradient(circle at 50% 0%, rgba(40, 40, 42, 0.3) 0%, transparent 60%) !important;
             --text-main: #e8e8ea !important;
             --text-secondary: #9a9a9e !important;
             --text-muted: #6c6c70 !important;
@@ -114,18 +120,15 @@
             --border-subtle: rgba(255,255,255,0.06) !important;
             --card-bg: rgba(18, 18, 18, 0.95) !important;
             --input-bg: #181818 !important;
-            --shadow-color: rgba(0,0,0,0.8) !important;
+            --shadow-color: rgba(0, 0, 0, 0.8) !important;
             --glass-border: 1px solid rgba(255, 255, 255, 0.08) !important;
             --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.04) !important;
             --glass-shadow: 0 8px 32px rgba(0,0,0,0.6) !important;
-            --accent-color: #f59847 !important;
-            --accent-hover: #e08735 !important;
-            --icon-color: #9aa0a6 !important;
-            --shimmer-color: rgba(255,255,255,0.1) !important;
-            --gradient-color-1: #1f130f !important;
-            --gradient-color-2: #30170a !important;
-            --gradient-color-3: #c49a45 !important;
-            --gradient-color-4: #12161f !important;
+            --mode-bg: rgba(44, 44, 46, 0.5) !important;
+            --mode-text: #a0a0a4 !important;
+            --pill-arrow: #3a3a3c !important;
+            --divider: rgba(255,255,255,0.06) !important;
+            --list-text: #c0c0c4 !important;
         }
 
         /* --- Global Reset & Typography --- */
@@ -212,7 +215,6 @@
         .credits-badge .lightning-icon {
             color: var(--accent-color);
             font-size: 0.9rem;
-            animation: pulse-glow 2s infinite ease-in-out;
         }
         .credits-badge .credits-val {
             color: var(--text-main);
@@ -223,11 +225,6 @@
             font-size: 0.7rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-        }
-
-        @keyframes pulse-glow {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.2); opacity: 0.8; }
         }
 
         /* Credit Balance Flash (when review bonus is awarded) */
@@ -298,7 +295,9 @@
         .profile-pill svg {
             width: 18px;
             height: 18px;
-            fill: currentColor;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.2;
             flex-shrink: 0;
         }
 
@@ -370,7 +369,7 @@
             min-height: 400px;
         }
 
-        .content-shimmer .shimmer-line {
+        .shimmer-line {
             height: 20px;
             background: var(--shimmer-bg);
             background-size: 200% 100%;
@@ -709,6 +708,13 @@
             opacity: 0.9;
         }
 
+        /* Scalable custom emoji SVG styles */
+        .scale-svg-icon {
+            width: 42px; height: 42px;
+            stroke: currentColor; fill: none; stroke-width: 1.8;
+            transition: transform 0.2s;
+        }
+
         .rating-description {
             font-size: 0.85rem;
             color: var(--accent-color);
@@ -795,42 +801,110 @@
         }
         .btn-modal-primary:hover { background: var(--accent-hover); }
 
-        /* --- Toast Notification --- */
-        .toast {
+        /* --- Reusable Offline Overlay --- */
+        .dialog-overlay {
             position: fixed;
-            bottom: 100px;
-            left: 50%;
-            transform: translateX(-50%) translateY(100px);
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1000;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        [data-theme="dark"] .dialog-overlay {
+            background: rgba(0, 0, 0, 0.55);
+        }
+        .dialog-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .glass-dialog {
             background: var(--card-bg);
             backdrop-filter: var(--card-blur);
             -webkit-backdrop-filter: var(--card-blur);
             border: var(--glass-border);
-            border-radius: 16px;
-            padding: 12px 24px;
+            border-radius: 28px;
+            padding: 28px;
+            width: 90%;
+            max-width: 380px;
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.15);
+            transform: scale(0.9) translateY(10px);
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            text-align: center;
+        }
+        [data-theme="dark"] .glass-dialog {
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6);
+        }
+        .dialog-overlay.active .glass-dialog {
+            transform: scale(1) translateY(0);
+        }
+        .dialog-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .dialog-title {
+            font-size: 18px;
+            font-weight: 700;
             color: var(--text-main);
-            font-size: 0.9rem;
-            box-shadow: var(--glass-shadow);
-            z-index: 2000;
-            opacity: 0;
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            pointer-events: none;
-            font-weight: 600;
+        }
+        .dialog-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            line-height: 1;
+            padding: 4px;
         }
 
-        .toast.show {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
+        /* Dynamic Glassmorphic Empty State Style */
+        .empty-state-view {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 4rem 1.5rem;
+            min-height: 60vh;
+            width: 100%;
+            animation: fadeIn 0.4s ease forwards;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        .empty-icon-box {
+            width: 64px; height: 64px;
+            border-radius: 50%;
+            background: var(--mode-bg);
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 1.5rem;
+            color: var(--text-muted);
+            border: var(--glass-border-subtle);
+        }
+        .empty-svg-icon {
+            width: 32px; height: 32px;
+        }
+        .empty-state-view h3 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.5px;
+        }
+        .empty-state-view p {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            max-width: 320px;
         }
 
-        @media (max-width: 600px) {
-            .hero-title { font-size: 2rem; }
-            .featured-gradient-card { min-height: 200px; padding: 1.5rem; }
-            .catch-line-text { font-size: 1.25rem; }
-            .glass-footer { bottom: 10px; width: 95%; border-radius: 20px; padding: 0.6rem 1rem; }
-            .footer-content { gap: 8px; }
-            .link-pill { max-width: 110px; font-size: 0.75rem; padding: 0.2rem 0.8rem; }
-            .glass-icon-btn { width: 34px; height: 34px; }
-            .glass-icon-btn svg { width: 16px; height: 16px; }
+        @media (max-width: 420px) {
+            .header { padding: 1rem 1rem 0.5rem 1rem; }
+            .content-area { padding: 0 1rem 1rem 1rem; }
             .review-modal { padding: 24px 20px; margin: 1rem; }
         }
     </style>
@@ -843,17 +917,30 @@
     <!-- Toast Notification -->
     <div class="toast" id="toast"></div>
 
-    <div class="full-screen-reader">
+    <!-- Reusable Empty State View -->
+    <div class="empty-state-view" id="emptyStateView" style="display: none;">
+        <div class="empty-icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="empty-svg-icon"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+        </div>
+        <h3>No active context loading</h3>
+        <p>Drop a website link, paste long notes, or ask questions in the Home tab to load dynamic content inside your viewer.</p>
+        <button class="auth-submit-btn" style="max-width: 180px; margin-top: 1.5rem;" onclick="window.parent.postMessage({ type: 'switchTab', tab: 'home' }, '*');">Go to Home</button>
+    </div>
+
+    <!-- Main Reader Workspace -->
+    <div class="full-screen-reader" id="readerWorkspace" style="display: none;">
         
         <!-- Reader Header: Category Breadcrumb + Credits Indicator -->
         <header class="reader-header">
-            <div class="category-breadcrumb">
-                Finance <span>›</span> <span class="current">Stock Exchange</span>
+            <div class="category-breadcrumb" id="breadcrumbContainer">
+                General <span>›</span> <span class="current">Reading Hub</span>
             </div>
             
             <!-- Credits Display Pill (Connected to DB backend schema) -->
-            <div class="credits-badge" id="userCreditsBadge" title="Credit Balance">
-                <span class="lightning-icon">⚡</span>
+            <div class="credits-badge" id="userCreditsBadge" title="Credit Balance" onclick="window.parent.postMessage({ type: 'switchTab', tab: 'profile' }, '*');">
+                <span class="lightning-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 16px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                </span>
                 <span class="credits-val" id="creditsValueDisplay">38.5</span>
                 <span class="credits-label">credits</span>
             </div>
@@ -861,35 +948,12 @@
 
         <!-- Hero Title Section -->
         <header class="hero-section">
-            <h1 class="hero-title">The Art of the <span class="accent">Exchange</span></h1>
+            <h1 class="hero-title" id="articleHeroTitle">The Art of the <span class="accent">Exchange</span></h1>
 
-            <!-- Horizontal Scrolling Profile Pills with SVG Icons -->
+            <!-- Horizontal Scrolling Profile Pills with SVG Icons (Personal Learning Focuses) -->
             <div class="profile-pills-wrapper">
                 <div class="profile-pills-scroll" id="profilePills">
-                    <button class="profile-pill active" data-profile="everyday" onclick="switchProfile('everyday', this)">
-                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
-                        Everyday Life
-                    </button>
-                    <button class="profile-pill" data-profile="football" onclick="switchProfile('football', this)">
-                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
-                        Football
-                    </button>
-                    <button class="profile-pill" data-profile="gaming" onclick="switchProfile('gaming', this)">
-                        <svg viewBox="0 0 24 24"><path d="M21.58 16.09l-1.09-7.66C20.21 6.46 18.52 5 16.53 5H7.47C5.48 5 3.79 6.46 3.51 8.43l-1.09 7.66C2.2 17.63 3.39 19 4.94 19h14.12c1.55 0 2.74-1.37 2.52-2.91zM7 10c.83 0 1.5.67 1.5 1.5S7.83 13 7 13s-1.5-.67-1.5-1.5S6.17 10 7 10zm10 0c.83 0 1.5.67 1.5 1.5S17.83 13 17 13s-1.5-.67-1.5-1.5S16.17 10 17 10z"/></svg>
-                        Gaming
-                    </button>
-                    <button class="profile-pill" data-profile="movies" onclick="switchProfile('movies', this)">
-                        <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z"/></svg>
-                        Movies
-                    </button>
-                    <button class="profile-pill" data-profile="cooking" onclick="switchProfile('cooking', this)">
-                        <svg viewBox="0 0 24 24"><path d="M18.06 22.99h1.66c.84 0 1.53-.64 1.63-1.46L23 5.05h-5V1h-2v4.05h-4.97l.27 16.48c.1.82.79 1.46 1.63 1.46h1.66zM10 12.04h8V14h-8v-1.96z"/></svg>
-                        Cooking
-                    </button>
-                    <button class="profile-pill" data-profile="tech" onclick="switchProfile('tech', this)">
-                        <svg viewBox="0 0 24 24"><path d="M20 18c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/></svg>
-                        Tech
-                    </button>
+                    <!-- Dynamic Cognitive Perspective Pills Rendered via API -->
                 </div>
             </div>
         </header>
@@ -911,49 +975,33 @@
                 <div class="shimmer-line"></div>
             </div>
             <div id="articleText" style="display: none;">
-                <p class="dropcap">
-                    Markets are not just numbers; they are the collective heartbeat of global ambition. Every tick on the stock exchange tells a story of risk, resilience, and the relentless pursuit of value. 
-                </p>
-
-                <p>
-                    Today, the <span class="highlight-text">S&P 500</span> reflects a cautious optimism, while the tech-heavy sectors paint a picture of volatility. But to the seasoned eye, the real movement happens beneath the surface — in the <strong>bid-ask spreads</strong>, the volume spikes, and the whispers of institutional shifts.
-                </p>
-
-                <h2 class="subheading">The <span class="highlight-text">Psychology</span> of the Floor</h2>
-                
-                <p>
-                    Understanding the exchange requires more than algorithms; it demands <span class="highlight-text">emotional intelligence</span>. Fear drives sell-offs. Greed fuels bull runs. The smartest capital isn't always the fastest — it's the <strong>most patient</strong>.
-                </p>
-
-                <p>
-                    As we navigate the <span class="highlight-text">bear</span> and <span class="highlight-text">bull</span> cycles of 2026, one truth remains: the market is a mirror of human nature. To profit, you must first understand the crowd.
-                </p>
+                <!-- Dynamically Populated Paragraphs -->
             </div>
         </article>
 
         <!-- Summary Section -->
-        <div class="summary-wrapper">
+        <div class="summary-wrapper" id="summarySection" style="display: none;">
             <div class="summary-content">
                 <h4>Summary</h4>
-                <p>Market movements reflect human psychology. Patience and emotional intelligence outweigh speed in navigating the 2026 bull and bear cycles. True success lies in understanding the crowd, not just the charts.</p>
+                <p id="summaryText">Market movements reflect human psychology. Patience and emotional intelligence outweigh speed in navigating the 2026 bull and bear cycles. True success lies in understanding the crowd, not just the charts.</p>
             </div>
         </div>
 
         <!-- Article Metadata -->
-        <div class="article-metadata">
+        <div class="article-metadata" id="articleMetadataSection" style="display: none;">
             <div class="meta-left">
-                <span class="author-name">By Capital Pulse</span>
+                <span class="author-name" id="authorName">By Capital Pulse</span>
                 <span>·</span>
-                <span>August 14, 2026</span>
+                <span id="articleDate">August 14, 2026</span>
             </div>
-            <div class="meta-right">
+            <div class="meta-right" id="readTimeText">
                 5 min read
             </div>
         </div>
 
         <!-- Reader Avatars -->
-        <div class="reader-section">
-            <div class="reader-avatars">
+        <div class="reader-section" id="readerAvatarsSection" style="display: none;">
+            <div class="reader-avatars" id="avatarPillsCircle">
                 <div class="mini-circle gold">JR</div>
                 <div class="mini-circle blue">AK</div>
                 <div class="mini-circle green">MS</div>
@@ -961,28 +1009,28 @@
                 <div class="mini-circle orange">PL</div>
             </div>
             <div class="reader-count">
-                <strong>1.4k</strong> readers this hour
+                <strong id="liveReadersCount">1.4k</strong> readers this hour
             </div>
         </div>
 
         <!-- Glass Footer -->
         <div class="glass-footer">
             <div class="footer-content">
-                <div class="link-pill">
-                    <span>🔗 capitalpulse.com/</span>art...
+                <div class="link-pill" id="sourceLinkPill">
+                    <span id="sourceLinkDomain">🔗 capitalpulse.com</span>
                 </div>
                 
                 <div class="glass-actions">
                     <button class="glass-icon-btn" id="copyLinkBtn" onclick="copyLink()" title="Copy link">
-                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                     </button>
                     
                     <button class="glass-icon-btn" onclick="shareLink()" title="Share link">
-                        <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
                     </button>
 
                     <button class="glass-icon-btn liked" id="bookmarkBtn" onclick="toggleBookmark()" title="Like">
-                        <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
                     </button>
                 </div>
             </div>
@@ -990,37 +1038,52 @@
 
     </div>
 
-    <!-- Redesigned Centered Review Modal with dynamic emotional feedback -->
+    <!-- Redesigned Centered Review Modal with dynamic emotional feedback line-icons -->
     <div class="review-overlay" id="reviewModal">
         <div class="review-modal" id="reviewModalBody">
             <button class="modal-close" onclick="closeReview()">✕</button>
             
             <!-- Dynamic Bonus Incentive Badge -->
             <div class="bonus-incentive-pill">
-                <span>⚡</span> Get +0.2 Credit Reward
+                <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 12px; height: 14px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></span> Get +0.2 Credit Reward
             </div>
             
             <h3>Share feedback</h3>
-            <p class="sub-text">Your ratings help fine-tune our personalized AI translations.</p>
+            <p class="sub-text">Your ratings help fine-tune our personalized explanations.</p>
             
             <div class="review-question">Was this explanation easy to understand?</div>
             
-            <!-- Highly Expressive Scales UI -->
+            <!-- Highly Expressive Scales Vector UI (replaces all raw emojis) -->
             <div class="rating-scale" id="ratingGroup">
                 <input type="radio" id="mRate1" name="rating" value="1" onclick="updateRatingFeedback(1)">
-                <label for="mRate1" title="Confusing">😣</label>
+                <label for="mRate1" title="Confusing">
+                    <!-- Rating 1: Confused Vector Icon -->
+                    <svg class="scale-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M16 16s-1.5-2-4-2-4 2-4 2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
+                </label>
                 
                 <input type="radio" id="mRate2" name="rating" value="2" onclick="updateRatingFeedback(2)">
-                <label for="mRate2" title="Unclear">😕</label>
+                <label for="mRate2" title="Unclear">
+                    <!-- Rating 2: Unclear Vector Icon -->
+                    <svg class="scale-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="15" x2="16" y2="15"></line><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
+                </label>
                 
                 <input type="radio" id="mRate3" name="rating" value="3" onclick="updateRatingFeedback(3)">
-                <label for="mRate3" title="Standard">😐</label>
+                <label for="mRate3" title="Standard">
+                    <!-- Rating 3: Neutral Vector Icon -->
+                    <svg class="scale-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="14" x2="16" y2="14"></line><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
+                </label>
                 
                 <input type="radio" id="mRate4" name="rating" value="4" onclick="updateRatingFeedback(4)">
-                <label for="mRate4" title="Clear">🙂</label>
+                <label for="mRate4" title="Clear">
+                    <!-- Rating 4: Happy Vector Icon -->
+                    <svg class="scale-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
+                </label>
                 
                 <input type="radio" id="mRate5" name="rating" value="5" onclick="updateRatingFeedback(5)">
-                <label for="mRate5" title="Amazing">🤯</label>
+                <label for="mRate5" title="Amazing">
+                    <!-- Rating 5: Mind Blown Vector Icon -->
+                    <svg class="scale-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M8 13s1.5 3 4 3 4-3 4-3"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="M4.93 4.93l1.41 1.41"></path><path d="M17.66 17.66l1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="M6.34 17.66l-1.41 1.41"></path><path d="M19.07 4.93l-1.41 1.41"></path></svg>
+                </label>
             </div>
             
             <div class="rating-description" id="ratingDesc">Tap your reaction above</div>
@@ -1044,13 +1107,54 @@
         </div>
     </div>
 
+    <!-- Reusable Offline Connection Error Dialog -->
+    <div class="dialog-overlay" id="errorDialog">
+        <div class="glass-dialog">
+            <div class="dialog-header">
+                <h3 class="dialog-title">Connection Offline</h3>
+                <button class="dialog-close" onclick="closeDialog('errorDialog')">&times;</button>
+            </div>
+            <div style="padding: 10px 0; text-align: center;">
+                <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(255, 59, 48, 0.1); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px; color: #ff3b30;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 28px; height: 28px;"><line x1="1" y1="1" x2="23" y2="23"></line><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.5"></path><path d="M5 12.5a10.94 10.94 0 0 1 5.17-2.39"></path><path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
+                </div>
+                <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 20px;" id="errorDialogMessage">
+                    Unable to connect to the EasyRead gateway. Check your internet connection or try again.
+                </p>
+                <button class="auth-submit-btn" style="background: var(--accent-color); margin-top: 0;" onclick="retryLastAction()">Retry Connection</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // --- 1. State Configuration ---
+        // --- API Global Configuration ---
+        const API_BASE_URL = 'https://easytoread.vercel.app/api';
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        let articleId = urlParams.get('id') || urlParams.get('article_id');
+        let articleSlug = urlParams.get('slug');
+        const userId = localStorage.getItem('easyread_user_id') || 'guest';
+
+        let currentExplanationViewId = null;
+        let preferredProfileId = localStorage.getItem('easyread-profile-id') || '1';
         let currentThemeSetting = 'auto';
         let currentCredits = parseFloat(localStorage.getItem('easyread-credits')) || 38.5;
+        let lastFailedAction = null;
 
-        // Sync header on launch
-        document.getElementById('creditsValueDisplay').textContent = currentCredits.toFixed(1);
+        // Dynamic vector icons used for the profile tabs
+        const profileIcons = {
+            1: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>`,
+            2: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>`,
+            3: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>`,
+            4: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>`
+        };
+
+        // --- 1. Synced Coordination Updates ---
+        function updateCreditsUI() {
+            const display = document.getElementById('creditsValueDisplay');
+            if (display) display.textContent = currentCredits.toFixed(1);
+        }
+        updateCreditsUI();
 
         function applyTheme(theme) {
             currentThemeSetting = theme;
@@ -1063,77 +1167,303 @@
             }
         }
 
-        // Apply theme instantly on load
         applyTheme(localStorage.getItem('easyread-theme') || 'auto');
 
-        // Watch storage events from sibling frames
         window.addEventListener('storage', (event) => {
             if (event.key === 'easyread-theme') {
                 applyTheme(event.newValue || 'auto');
             }
         });
 
-        // Watch message broadcasts from parent frame
         window.addEventListener('message', (event) => {
-            if (event.data && event.data.type === 'themeChanged') {
-                applyTheme(event.data.theme);
+            if (event.data) {
+                if (event.data.type === 'themeChanged') {
+                    applyTheme(event.data.theme);
+                } else if (event.data.type === 'loadSpecificArticle') {
+                    articleId = event.data.article_id;
+                    articleSlug = event.data.slug || '';
+                    fetchArticleData();
+                }
             }
         });
 
-        // Continuous sync verification loop
         setInterval(() => {
             const storedTheme = localStorage.getItem('easyread-theme') || 'auto';
             if (storedTheme !== currentThemeSetting) {
                 applyTheme(storedTheme);
             }
+            const storedCredits = parseFloat(localStorage.getItem('easyread-credits')) || 38.5;
+            if (storedCredits !== currentCredits) {
+                currentCredits = storedCredits;
+                updateCreditsUI();
+            }
         }, 600);
 
-        // --- 2. Toast Notification ---
+        // --- 2. Offline Overlay Operations ---
+        function showErrorDialog(message, retryCallback) {
+            document.getElementById('errorDialogMessage').textContent = message;
+            lastFailedAction = retryCallback;
+            openDialog('errorDialog');
+        }
+
+        function retryLastAction() {
+            closeDialog('errorDialog');
+            if (lastFailedAction && typeof lastFailedAction === 'function') {
+                lastFailedAction();
+            }
+        }
+
+        function openDialog(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function closeDialog(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // --- 3. Dynamic Profile perspectives (pills) Loader ---
+        async function fetchProfilesList() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/profiles`);
+                if (!response.ok) throw new Error();
+                const profiles = await response.json();
+                renderProfilePills(profiles);
+            } catch (err) {
+                renderProfilePills([
+                    { profile_id: 1, name: 'Everyday Analogy' },
+                    { profile_id: 2, name: 'Strategic Synthesis' },
+                    { profile_id: 3, name: 'Technical Analytics' },
+                    { profile_id: 4, name: 'Foundational Overview' }
+                ]);
+            }
+        }
+
+        function renderProfilePills(profiles) {
+            const container = document.getElementById('profilePills');
+            container.innerHTML = '';
+
+            profiles.forEach(p => {
+                const icon = profileIcons[p.profile_id] || profileIcons[1];
+                const activeClass = p.profile_id.toString() === preferredProfileId ? 'active' : '';
+                
+                container.innerHTML += `
+                    <button class="profile-pill ${activeClass}" data-profile-id="${p.profile_id}" onclick="switchProfile(${p.profile_id}, this)">
+                        ${icon} ${p.name}
+                    </button>
+                `;
+            });
+        }
+
+        // --- 4. Dynamic Explanation and Metadata Fetching ---
+        async function fetchArticleData() {
+            const workspace = document.getElementById('readerWorkspace');
+            const emptyView = document.getElementById('emptyStateView');
+            const contentShimmer = document.getElementById('contentShimmer');
+            const articleText = document.getElementById('articleText');
+
+            if (!articleId && !articleSlug) {
+                workspace.style.display = 'none';
+                emptyView.style.display = 'flex';
+                return;
+            }
+
+            workspace.style.display = 'block';
+            emptyView.style.display = 'none';
+            contentShimmer.style.display = 'block';
+            articleText.style.display = 'none';
+
+            // Wait 1.2s to showcase shimmer loading state
+            await new Promise(resolve => setTimeout(resolve, 1200));
+
+            if (!navigator.onLine) {
+                workspace.style.display = 'none';
+                emptyView.style.display = 'flex';
+                showErrorDialog('Unable to sync article metadata. Check your connection.', fetchArticleData);
+                return;
+            }
+
+            try {
+                // Fetch dynamic article parameters from Supabase backend
+                const response = await fetch(`${API_BASE_URL}/articles?action=get&id=${articleId}`);
+                if (!response.ok) throw new Error();
+                const article = await response.json();
+
+                renderMetadata(article);
+                await fetchExplanation(article.article_id, preferredProfileId);
+
+            } catch (err) {
+                workspace.style.display = 'none';
+                emptyView.style.display = 'flex';
+                showErrorDialog('Failed to fetch article details. Content may be missing or deleted.', fetchArticleData);
+            }
+        }
+
+        async function fetchExplanation(artId, profileId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/explanation?action=get-by-article&article_id=${artId}&profile_id=${profileId}`);
+                if (!response.ok) throw new Error();
+                const data = await response.json(); 
+
+                currentExplanationViewId = data.explanation.view_id;
+                renderContent(data.explanation.content, data.explanation.summary);
+
+            } catch (err) {
+                showErrorDialog('Connection lost while syncing explanation content.', () => fetchExplanation(artId, profileId));
+            }
+        }
+
+        function renderMetadata(art) {
+            document.getElementById('articleHeroTitle').textContent = art.canonical_title;
+            document.getElementById('breadcrumbContainer').innerHTML = `
+                Finance <span>›</span> <span class="current">${art.categories ? art.categories[0] : 'Knowledge'}</span>
+            `;
+            document.getElementById('authorName').textContent = `By ${art.source_domain || 'Knowledge Pulse'}`;
+            document.getElementById('sourceLinkDomain').textContent = `🔗 ${art.source_domain || 'easytoread.vercel.app'}`;
+            
+            const readTime = Math.round(art.word_count / 200) || 5;
+            document.getElementById('readTimeText').textContent = `${readTime} min read`;
+
+            document.getElementById('articleMetadataSection').style.display = 'flex';
+            document.getElementById('readerAvatarsSection').style.display = 'flex';
+        }
+
+        function renderContent(content, summary) {
+            const textContainer = document.getElementById('articleText');
+            const shimmer = document.getElementById('contentShimmer');
+            const catchLineText = document.getElementById('catchLineText');
+
+            const paragraphs = content.split('\n\n');
+            textContainer.innerHTML = `
+                <p class="dropcap">${paragraphs[0]}</p>
+                ${paragraphs.slice(1).map(p => `<p>${p}</p>`).join('')}
+            `;
+
+            catchLineText.textContent = summary || "Expanding your knowledge.";
+            document.getElementById('summaryText').textContent = summary || "";
+
+            shimmer.style.display = 'none';
+            textContainer.style.display = 'block';
+            document.getElementById('summarySection').style.display = 'block';
+        }
+
+        function switchProfile(profileId, element) {
+            preferredProfileId = profileId.toString();
+            localStorage.setItem('easyread-profile-id', preferredProfileId);
+
+            document.querySelectorAll('.profile-pill').forEach(pill => pill.classList.remove('active'));
+            element.classList.add('active');
+
+            fetchExplanation(articleId, preferredProfileId);
+        }
+
+        // --- 5. Review & Rating Processing (Dynamic Accrual) ---
+        function updateRatingFeedback(rating) {
+            const ratingDesc = document.getElementById('ratingDesc');
+            const feedbackOptions = document.getElementById('feedbackOptions');
+            const textMap = {
+                1: "Extremely confusing or complicated. 😣",
+                2: "Slightly difficult to follow. 😕",
+                3: "Average, standard explanation. 😐",
+                4: "Clear and very easy to follow! 🙂",
+                5: "Incredible explanation! Mind blown. 🤯"
+            };
+            ratingDesc.textContent = textMap[rating] || "Select how clear this text was";
+            modalBody.className = `review-modal rating-glow-${rating}`;
+            
+            if (rating <= 3) {
+                feedbackOptions.classList.add('visible');
+            } else {
+                feedbackOptions.classList.remove('visible');
+            }
+        }
+
+        async function submitReview() {
+            const selectedRating = document.querySelector('input[name="rating"]:checked');
+            if (!selectedRating) {
+                showToast('Please select a rating first ⭐');
+                return;
+            }
+
+            const ratingValue = selectedRating.value;
+            const selectedChips = Array.from(document.querySelectorAll('.feedback-chip.selected'))
+                                       .map(chip => chip.textContent);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/account?action=rate&user_id=${userId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        view_id: currentExplanationViewId,
+                        rating: parseInt(ratingValue),
+                        feedback: selectedChips.join(', ')
+                    })
+                });
+
+                currentCredits += 0.2;
+                localStorage.setItem('easyread-credits', currentCredits.toString());
+                
+                const display = document.getElementById('creditsValueDisplay');
+                const badge = document.getElementById('userCreditsBadge');
+                
+                display.textContent = currentCredits.toFixed(1);
+                badge.classList.add('flash-success');
+                setTimeout(() => badge.classList.remove('flash-success'), 1100);
+
+                showToast('Review submitted! +0.2 Credits Awarded ⚡');
+                closeReview();
+
+            } catch (err) {
+                showErrorDialog('Failed to process review. Please check connection and try again.', submitReview);
+            }
+        }
+
+        // --- 6. Helper Actions ---
+        async function toggleBookmark() {
+            const btn = document.getElementById('bookmarkBtn');
+            const active = btn.classList.toggle('liked');
+
+            try {
+                await fetch(`${API_BASE_URL}/articles?action=bookmark`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        article_id: articleId,
+                        add_to_bookmarks: active
+                    })
+                });
+                showToast(active ? 'Article saved to Bookmarks! 🔖' : 'Bookmark removed.');
+            } catch (err) {
+                showToast(active ? 'Bookmark registered locally! 🔖' : 'Bookmark removed.');
+            }
+        }
+
+        function copyLink() {
+            navigator.clipboard.writeText(window.location.href);
+            showToast('Link copied to clipboard! 📋');
+        }
+
+        function shareLink() {
+            if (navigator.share) {
+                navigator.share({
+                    title: document.getElementById('articleHeroTitle').textContent,
+                    text: document.getElementById('catchLineText').textContent,
+                    url: window.location.href
+                }).catch(() => {});
+            } else {
+                copyLink();
+            }
+        }
+
+        // --- Toast & Initializers ---
         function showToast(message) {
             const toast = document.getElementById('toast');
             toast.textContent = message;
             toast.classList.add('show');
-            
             clearTimeout(toast._timeout);
-            toast._timeout = setTimeout(() => {
-                toast.classList.remove('show');
-            }, 2500);
+            toast._timeout = setTimeout(() => toast.classList.remove('show'), 2500);
         }
 
-        // --- 3. Progress Bar Logic ---
-        window.addEventListener('scroll', () => {
-            const scrollTop = window.scrollY;
-            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-            const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
-            document.getElementById('progressBar').style.width = progress + '%';
-        });
-
-        // --- 4. Content Loading with Shimmer ---
-        function loadContent() {
-            const shimmer = document.getElementById('contentShimmer');
-            const text = document.getElementById('articleText');
-            
-            setTimeout(() => {
-                if (shimmer) shimmer.style.display = 'none';
-                if (text) {
-                    text.style.display = 'block';
-                    const paragraphs = text.querySelectorAll('p');
-                    paragraphs.forEach((p, index) => {
-                        p.style.opacity = '0';
-                        p.style.animation = `fadeInContent 0.6s ease forwards`;
-                        p.style.animationDelay = `${(index + 1) * 0.1}s`;
-                    });
-                    const headings = text.querySelectorAll('.subheading');
-                    headings.forEach((h, index) => {
-                        h.style.opacity = '0';
-                        h.style.animation = `fadeInContent 0.6s ease forwards`;
-                        h.style.animationDelay = `${(paragraphs.length + index + 1) * 0.1}s`;
-                    });
-                }
-            }, 1200);
-        }
-
-        // --- 5. Clever Review Modal Logic ---
         const modal = document.getElementById('reviewModal');
         const modalBody = document.getElementById('reviewModalBody');
         let modalTriggered = false;
@@ -1142,16 +1472,9 @@
             const scrollY = window.scrollY;
             const windowHeight = window.innerHeight;
             const docHeight = document.documentElement.scrollHeight;
-
             if (scrollY + windowHeight >= docHeight - 120 && !modalTriggered) {
                 modalTriggered = true;
-                setTimeout(() => {
-                    openReview();
-                }, 600);
-            }
-            
-            if (scrollY + windowHeight < docHeight - 450) {
-                modalTriggered = false; // allow re-trigger if they scroll back up
+                setTimeout(openReview, 600);
             }
         });
 
@@ -1163,257 +1486,19 @@
         function closeReview() {
             modal.classList.remove('active');
             document.body.style.overflow = '';
-            
-            // Reset modal classes
             modalBody.className = "review-modal";
         }
 
-        // Dismiss modal on background clicks
         modal.addEventListener('click', function(e) {
             if (e.target === this) {
                 closeReview();
             }
         });
 
-        // Live Descriptive updates & interactive glow triggers
-        function updateRatingFeedback(rating) {
-            const ratingDesc = document.getElementById('ratingDesc');
-            const feedbackOptions = document.getElementById('feedbackOptions');
-            
-            const ratingTextMap = {
-                1: "Extremely confusing or complicated. 😣",
-                2: "Slightly difficult to follow. 😕",
-                3: "Average, standard explanation. 😐",
-                4: "Clear and very easy to follow! 🙂",
-                5: "Incredible explanation! Mind blown. 🤯"
-            };
-
-            ratingDesc.textContent = ratingTextMap[rating] || "Select how clear this text was";
-            
-            // Morph glow color matching user response
-            modalBody.className = `review-modal rating-glow-${rating}`;
-
-            // Show constructive feedback chips only for score <= 3
-            if (rating <= 3) {
-                feedbackOptions.classList.add('visible');
-            } else {
-                feedbackOptions.classList.remove('visible');
-            }
-        }
-
-        function submitReview() {
-            const selectedRating = document.querySelector('input[name="rating"]:checked');
-            if (!selectedRating) {
-                showToast('Please select a rating first ⭐');
-                return;
-            }
-            
-            // Add rating bonus with visual response
-            currentCredits += 0.2;
-            localStorage.setItem('easyread-credits', currentCredits.toString());
-            
-            const creditDisplay = document.getElementById('creditsValueDisplay');
-            const creditBadge = document.getElementById('userCreditsBadge');
-            
-            creditDisplay.textContent = currentCredits.toFixed(1);
-            creditBadge.classList.add('flash-success');
-            
-            setTimeout(() => {
-                creditBadge.classList.remove('flash-success');
-            }, 1100);
-
-            showToast('Review submitted! +0.2 Credits Awarded ⚡');
-            closeReview();
-        }
-
-        // --- 6. Profile Switcher Logic with Dynamic Catch Line Updates ---
-        const catchLines = {
-            everyday: "“Every tick tells a story of risk, resilience, and patience.”",
-            football: "“When panic sets in, even the best tactical players can get sold off.”",
-            gaming: "“Winning isn't about reflexes—it's about mastering game fundamentals.”",
-            movies: "“Plot twists, dramatic cliffhangers, and heroes: every day is a storyboard.”",
-            cooking: "“Balancing flavors and heat is exactly like managing portfolio risk.”",
-            tech: "“Algorithms rule the exchange, but emotional intelligence still wins the floor.”"
-        };
-
-        function switchProfile(profileId, element) {
-            const pills = document.querySelectorAll('.profile-pill');
-            pills.forEach(p => p.classList.remove('active'));
-            element.classList.add('active');
-
-            const text = document.getElementById('articleText');
-            const shimmer = document.getElementById('contentShimmer');
-            const catchLineText = document.getElementById('catchLineText');
-
-            if (text) text.style.display = 'none';
-            if (shimmer) shimmer.style.display = 'block';
-            
-            // Transition and swap the catch line dynamically
-            if (catchLineText) {
-                catchLineText.style.opacity = '0';
-                catchLineText.style.transform = 'translateY(10px)';
-            }
-            
-            setTimeout(() => {
-                const contentArea = document.getElementById('articleContent');
-                
-                if (catchLineText) {
-                    catchLineText.textContent = catchLines[profileId] || catchLines.everyday;
-                    catchLineText.style.opacity = '1';
-                    catchLineText.style.transform = 'translateY(0)';
-                }
-
-                if (profileId === 'football') {
-                    contentArea.innerHTML = `
-                        <div class="content-shimmer" id="contentShimmer" style="display: none;"></div>
-                        <div id="articleText">
-                            <p class="dropcap">
-                                Think of the stock market like a massive football league. Each company is a team, and the S&P 500 is the league table. 
-                                When a team wins (makes profit), their fans (investors) buy more merchandise (stocks), pushing them higher up the table.
-                            </p>
-                            <p>
-                                The "Psychology of the Floor" is exactly like a derby match. When the home team scores (good news), the crowd (market) goes wild. 
-                                But when the opposing team scores (bad news), panic sets in, and even the best players (stocks) can get sold off.
-                            </p>
-                            <h2 class="subheading">The <span class="highlight-text">Tactics</span> on the Pitch</h2>
-                            <p>
-                                Understanding the market is like understanding tactical game management. You need to know when to defend (hold) 
-                                and when to push for an attack (buy). The smartest players are the ones who keep their heads cool while the crowd screams.
-                            </p>
-                        </div>
-                    `;
-                } else if (profileId === 'gaming') {
-                    contentArea.innerHTML = `
-                        <div class="content-shimmer" id="contentShimmer" style="display: none;"></div>
-                        <div id="articleText">
-                            <p class="dropcap">
-                                The stock market is the ultimate strategy game. Every trade is a dynamic move, every position is an item, and the objective is to scale your portfolio stats while watching your risk meter.
-                            </p>
-                            <p>
-                                Think of <span class="highlight-text">bull markets</span> as special damage multipliers and <span class="highlight-text">bear markets</span> as demanding boss fights. 
-                                The path to a high score isn't fast button-mashing, but learning game mechanics (fundamental structures).
-                            </p>
-                            <h2 class="subheading">Managing Your <span class="highlight-text">Health Bar</span></h2>
-                            <p>
-                                Just like in gaming, the market has recurring patterns. Recognizing indicators is like learning enemy animation frames. 
-                                Keep your health bar safe: never over-commit on a single quest, and always keep a spare save file.
-                            </p>
-                        </div>
-                    `;
-                } else if (profileId === 'movies') {
-                    contentArea.innerHTML = `
-                        <div class="content-shimmer" id="contentShimmer" style="display: none;"></div>
-                        <div id="articleText">
-                            <p class="dropcap">
-                                Every trading day on the exchange is a three-act cinematic blockbuster. There are heroes (bulls), antagonists (bears), sudden plot twists (volatility), and major cliffhangers (earnings calls).
-                            </p>
-                            <p>
-                                The S&P 500 is our lead character, but there are multiple cinematic sub-franchises: the tech division thriller, emerging tech dramas, and commodity documentaries. Each tells a cohesive story.
-                            </p>
-                            <h2 class="subheading">Storyboarding the <span class="highlight-text">Trendlines</span></h2>
-                            <p>
-                                Reading technical charts is like analyzing storyboards. Green frames (scenes of triumph), red frames (conflict), and trading volume (audience reaction) map human desire in real time.
-                            </p>
-                        </div>
-                    `;
-                } else if (profileId === 'cooking') {
-                    contentArea.innerHTML = `
-                        <div class="content-shimmer" id="contentShimmer" style="display: none;"></div>
-                        <div id="articleText">
-                            <p class="dropcap">
-                                Balancing flavours and managing heat is exactly like managing portfolio risk. Every ingredient you toss into the pan represents a position, and the fire is the current market volatility.
-                            </p>
-                            <p>
-                                A seasoned chef knows not to rush the process. If you turn the flame up too high (over-leverage), you will burn the dish (blow your account). Success in the kitchen, like on the trading floor, demands patience, timing, and structural balance.
-                            </p>
-                        </div>
-                    `;
-                } else if (profileId === 'tech') {
-                    contentArea.innerHTML = `
-                        <div class="content-shimmer" id="contentShimmer" style="display: none;"></div>
-                        <div id="articleText">
-                            <p class="dropcap">
-                                Algorithms and microprocessors rule the exchange today, executing millions of calculations in a fraction of a millisecond. Yet, behind the servers and logic units, human psychology remains the true driver of long-term price action.
-                            </p>
-                            <p>
-                                High-frequency trading and automated systems operate on structural inputs, but the macro-cycles are defined by collective emotion. To excel in the digital-era exchange, you must understand both the code and the crowd.
-                            </p>
-                        </div>
-                    `;
-                } else {
-                    // Default / Everyday Life
-                    contentArea.innerHTML = `
-                        <div class="content-shimmer" id="contentShimmer" style="display: none;"></div>
-                        <div id="articleText">
-                            <p class="dropcap">
-                                Markets are not just numbers; they are the collective heartbeat of global ambition. Every tick on the stock exchange tells a story of risk, resilience, and the relentless pursuit of value. 
-                            </p>
-                            <p>
-                                Today, the <span class="highlight-text">S&P 500</span> reflects a cautious optimism, while the tech-heavy sectors paint a picture of volatility. But to the seasoned eye, the real movement happens beneath the surface — in the <strong>bid-ask spreads</strong>, the volume spikes, and the whispers of institutional shifts.
-                            </p>
-                            <h2 class="subheading">The <span class="highlight-text">Psychology</span> of the Floor</h2>
-                            <p>
-                                Understanding the exchange requires more than algorithms; it demands <span class="highlight-text">emotional intelligence</span>. Fear drives sell-offs. Greed fuels bull runs. The smartest capital isn't always the fastest — it's the <strong>most patient</strong>.
-                            </p>
-                        </div>
-                    `;
-                }
-                
-                // Re-trigger visual fade-in transitions for updated contents
-                const newText = contentArea.querySelector('#articleText');
-                if (newText) {
-                    const paragraphs = newText.querySelectorAll('p');
-                    paragraphs.forEach((p, index) => {
-                        p.style.opacity = '0';
-                        p.style.animation = `fadeInContent 0.6s ease forwards`;
-                        p.style.animationDelay = `${(index + 1) * 0.1}s`;
-                    });
-                    const headings = newText.querySelectorAll('.subheading');
-                    headings.forEach((h, index) => {
-                        h.style.opacity = '0';
-                        h.style.animation = `fadeInContent 0.6s ease forwards`;
-                        h.style.animationDelay = `${(paragraphs.length + index + 1) * 0.1}s`;
-                    });
-                }
-            }, 800);
-        }
-
-        // --- 7. Helper Sharing & Bookmark Functions ---
-        function copyLink() {
-            const dummy = document.createElement('input');
-            document.body.appendChild(dummy);
-            dummy.value = 'https://capitalpulse.com/art-of-the-exchange-2026';
-            dummy.select();
-            document.execCommand('copy');
-            document.body.removeChild(dummy);
-            
-            const btn = document.getElementById('copyLinkBtn');
-            btn.style.color = '#28a745';
-            setTimeout(() => btn.style.color = '', 2000);
-            showToast('Link copied to clipboard! 📋');
-        }
-
-        function shareLink() {
-            if (navigator.share) {
-                navigator.share({
-                    title: 'The Art of the Exchange',
-                    text: 'Check out this deep dive into market psychology!',
-                    url: 'https://capitalpulse.com/art-of-the-exchange-2026'
-                }).catch(() => {});
-            } else {
-                navigator.clipboard.writeText('https://capitalpulse.com/art-of-the-exchange-2026').then(() => {
-                    showToast('Link copied to clipboard! 📋');
-                });
-            }
-        }
-
-        function toggleBookmark() {
-            const btn = document.getElementById('bookmarkBtn');
-            const active = btn.classList.toggle('liked');
-            showToast(active ? 'Article saved to Bookmarks! 🔖' : 'Bookmark removed.');
-        }
-
-        document.addEventListener('DOMContentLoaded', loadContent);
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchProfilesList();
+            fetchArticleData();
+        });
     </script>
 </body>
 </html>

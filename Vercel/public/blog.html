@@ -41,9 +41,6 @@
             --pill-arrow: rgba(0, 0, 0, 0.06);
             --divider: rgba(0,0,0,0.08);
             --list-text: #1c1c1e;
-            
-            --hero-img: url('https://images.unsplash.com/photo-1611974739785-0e4f3d2f4c8d?q=80&w=800&auto=format&fit=crop');
-            --hero-gradient-overlay: linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.45) 40%, rgba(0,0,0,0.85) 100%);
         }
 
         /* DARK THEME (AUTO SYSTEM OR DATA-THEME OVERRIDE) */
@@ -68,9 +65,6 @@
                 --pill-arrow: #3a3a3c;
                 --divider: rgba(255,255,255,0.06);
                 --list-text: #c0c0c4;
-                
-                --hero-img: url('https://images.unsplash.com/photo-1611974739785-0e4f3d2f4c8d?q=80&w=800&auto=format&fit=crop');
-                --hero-gradient-overlay: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.55) 35%, rgba(0,0,0,0.92) 100%);
             }
         }
         
@@ -166,10 +160,11 @@
             display: flex; align-items: center; justify-content: center;
             cursor: pointer;
             transition: all 0.2s ease;
+            color: var(--text-muted);
         }
         .header-icon:active { transform: scale(0.92); }
-        .header-icon:hover { background: var(--pill-arrow); }
-        .header-icon svg { width: 18px; height: 18px; fill: var(--text-muted); }
+        .header-icon:hover { background: var(--pill-arrow); color: var(--text-main); }
+        .header-icon svg { width: 18px; height: 18px; fill: currentColor; stroke: currentColor; stroke-width: 0.5; }
 
         /* --- Content Area --- */
         .content-area {
@@ -198,7 +193,7 @@
             box-shadow: 0 0 0 4px rgba(245, 152, 71, 0.15);
         }
         .search-bar:active { transform: scale(0.98); }
-        .search-bar svg { width: 18px; height: 18px; fill: var(--text-placeholder); margin-right: 12px; flex-shrink: 0; }
+        .search-bar svg { width: 18px; height: 18px; fill: none; stroke: var(--text-placeholder); stroke-width: 2.2; margin-right: 12px; flex-shrink: 0; }
         .search-bar input {
             width: 100%; background: transparent; border: none; outline: none;
             font-family: inherit; font-size: 0.95rem; font-weight: 500; color: var(--text-main);
@@ -217,21 +212,21 @@
             transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: flex-end;
+            cursor: pointer;
         }
         .hero-card:active { transform: scale(0.98); }
 
-        .hero-card .bg-img {
+        .hero-card .bg-gradient-mesh {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: var(--hero-img); background-size: cover; background-position: center; 
             z-index: 1;
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .hero-card:hover .bg-img {
+        .hero-card:hover .bg-gradient-mesh {
             transform: scale(1.03);
         }
         .hero-card .overlay-gradient {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--hero-gradient-overlay); z-index: 2;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0.75) 100%); z-index: 2;
         }
         .hero-text-content {
             position: relative; width: 100%; padding: 1.8rem 1.5rem; z-index: 3;
@@ -248,7 +243,7 @@
             backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 10px;
             display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.15);
         }
-        .hero-icon svg { width: 16px; height: 16px; fill: #fff; }
+        .hero-icon svg { width: 16px; height: 16px; fill: none; stroke: #fff; stroke-width: 2.2; }
         
         .hero-text-content h2 { 
             font-size: 1.55rem; font-weight: 800; line-height: 1.25; 
@@ -292,11 +287,9 @@
             cursor: pointer; transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
             animation: fadeSlideUp 0.4s ease forwards;
             opacity: 0;
+            width: 100%;
+            text-align: left;
         }
-        .article-item:nth-child(1) { animation-delay: 0.05s; }
-        .article-item:nth-child(2) { animation-delay: 0.1s; }
-        .article-item:nth-child(3) { animation-delay: 0.15s; }
-        .article-item:nth-child(4) { animation-delay: 0.2s; }
 
         @keyframes fadeSlideUp {
             from { opacity: 0; transform: translateY(10px); }
@@ -312,7 +305,7 @@
             transition: transform 0.2s;
         }
         .article-item:active .article-icon { transform: scale(0.9); }
-        .article-icon svg { width: 22px; height: 22px; fill: currentColor; }
+        .article-icon svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; }
 
         .article-content { flex: 1; min-width: 0; }
         .article-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-main); }
@@ -325,25 +318,150 @@
             flex-shrink: 0; transition: all 0.2s;
         }
         .article-item:hover .article-action { background: var(--mode-bg); transform: scale(1.05); }
-        .article-action svg { width: 14px; height: 14px; fill: var(--text-placeholder); }
+        .article-action svg { width: 14px; height: 14px; fill: none; stroke: var(--text-placeholder); stroke-width: 2.2; }
 
-        /* --- Skeleton Loader --- */
+        /* --- Skeleton Loading Elements --- */
+        .shimmer-element {
+            position: relative;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+        [data-theme="light"] .shimmer-element {
+            background: rgba(0, 0, 0, 0.04);
+        }
+        .shimmer-element::after {
+            position: absolute;
+            top: 0; right: 0; bottom: 0; left: 0;
+            transform: translateX(-100%);
+            background-image: linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.08) 20%,
+                rgba(255, 255, 255, 0.15) 60%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            animation: shimmerSwipe 1.5s infinite;
+            content: '';
+        }
+        [data-theme="light"] .shimmer-element::after {
+            background-image: linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(0, 0, 0, 0.02) 20%,
+                rgba(0, 0, 0, 0.05) 60%,
+                rgba(255, 255, 255, 0) 100%
+            );
+        }
+        @keyframes shimmerSwipe {
+            100% { transform: translateX(100%); }
+        }
+
         .skeleton-container {
             display: flex; flex-direction: column; gap: 0.8rem; padding-top: 0.5rem;
         }
-        .skeleton-item {
-            display: flex; align-items: center; gap: 16px; padding: 0.5rem 0;
+        .shimmer-card-wrapper {
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 0.5rem 0;
+            width: 100%;
         }
-        .skeleton-icon { width: 48px; height: 48px; border-radius: 14px; background: var(--mode-bg); }
-        .skeleton-lines { flex: 1; display: flex; flex-direction: column; gap: 6px; }
-        .skeleton-line { height: 12px; border-radius: 8px; background: var(--mode-bg); width: 100%; animation: shimmerLoader 1.5s infinite; }
-        .skeleton-line.short { width: 60%; }
-        @keyframes shimmerLoader {
-            0% { opacity: 0.6; }
-            50% { opacity: 0.3; }
-            100% { opacity: 0.6; }
+        .shimmer-element.circle {
+            width: 48px; height: 48px;
+            border-radius: 14px;
         }
-        .skeleton-action { width: 32px; height: 32px; border-radius: 50%; background: var(--mode-bg); }
+        .shimmer-element.line-title {
+            width: 70%; height: 14px;
+            margin-bottom: 8px;
+        }
+        .shimmer-element.line-meta {
+            width: 45%; height: 11px;
+        }
+        .shimmer-element.line-arrow {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+        }
+
+        /* --- Reusable Error / Offline Overlay --- */
+        .dialog-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1000;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        [data-theme="dark"] .dialog-overlay {
+            background: rgba(0, 0, 0, 0.55);
+        }
+        .dialog-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .glass-dialog {
+            background: var(--card-bg);
+            backdrop-filter: var(--card-blur);
+            -webkit-backdrop-filter: var(--card-blur);
+            border: var(--glass-border);
+            border-radius: 28px;
+            padding: 28px;
+            width: 90%;
+            max-width: 380px;
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.15);
+            transform: scale(0.9) translateY(10px);
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            text-align: center;
+        }
+        [data-theme="dark"] .glass-dialog {
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6);
+        }
+        .dialog-overlay.active .glass-dialog {
+            transform: scale(1) translateY(0);
+        }
+        .dialog-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .dialog-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .dialog-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            line-height: 1;
+            padding: 4px;
+        }
+        .auth-submit-btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 14px;
+            background: var(--accent-color);
+            border: none;
+            color: white;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            box-shadow: 0 4px 12px rgba(245, 152, 71, 0.25);
+            transition: all 0.2s;
+        }
+        .auth-submit-btn:active {
+            transform: scale(0.98);
+        }
 
         /* --- Responsive --- */
         @media (max-width: 420px) {
@@ -369,11 +487,11 @@
         <header class="header">
             <div class="header-title">EASY<span class="accent">READ</span></div>
             <div class="header-actions">
-                <div class="header-icon">
-                    <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                <div class="header-icon" onclick="focusSearch()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                 </div>
-                <div class="header-icon">
-                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+                <div class="header-icon" onclick="window.parent.postMessage({ type: 'switchTab', tab: 'profile' }, '*');">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                 </div>
             </div>
         </header>
@@ -383,46 +501,47 @@
             <!-- Glass Search Bar -->
             <div class="search-container">
                 <div class="search-bar">
-                    <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                    <input type="text" placeholder="Search articles..." />
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" id="searchInput" oninput="filterArticlesLocal()" placeholder="Search articles..." />
                 </div>
             </div>
 
             <!-- 1. Refined Premium Overlay Hero Card -->
-            <div class="hero-card">
-                <div class="bg-img"></div>
+            <div class="hero-card" id="heroCard" style="display: none;">
+                <div class="bg-gradient-mesh" id="heroGradientMesh"></div>
                 <div class="overlay-gradient"></div>
-                <div class="hero-text-content">
-                    <div class="hero-meta-row">
-                        <span class="hero-tag">Featured</span>
-                        <div class="hero-icon">
-                            <svg viewBox="0 0 24 24"><path d="M12 2l-5 5v10l5 5 5-5V7l-5-5zm0 4.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5-1.5-.67-1.5-1.5.67-1.5 1.5-1.5zm0 11c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-                        </div>
-                    </div>
-                    <h2>Market Psychology</h2>
-                    <p class="hero-lead">Understanding the crowd, not just the charts.</p>
-                    <p class="hero-description">Markets are not just numbers; they are the collective heartbeat of global ambition. Every tick on the stock exchange tells a story of risk, resilience, and patience.</p>
+                <div class="hero-text-content" id="heroTextContent">
+                    <!-- Dynamic Featured Content Mapped Here -->
                 </div>
             </div>
 
+            <!-- Hero Skeleton Loader -->
+            <div class="hero-card shimmer-card-wrapper" id="heroShimmer" style="height: 345px; background: var(--card-bg); border-radius: 24px; padding: 24px; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start;">
+                <span class="shimmer-element" style="width: 80px; height: 20px; border-radius: 20px; margin-bottom: 12px;"></span>
+                <span class="shimmer-element" style="width: 60%; height: 28px; margin-bottom: 12px;"></span>
+                <span class="shimmer-element" style="width: 40%; height: 16px; margin-bottom: 12px;"></span>
+                <span class="shimmer-element" style="width: 90%; height: 14px; margin-bottom: 6px;"></span>
+                <span class="shimmer-element" style="width: 75%; height: 14px;"></span>
+            </div>
+
             <!-- 2. Horizontal Category Pills -->
-            <div class="categories-scroll">
-                <button class="category-pill active">For you</button>
-                <button class="category-pill">Top charts</button>
-                <button class="category-pill">Finance</button>
-                <button class="category-pill">Crypto</button>
-                <button class="category-pill">Economy</button>
-                <button class="category-pill">Tech</button>
+            <div class="categories-scroll" id="categoryScrollContainer">
+                <button class="category-pill active" onclick="filterCategory('All', this)">For you</button>
+                <button class="category-pill" onclick="filterCategory('Finance', this)">Finance</button>
+                <button class="category-pill" onclick="filterCategory('Stock Exchange', this)">Stock Exchange</button>
+                <button class="category-pill" onclick="filterCategory('Economy', this)">Economy</button>
+                <button class="category-pill" onclick="filterCategory('Crypto', this)">Crypto</button>
+                <button class="category-pill" onclick="filterCategory('Tech', this)">Tech</button>
             </div>
 
             <!-- 3. Transparent Article List -->
             <div id="articleContainer">
                 <!-- Skeleton Loader -->
                 <div class="skeleton-container" id="skeletonLoader">
-                    <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-lines"><div class="skeleton-line"></div><div class="skeleton-line short"></div></div><div class="skeleton-action"></div></div>
-                    <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-lines"><div class="skeleton-line"></div><div class="skeleton-line short"></div></div><div class="skeleton-action"></div></div>
-                    <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-lines"><div class="skeleton-line"></div><div class="skeleton-line short"></div></div><div class="skeleton-action"></div></div>
-                    <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-lines"><div class="skeleton-line"></div><div class="skeleton-line short"></div></div><div class="skeleton-action"></div></div>
+                    <div class="shimmer-card-wrapper"><div class="shimmer-element circle"></div><div class="shimmer-info" style="flex:1;"><div class="shimmer-element line-title"></div><div class="shimmer-element line-meta"></div></div><div class="shimmer-element line-arrow"></div></div>
+                    <div class="shimmer-card-wrapper"><div class="shimmer-element circle"></div><div class="shimmer-info" style="flex:1;"><div class="shimmer-element line-title"></div><div class="shimmer-element line-meta"></div></div><div class="shimmer-element line-arrow"></div></div>
+                    <div class="shimmer-card-wrapper"><div class="shimmer-element circle"></div><div class="shimmer-info" style="flex:1;"><div class="shimmer-element line-title"></div><div class="shimmer-element line-meta"></div></div><div class="shimmer-element line-arrow"></div></div>
+                    <div class="shimmer-card-wrapper"><div class="shimmer-element circle"></div><div class="shimmer-info" style="flex:1;"><div class="shimmer-element line-title"></div><div class="shimmer-element line-meta"></div></div><div class="shimmer-element line-arrow"></div></div>
                 </div>
                 <!-- Actual Content -->
                 <div class="article-list" id="articleList" style="display: none;"></div>
@@ -431,7 +550,68 @@
         </main>
     </div>
 
+    <!-- Reusable Offline Connection Error Dialog -->
+    <div class="dialog-overlay" id="errorDialog">
+        <div class="glass-dialog">
+            <div class="dialog-header">
+                <h3 class="dialog-title">Connection Offline</h3>
+                <button class="dialog-close" onclick="closeDialog('errorDialog')">&times;</button>
+            </div>
+            <div style="padding: 10px 0; text-align: center;">
+                <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(255, 59, 48, 0.1); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px; color: #ff3b30;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 28px; height: 28px;"><line x1="1" y1="1" x2="23" y2="23"></line><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.5"></path><path d="M5 12.5a10.94 10.94 0 0 1 5.17-2.39"></path><path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
+                </div>
+                <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 20px;" id="errorDialogMessage">
+                    Unable to connect to the EasyRead gateway. Check your internet connection or try again.
+                </p>
+                <button class="auth-submit-btn" style="background: var(--accent-color); margin-top: 0;" onclick="retryLastAction()">Retry Connection</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // --- API Global Configuration ---
+        const API_BASE_URL = 'https://easytoread.vercel.app/api';
+        
+        let fetchedArticles = []; // Cached array of articles
+        let activeCategory = 'All';
+        let lastFailedAction = null;
+
+        // Vector icon set mappings
+        const dynamicIcons = {
+            trend: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 11 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>`,
+            dollar: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>`,
+            computer: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>`,
+            globe: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>`,
+            book: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>`,
+            analytics: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>`
+        };
+        const listIcons = [dynamicIcons.trend, dynamicIcons.dollar, dynamicIcons.computer, dynamicIcons.globe, dynamicIcons.analytics, dynamicIcons.book];
+
+        // High-end color gradients for non-image list nodes
+        const gradientPalettes = [
+            'linear-gradient(135deg, #f59847, #ffb067)',
+            'linear-gradient(135deg, #20c997, #198754)',
+            'linear-gradient(135deg, #0d6efd, #0a58ca)',
+            'linear-gradient(135deg, #e83e8c, #b8216b)',
+            'linear-gradient(135deg, #6f42c1, #522c97)'
+        ];
+
+        function getRandomGradient() {
+            return gradientPalettes[Math.floor(Math.random() * gradientPalettes.length)];
+        }
+
+        // Abstract responsive mesh gradient generator for Hero Card (zero image assets)
+        function getMeshGradient() {
+            const palettes = [
+                'radial-gradient(circle at 0% 0%, #ffd3b6 0%, transparent 50%), radial-gradient(circle at 100% 100%, #ffaaa5 0%, transparent 50%), linear-gradient(135deg, #f59847, #d4e5f7)',
+                'radial-gradient(circle at 0% 100%, #1f130f 0%, transparent 60%), radial-gradient(circle at 100% 0%, #30170a 0%, transparent 60%), linear-gradient(135deg, #c49a45, #12161f)'
+            ];
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || 
+                           (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            return isDark ? palettes[1] : palettes[0];
+        }
+
         // --- 1. Load and Sync Theme from localStorage/Parent Broadcasts ---
         let currentThemeSetting = 'auto';
 
@@ -444,19 +624,19 @@
             } else {
                 document.documentElement.removeAttribute('data-theme');
             }
+            // Dynamic theme transition shift update for hero gradient mesh
+            const mesh = document.getElementById('heroGradientMesh');
+            if (mesh) mesh.style.background = getMeshGradient();
         }
 
-        // Apply theme instantly on startup
         applyTheme(localStorage.getItem('easyread-theme') || 'auto');
 
-        // Watch storage events from sister frames
         window.addEventListener('storage', (event) => {
             if (event.key === 'easyread-theme') {
                 applyTheme(event.newValue || 'auto');
             }
         });
 
-        // Watch message broadcasts from parent index frame
         window.addEventListener('message', (event) => {
             if (event.data && event.data.type === 'themeChanged') {
                 applyTheme(event.data.theme);
@@ -471,54 +651,323 @@
             }
         }, 600);
 
-        // --- 2. List of Assets ---
-        const svgIcons = [
-            `<svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>`,
-            `<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>`,
-            `<svg viewBox="0 0 24 24"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg>`,
-            `<svg viewBox="0 0 24 24"><path d="M20 18c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/></svg>`,
-            `<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`,
-            `<svg viewBox="0 0 24 24"><path d="M12 2c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm9 7h-6v13h-2v-6h-2v6H9V9H3V7h18v2z"/></svg>`,
-            `<svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`,
-            `<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>`,
-            `<svg viewBox="0 0 24 24"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"/></svg>`,
-            `<svg viewBox="0 0 24 24"><path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z"/></svg>`
-        ];
-        const pastelColors = ['#ffadad','#ffd6a5','#fdffb6','#caffbf','#9bf6ff','#a0c4ff','#bdb2ff','#ffc6ff','#ffb3c6','#fbc4ab'];
-        const articles = [
-            { title: "The Art of the Exchange", author: "By Capital Pulse", views: "143", time: "2 hours ago" },
-            { title: "Why Bonds Matter", author: "By Finance 101", views: "89", time: "5 hours ago" },
-            { title: "Crypto Volatility Explained", author: "By Crypto Insider", views: "212", time: "1 day ago" },
-            { title: "Bear Market Survival Guide", author: "By Market Analyst", views: "56", time: "2 days ago" }
-        ];
-
-        // --- 3. Render List with Fade-in Animation ---
-        function renderArticles() {
-            const container = document.getElementById('articleList');
-            const skeleton = document.getElementById('skeletonLoader');
-            
-            // Simulate loading delay for the animation
-            setTimeout(() => {
-                skeleton.style.display = 'none';
-                container.style.display = 'flex';
-                
-                container.innerHTML = '';
-                articles.forEach(article => {
-                    const randomIcon = svgIcons[Math.floor(Math.random() * svgIcons.length)];
-                    const randomColor = pastelColors[Math.floor(Math.random() * pastelColors.length)];
-                    const item = document.createElement('div');
-                    item.className = 'article-item';
-                    item.innerHTML = `
-                        <div class="article-icon" style="background: ${randomColor};">${randomIcon}</div>
-                        <div class="article-content"><div class="article-title">${article.title}</div><div class="article-subtitle">${article.author}</div><div class="article-meta">${article.views} views <span class="dot"></span> ${article.time}</div></div>
-                        <div class="article-action"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg></div>
-                    `;
-                    container.appendChild(item);
-                });
-            }, 800); // 800ms loading animation
+        // --- 2. Offline Overlay Operations ---
+        function showErrorDialog(message, retryCallback) {
+            document.getElementById('errorDialogMessage').textContent = message;
+            lastFailedAction = retryCallback;
+            openDialog('errorDialog');
         }
 
-        document.addEventListener('DOMContentLoaded', renderArticles);
+        function retryLastAction() {
+            closeDialog('errorDialog');
+            if (lastFailedAction && typeof lastFailedAction === 'function') {
+                lastFailedAction();
+            }
+        }
+
+        function openDialog(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function closeDialog(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // --- 3. Dynamic Fetching and Ingestion Pipelines ---
+        async function fetchArticlesList() {
+            const container = document.getElementById('articleList');
+            const skeleton = document.getElementById('skeletonLoader');
+            const heroCard = document.getElementById('heroCard');
+            const heroShimmer = document.getElementById('heroShimmer');
+
+            // Set loading state
+            skeleton.style.display = 'flex';
+            container.style.display = 'none';
+            heroCard.style.display = 'none';
+            heroShimmer.style.display = 'flex';
+
+            // Wait 1.2s to showcase shimmer loading state
+            await new Promise(resolve => setTimeout(resolve, 1200));
+
+            if (!navigator.onLine) {
+                // If offline, render cache fallbacks and alert user
+                loadFallbackArticles();
+                showErrorDialog('Unable to sync blog feed. You appear to be offline.', fetchArticlesList);
+                return;
+            }
+
+            const userId = localStorage.getItem('easyread_user_id') || 'guest';
+
+            try {
+                // Fetch dynamic articles list from server API
+                const response = await fetch(`${API_BASE_URL}/articles?action=list&user_id=${userId}`);
+                if (!response.ok) throw new Error();
+                const data = await response.json(); // returns { articles: [...] }
+
+                fetchedArticles = data.articles || [];
+                
+                renderFeaturedHero();
+                renderFilteredArticlesList();
+            } catch (err) {
+                loadFallbackArticles();
+                showErrorDialog('Connection failed while loading active articles database.', fetchArticlesList);
+            }
+        }
+
+        // Selected featured article completely randomized from loaded articles array
+        function renderFeaturedHero() {
+            const heroCard = document.getElementById('heroCard');
+            const heroShimmer = document.getElementById('heroShimmer');
+            const heroTextContent = document.getElementById('heroTextContent');
+            const mesh = document.getElementById('heroGradientMesh');
+
+            if (fetchedArticles.length === 0) {
+                heroShimmer.style.display = 'none';
+                return;
+            }
+
+            // Pick a random article from fetched list to feature
+            const randomIndex = Math.floor(Math.random() * fetchedArticles.length);
+            const heroArticle = fetchedArticles[randomIndex];
+
+            // Render Hero content dynamically
+            mesh.style.background = getMeshGradient();
+            
+            // Format meta info
+            const sourceDomain = heroArticle.source_domain || 'Capital Pulse';
+            const readTime = Math.round(heroArticle.word_count / 200) || 5;
+
+            heroTextContent.innerHTML = `
+                <div class="hero-meta-row">
+                    <span class="hero-tag">Featured</span>
+                    <div class="hero-icon">
+                        ${dynamicIcons.analytics}
+                    </div>
+                </div>
+                <h2>${heroArticle.canonical_title}</h2>
+                <p class="hero-lead">By ${sourceDomain} · ${readTime} min read</p>
+                <p class="hero-description">${heroArticle.summary || 'Tap to translate and explore personalized perspectives.'}</p>
+            `;
+
+            heroCard.onclick = () => openArticle(heroArticle);
+
+            heroShimmer.style.display = 'none';
+            heroCard.style.display = 'flex';
+        }
+
+        function renderFilteredArticlesList() {
+            const container = document.getElementById('articleList');
+            const skeleton = document.getElementById('skeletonLoader');
+
+            skeleton.style.display = 'none';
+            container.style.display = 'flex';
+            container.innerHTML = '';
+
+            // Filter collection by category tag selection
+            const filtered = activeCategory === 'All' 
+                ? fetchedArticles 
+                : fetchedArticles.filter(art => art.categories && art.categories.includes(activeCategory));
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: var(--text-secondary); padding: 3rem 0; width: 100%;">
+                        No articles found in this category.
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach((art, index) => {
+                const randomIcon = listIcons[index % listIcons.length];
+                const readTime = Math.round(art.word_count / 200) || 3;
+                const sourceDomain = art.source_domain || 'Knowledge Hub';
+                const views = art.view_count || Math.floor(Math.random() * 200) + 12;
+
+                const item = document.createElement('button');
+                item.className = 'article-item';
+                item.onclick = () => openArticle(art);
+                item.innerHTML = `
+                    <div class="article-icon" style="background: ${getRandomGradient()};">${randomIcon}</div>
+                    <div class="article-content">
+                        <div class="article-title">${art.canonical_title}</div>
+                        <div class="article-subtitle">By ${sourceDomain}</div>
+                        <div class="article-meta">
+                            ${views} reads 
+                            <span class="dot"></span> 
+                            ${readTime} min read
+                        </div>
+                    </div>
+                    <div class="article-action">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // --- 4. Locally Filter list via Search Ingestion ---
+        function filterArticlesLocal() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const container = document.getElementById('articleList');
+
+            if (!query) {
+                renderFilteredArticlesList();
+                return;
+            }
+
+            container.innerHTML = '';
+            
+            const searched = fetchedArticles.filter(art => 
+                art.canonical_title.toLowerCase().includes(query) || 
+                (art.summary && art.summary.toLowerCase().includes(query)) ||
+                (art.source_domain && art.source_domain.toLowerCase().includes(query))
+            );
+
+            if (searched.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: var(--text-secondary); padding: 3rem 0; width: 100%;">
+                        No matches found for "${query}"
+                    </div>
+                `;
+                return;
+            }
+
+            searched.forEach((art, index) => {
+                const randomIcon = listIcons[index % listIcons.length];
+                const readTime = Math.round(art.word_count / 200) || 3;
+                const sourceDomain = art.source_domain || 'Knowledge Hub';
+
+                const item = document.createElement('button');
+                item.className = 'article-item';
+                item.onclick = () => openArticle(art);
+                item.innerHTML = `
+                    <div class="article-icon" style="background: ${getRandomGradient()};">${randomIcon}</div>
+                    <div class="article-content">
+                        <div class="article-title">${art.canonical_title}</div>
+                        <div class="article-subtitle">By ${sourceDomain}</div>
+                        <div class="article-meta">${art.view_count || 143} views <span class="dot"></span> ${readTime} min read</div>
+                    </div>
+                    <div class="article-action">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // --- 5. Category Pillar Handlers ---
+        function filterCategory(category, buttonElement) {
+            activeCategory = category;
+            document.querySelectorAll('.category-pill').forEach(pill => pill.classList.remove('active'));
+            buttonElement.classList.add('active');
+            
+            renderFilteredArticlesList();
+        }
+
+        function focusSearch() {
+            const input = document.getElementById('searchInput');
+            input.focus();
+            input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // --- 6. stand-alone and tab-switching open methods ---
+        function openArticle(article) {
+            // stand-alone URL redirect
+            const standaloneUrl = `https://easytoread.vercel.app/article/${article.slug}`;
+            
+            // Broadcast targeted article switch logic back up to the frame shell orchestrator
+            window.parent.postMessage({ 
+                type: 'openArticle', 
+                slug: article.slug,
+                article_id: article.article_id
+            }, '*');
+
+            // Optional standalone fallback:
+            // window.location.href = standaloneUrl;
+        }
+
+        // --- 7. Fallback cached database loader ---
+        function loadFallbackArticles() {
+            fetchedArticles = [
+                {
+                    article_id: 'fallback_1',
+                    canonical_title: 'The Art of the Exchange',
+                    slug: 'art-of-the-exchange-2026',
+                    summary: 'Market movements reflect human psychology. Patience and emotional intelligence outweigh speed in navigating structural bull and bear cycles.',
+                    source_domain: 'Capital Pulse',
+                    word_count: 980,
+                    view_count: 143,
+                    categories: ['Finance', 'Stock Exchange']
+                },
+                {
+                    article_id: 'fallback_2',
+                    canonical_title: 'Why Bonds Matter',
+                    slug: 'why-bonds-matter',
+                    summary: 'An overarching structural review of bonds as secure portfolio shields against stock volatility.',
+                    source_domain: 'Finance 101',
+                    word_count: 650,
+                    view_count: 89,
+                    categories: ['Finance', 'Economy']
+                },
+                {
+                    article_id: 'fallback_3',
+                    canonical_title: 'Understanding Inflation',
+                    slug: 'understanding-inflation',
+                    summary: 'Exploring macroeconomic factors driving rate hikes, cost indexing, and systemic pricing increases.',
+                    source_domain: 'Economy Digest',
+                    word_count: 820,
+                    view_count: 212,
+                    categories: ['Economy']
+                }
+            ];
+            renderFeaturedHero();
+            renderFilteredArticlesList();
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchArticlesList);
+      // Add Categories dynamic fetching to blog reader
+async function fetchCategoriesList() {
+    const container = document.getElementById('categoryScrollContainer');
+    if (!container) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/category`);
+        if (!response.ok) throw new Error();
+        const categories = await response.json();
+        
+        container.innerHTML = `<button class="category-pill active" onclick="filterCategory('All', this)">For you</button>`;
+        categories.forEach(cat => {
+            const name = typeof cat === 'string' ? cat : (cat.name || cat.canonical_name);
+            container.innerHTML += `<button class="category-pill" onclick="filterCategory('${name}', this)">${name}</button>`;
+        });
+    } catch (err) {
+        // Safe static fallback
+        container.innerHTML = `
+            <button class="category-pill active" onclick="filterCategory('All', this)">For you</button>
+            <button class="category-pill" onclick="filterCategory('Finance', this)">Finance</button>
+            <button class="category-pill" onclick="filterCategory('Stock Exchange', this)">Stock Exchange</button>
+            <button class="category-pill" onclick="filterCategory('Economy', this)">Economy</button>
+            <button class="category-pill" onclick="filterCategory('Tech', this)">Tech</button>
+        `;
+    }
+}
+
+// Listen to Home Shell category filter commands
+window.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'filterCategory') {
+        const targetCategory = event.data.category;
+        const targetBtn = Array.from(document.querySelectorAll('.category-pill'))
+                               .find(btn => btn.textContent.toLowerCase() === targetCategory.toLowerCase());
+        if (targetBtn) {
+            filterCategory(targetCategory === 'For you' ? 'All' : targetCategory, targetBtn);
+        }
+    }
+});
+
+// Update standard DOM load trigger inside blog.html to call categories loader
+document.addEventListener('DOMContentLoaded', () => {
+    fetchCategoriesList();
+});
     </script>
 </body>
 </html>

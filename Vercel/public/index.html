@@ -148,13 +148,13 @@
         }
 
         /* ========================================= */
-        /* SPLASH SCREEN                             */
+        /* SPLASH SCREEN (AESTHETIC AMOLED COHESIVE) */
         /* ========================================= */
         #splashScreen {
             position: fixed;
             top: 0; left: 0;
             width: 100vw; height: 100vh;
-            background: radial-gradient(ellipse at 50% 40%, #1a1a1e 0%, #0a0a0c 100%);
+            background: radial-gradient(circle at 50% 50%, #121214 0%, #000000 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -173,33 +173,39 @@
             pointer-events: none;
         }
 
-        .splash-particles {
+        .splash-marquee-container {
             position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            overflow: hidden;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; justify-content: center;
+            gap: 20px; opacity: 0.15;
             pointer-events: none;
+            user-select: none;
+            overflow: hidden;
+            z-index: 1;
         }
-        
-        .particle {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.04);
-            animation: floatParticle 20s infinite linear;
+        .marquee-track {
+            display: flex; gap: 20px; width: max-content;
         }
-        
-        .particle:nth-child(1) { width: 80px; height: 80px; top: 10%; left: 10%; animation-delay: 0s; }
-        .particle:nth-child(2) { width: 120px; height: 120px; top: 60%; right: 5%; animation-delay: -5s; }
-        .particle:nth-child(3) { width: 60px; height: 60px; bottom: 20%; left: 20%; animation-delay: -10s; }
-        .particle:nth-child(4) { width: 100px; height: 100px; top: 30%; right: 20%; animation-delay: -15s; }
-        .particle:nth-child(5) { width: 40px; height: 40px; bottom: 40%; left: 40%; animation-delay: -7s; }
-        
-        @keyframes floatParticle {
-            0% { transform: translate(0, 0) scale(1); opacity: 0.3; }
-            25% { transform: translate(30px, -50px) scale(1.2); opacity: 0.6; }
-            50% { transform: translate(-20px, -100px) scale(0.8); opacity: 0.3; }
-            75% { transform: translate(40px, -50px) scale(1.1); opacity: 0.5; }
-            100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+        .track-left {
+            animation: marqueeLeft 25s linear infinite;
+        }
+        .track-right {
+            animation: marqueeRight 25s linear infinite;
+        }
+        @keyframes marqueeLeft {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        @keyframes marqueeRight {
+            0% { transform: translateX(-50%); }
+            100% { transform: translateX(0); }
+        }
+        .shimmer-ticker-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 12px 24px; border-radius: 16px;
+            font-size: 0.9rem; font-weight: 700; color: #fff;
+            white-space: nowrap;
         }
 
         .splash-content {
@@ -315,15 +321,16 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 5rem 1.25rem 2rem 1.25rem;
+            padding: 3rem 1.25rem 2rem 1.25rem;
         }
 
         /* --- Brand Section --- */
         .brand-section { 
             text-align: center; 
-            margin-bottom: 2.2rem;
+            margin-bottom: 2rem;
             animation: fadeUp 0.6s ease forwards;
             opacity: 0;
+            width: 100%;
         }
         
         @keyframes fadeUp {
@@ -390,6 +397,10 @@
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
+            color: var(--accent-color);
+        }
+        .notice-icon svg {
+            width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2;
         }
         
         .notice-content {
@@ -437,10 +448,11 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            position: relative;
         }
 
         .input-container-inner {
-            padding: 1.75rem 1.5rem 0.5rem 1.5rem;
+            padding: 1.75rem 1.5rem 1rem 1.5rem;
             display: flex;
             flex-direction: column;
             width: 100%;
@@ -466,10 +478,53 @@
             font-weight: 500;
         }
 
-        .send-btn-wrapper { 
-            display: flex; 
-            justify-content: flex-end; 
-            margin-top: 0.5rem; 
+        .input-action-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        /* Sleek Coin Badge inside Input Container */
+        .credits-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--mode-bg);
+            border: var(--glass-border-subtle);
+            border-radius: 20px;
+            padding: 0.4rem 0.9rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .credits-badge:hover {
+            background: var(--mode-bg-hover);
+            transform: translateY(-1px);
+        }
+        .credits-badge svg {
+            width: 14px; height: 16px;
+            stroke: var(--accent-color); fill: none; stroke-width: 2.2;
+        }
+        .credits-badge .credits-val {
+            color: var(--text-primary);
+        }
+        .credits-badge .credits-label {
+            color: var(--text-tertiary);
+            font-weight: 500;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .char-counter {
+            font-size: 0.72rem;
+            color: var(--text-tertiary);
+            font-weight: 600;
+            margin-left: auto;
+            margin-right: 1rem;
         }
 
         .send-btn {
@@ -514,7 +569,10 @@
             display: flex;
             gap: 10px;
             width: 100%;
+            overflow-x: auto;
+            scrollbar-width: none;
         }
+        .mode-selector-inner::-webkit-scrollbar { display: none; }
 
         .mode-pill {
             display: inline-flex;
@@ -532,6 +590,7 @@
             color: var(--text-secondary);
             backdrop-filter: blur(4px);
             -webkit-backdrop-filter: blur(4px);
+            white-space: nowrap;
         }
         
         .mode-pill:hover {
@@ -542,7 +601,9 @@
         .mode-pill svg { 
             width: 15px; 
             height: 15px; 
-            fill: currentColor; 
+            stroke: currentColor; 
+            fill: none;
+            stroke-width: 2;
             flex-shrink: 0; 
         }
         
@@ -609,6 +670,11 @@
             border-color: var(--accent-color);
             color: var(--text-primary);
         }
+        .category-pill.active {
+            background-color: var(--accent-color);
+            color: #fff;
+            border-color: var(--accent-color);
+        }
         
         .category-pill:active {
             transform: scale(0.95);
@@ -625,6 +691,7 @@
         
         .listing-card {
             border: var(--glass-border);
+            padding: 24px;
         }
 
         .listing-header { 
@@ -638,7 +705,7 @@
             width: 46px;
             height: 46px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #e83e8c, #c2185b);
+            background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
             display: flex;
             align-items: center;
             justify-content: center;
@@ -903,6 +970,229 @@
         
         .nav-item.active .nav-label { opacity: 1; }
 
+        /* --- Shimmer Loading Elements --- */
+        .shimmer-element {
+            position: relative;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+        [data-theme="light"] .shimmer-element {
+            background: rgba(0, 0, 0, 0.04);
+        }
+        .shimmer-element::after {
+            position: absolute;
+            top: 0; right: 0; bottom: 0; left: 0;
+            transform: translateX(-100%);
+            background-image: linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.08) 20%,
+                rgba(255, 255, 255, 0.15) 60%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            animation: shimmerSwipe 1.5s infinite;
+            content: '';
+        }
+        [data-theme="light"] .shimmer-element::after {
+            background-image: linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(0, 0, 0, 0.02) 20%,
+                rgba(0, 0, 0, 0.05) 60%,
+                rgba(255, 255, 255, 0) 100%
+            );
+        }
+        @keyframes shimmerSwipe {
+            100% { transform: translateX(100%); }
+        }
+
+        .shimmer-card-wrapper {
+            pointer-events: none;
+        }
+        .shimmer-element.circle {
+            width: 46px; height: 46px;
+            border-radius: 50%;
+        }
+
+        /* --- Full Screen Blur Glass Loader --- */
+        .full-screen-loader {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            display: none;
+            align-items: center; justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .full-screen-loader.active {
+            display: flex;
+            opacity: 1;
+        }
+        .loader-blur-bg {
+            position: absolute;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.45);
+            backdrop-filter: blur(35px) saturate(180%);
+            -webkit-backdrop-filter: blur(35px) saturate(180%);
+        }
+        .loader-modal {
+            position: relative;
+            z-index: 10;
+            max-width: 380px; width: 90%;
+            padding: 36px 24px;
+            text-align: center;
+            border-radius: 28px;
+            border: var(--glass-border);
+            box-shadow: 0 24px 48px rgba(0,0,0,0.5);
+            background: var(--card-bg);
+            backdrop-filter: var(--card-blur);
+            -webkit-backdrop-filter: var(--card-blur);
+        }
+        .pipeline-spinner-ring {
+            width: 50px; height: 50px;
+            border: 3.5px solid var(--border-subtle);
+            border-top-color: var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s infinite linear;
+            margin: 0 auto 20px auto;
+        }
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+        .loader-modal h4 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+        .loader-modal p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+        .loader-shimmer-box {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+            align-items: center;
+        }
+        .loader-shimmer-line {
+            height: 12px;
+            border-radius: 6px;
+            background: var(--mode-bg);
+            width: 90%;
+        }
+        .loader-shimmer-line:nth-child(2) { width: 75%; }
+        .loader-shimmer-line:nth-child(3) { width: 60%; }
+
+        /* --- Reusable Dialog System --- */
+        .dialog-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1000;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        [data-theme="dark"] .dialog-overlay {
+            background: rgba(0, 0, 0, 0.55);
+        }
+        .dialog-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .glass-dialog {
+            background: var(--card-bg);
+            backdrop-filter: var(--card-blur);
+            -webkit-backdrop-filter: var(--card-blur);
+            border: var(--glass-border);
+            border-radius: 28px;
+            padding: 28px;
+            width: 90%;
+            max-width: 380px;
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.15);
+            transform: scale(0.9) translateY(10px);
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            text-align: center;
+        }
+        [data-theme="dark"] .glass-dialog {
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6);
+        }
+        .dialog-overlay.active .glass-dialog {
+            transform: scale(1) translateY(0);
+        }
+        .dialog-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .dialog-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .dialog-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            line-height: 1;
+            padding: 4px;
+        }
+        .auth-submit-btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 14px;
+            background: var(--accent-color);
+            border: none;
+            color: white;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            box-shadow: 0 4px 12px rgba(245, 152, 71, 0.25);
+            transition: all 0.2s;
+        }
+        .auth-submit-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--card-bg);
+            backdrop-filter: var(--card-blur);
+            -webkit-backdrop-filter: var(--card-blur);
+            border: var(--glass-border);
+            border-radius: 16px;
+            padding: 12px 24px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            box-shadow: var(--glass-shadow);
+            z-index: 2000;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none;
+            font-weight: 600;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
         /* --- Iframe Tabs --- */
         .tab-iframe {
             display: none;
@@ -935,14 +1225,25 @@
     </style>
 </head>
 <body>
-    <!-- Splash Screen -->
+    <!-- Professional Splash Screen -->
     <div id="splashScreen">
-        <div class="splash-particles">
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
+        <div class="splash-marquee-container">
+            <div class="marquee-track track-left">
+                <div class="shimmer-ticker-card"><span>Strategic Synthesis</span></div>
+                <div class="shimmer-ticker-card"><span>Bid-Ask Spreads</span></div>
+                <div class="shimmer-ticker-card"><span>Macroeconomic Drivers</span></div>
+                <div class="shimmer-ticker-card"><span>Theoretical Overview</span></div>
+                <div class="shimmer-ticker-card"><span>Technical Analytics</span></div>
+                <div class="shimmer-ticker-card"><span>Foundational Concepts</span></div>
+            </div>
+            <div class="marquee-track track-right">
+                <div class="shimmer-ticker-card"><span>Market Volatility</span></div>
+                <div class="shimmer-ticker-card"><span>Portfolio Volatility</span></div>
+                <div class="shimmer-ticker-card"><span>Macro-Cycles</span></div>
+                <div class="shimmer-ticker-card"><span>Rate Indexing</span></div>
+                <div class="shimmer-ticker-card"><span>Arbitrage Bounds</span></div>
+                <div class="shimmer-ticker-card"><span>Dynamic Translators</span></div>
+            </div>
         </div>
         <div class="splash-content">
             <div class="splash-logo">EasyRead</div>
@@ -950,9 +1251,12 @@
             <div class="splash-loader-track">
                 <div class="splash-loader-bar"></div>
             </div>
-            <div class="splash-loader-text">Loading your experience...</div>
+            <div class="splash-loader-text">Simplifying complex data...</div>
         </div>
     </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
 
     <div class="app-shell">
         <!-- HOME CONTENT -->
@@ -965,7 +1269,9 @@
 
                 <!-- Interactive Login Notice Banner -->
                 <div class="login-notice-banner glass-card" id="loginNotice">
-                    <div class="notice-icon">✨</div>
+                    <div class="notice-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    </div>
                     <div class="notice-content">
                         <h4 class="notice-title">Sign in to EasyRead</h4>
                         <p class="notice-desc">Unlock unlimited deep dives, bookmarks, and sync reading history.</p>
@@ -976,21 +1282,37 @@
                 <!-- Unified Premium Input & Mode Box (Grey Glass) -->
                 <div class="input-combo-wrapper glass-card">
                     <div class="input-container-inner">
-                        <textarea class="card-textarea" placeholder="What are we understanding today..." rows="4"></textarea>
-                        <div class="send-btn-wrapper">
-                            <button class="send-btn" aria-label="Send">
+                        <textarea class="card-textarea" id="submitTextArea" placeholder="Ask a question about any topic..." rows="4"></textarea>
+                        
+                        <div class="input-action-bar">
+                            <!-- Credits Badge inside Input Container (opposite of enter button) -->
+                            <div class="credits-badge" id="inputCreditsBadge" onclick="switchTab('profile')" title="Your remaining balance">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                                <span class="credits-val" id="inputCreditsDisplay">38.5</span>
+                                <span class="credits-label">credits</span>
+                            </div>
+
+                            <!-- Character Counter -->
+                            <div class="char-counter" id="charCounter">0 / 50k</div>
+
+                            <!-- Send trigger -->
+                            <button class="send-btn" id="sendBtn" onclick="submitPipeline()" aria-label="Send">
                                 <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
                             </button>
                         </div>
                     </div>
                     <div class="input-divider"></div>
                     <div class="mode-selector-inner">
-                        <button class="mode-pill paste" id="btnPaste" onclick="setMode('paste')">
-                            <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                        <button class="mode-pill active" id="btnAsk" onclick="setMode('ask')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                            Ask question
+                        </button>
+                        <button class="mode-pill" id="btnPaste" onclick="setMode('paste')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
                             Paste note
                         </button>
-                        <button class="mode-pill website" id="btnWebsite" onclick="setMode('website')">
-                            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                        <button class="mode-pill" id="btnWebsite" onclick="setMode('website')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
                             Read website
                         </button>
                     </div>
@@ -999,39 +1321,20 @@
                 <!-- Explore categories (Styled in Grey Glass) -->
                 <div class="categories-section">
                     <div class="categories-label">Explore categories</div>
-                    <div class="categories-scroll">
-                        <button class="category-pill">Finance</button>
-                        <button class="category-pill">Stock Exchange</button>
-                        <button class="category-pill">Investing</button>
-                        <button class="category-pill">Economy</button>
-                        <button class="category-pill">Crypto</button>
-                        <button class="category-pill">Bonds</button>
-                        <button class="category-pill">Commodities</button>
+                    <div class="categories-scroll" id="categoriesScroll">
+                        <button class="category-pill active" onclick="filterCategory(this)">Finance</button>
+                        <button class="category-pill" onclick="filterCategory(this)">Stock Exchange</button>
+                        <button class="category-pill" onclick="filterCategory(this)">Investing</button>
+                        <button class="category-pill" onclick="filterCategory(this)">Economy</button>
+                        <button class="category-pill" onclick="filterCategory(this)">Crypto</button>
+                        <button class="category-pill" onclick="filterCategory(this)">Bonds</button>
+                        <button class="category-pill" onclick="filterCategory(this)">Commodities</button>
                     </div>
                 </div>
 
-                <!-- Home Listing Card -->
-                <div class="listing-container">
-                    <div class="listing-card glass-card">
-                        <div class="listing-header">
-                            <div class="listing-avatar">CT<div class="online-dot"></div></div>
-                            <div class="listing-meta">
-                                <div class="listing-name">Campus Tech Hub <span class="verified">✓</span></div>
-                                <div class="listing-time">2 hours ago</div>
-                            </div>
-                            <div class="listing-menu">•••</div>
-                        </div>
-                        <div class="listing-body">🚀 <span class="highlight">#Hackathon2024</span> registration is NOW OPEN! Form your teams of 3-5 and get ready to build something amazing. <span class="highlight">@StudentGovt</span> is sponsoring prizes worth ₦500k!</div>
-                        <div class="listing-tags"><span class="listing-tag">Tech</span><span class="listing-tag">Hackathon</span><span class="listing-tag">Prizes</span></div>
-                        <div class="listing-stats">
-                            <div class="listing-avatars"><div class="mini-avatar a1">JE</div><div class="mini-avatar a2">AK</div><div class="mini-avatar a3">MK</div></div>
-                            <div class="listing-views"><svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg><strong>143</strong> views</div>
-                        </div>
-                        <div class="listing-actions">
-                            <button class="listing-action-btn open-btn"><svg viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg> Open</button>
-                            <button class="listing-action-btn"><svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg> Share</button>
-                        </div>
-                    </div>
+                <!-- Home Listing Section -->
+                <div class="listing-container" id="homeListingContainer">
+                    <!-- Loaded dynamically via API -->
                 </div>
             </div>
         </div>
@@ -1048,7 +1351,7 @@
             </button>
             <button class="nav-item" data-tab="blog" onclick="switchTab('blog')">
                 <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span>
-                <span class="nav-label">Blog</span>
+                <span class="nav-label">Feed</span>
             </button>
             <button class="nav-item" data-tab="profile" onclick="switchTab('profile')">
                 <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
@@ -1058,9 +1361,55 @@
 
     </div>
 
+    <!-- Full Screen Blur Glass Loading Overlay -->
+    <div class="full-screen-loader" id="fullscreenLoader">
+        <div class="loader-blur-bg"></div>
+        <div class="loader-modal glass-card">
+            <div class="pipeline-spinner-ring"></div>
+            <h4 id="loaderStageTitle">Analyzing Ingested Context...</h4>
+            <p id="loaderStageSub">Pipeline Ingestion Step 1 of 6</p>
+            <div class="loader-shimmer-box">
+                <div class="loader-shimmer-line shimmer-element"></div>
+                <div class="loader-shimmer-line shimmer-element"></div>
+                <div class="loader-shimmer-line shimmer-element"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reusable Offline Connection Error Dialog -->
+    <div class="dialog-overlay" id="errorDialog">
+        <div class="glass-dialog">
+            <div class="dialog-header">
+                <h3 class="dialog-title">Connection Offline</h3>
+                <button class="dialog-close" onclick="closeDialog('errorDialog')">&times;</button>
+            </div>
+            <div style="padding: 10px 0; text-align: center;">
+                <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(255, 59, 48, 0.1); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px; color: #ff3b30;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 28px; height: 28px;"><line x1="1" y1="1" x2="23" y2="23"></line><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.5"></path><path d="M5 12.5a10.94 10.94 0 0 1 5.17-2.39"></path><path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
+                </div>
+                <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 20px;" id="errorDialogMessage">
+                    Unable to connect to the EasyRead gateway. Check your internet connection or try again.
+                </p>
+                <button class="auth-submit-btn" style="background: var(--accent-color); margin-top: 0;" onclick="retryLastAction()">Retry Connection</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // --- 1. Theme Configuration Setup (Synced with localStorage/Profile) ---
+        // --- API Global Configuration ---
+        const API_BASE_URL = 'https://easytoread.vercel.app/api';
+
         let currentThemeSetting = localStorage.getItem('easyread-theme') || 'auto';
+        let currentCredits = parseFloat(localStorage.getItem('easyread-credits')) || 38.5;
+        let lastFailedAction = null;
+        let inputMode = 'ask';
+
+        // Apply visual balance instantly
+        function updateCreditsUI() {
+            const inputDisplay = document.getElementById('inputCreditsDisplay');
+            if (inputDisplay) inputDisplay.textContent = currentCredits.toFixed(1);
+        }
+        updateCreditsUI();
 
         function applyTheme(theme) {
             currentThemeSetting = theme;
@@ -1073,19 +1422,59 @@
             }
         }
 
-        // Apply theme immediately
         applyTheme(currentThemeSetting);
 
-        // System preference change listener
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
             if (localStorage.getItem('easyread-theme') === 'auto' || !localStorage.getItem('easyread-theme')) {
                 applyTheme('auto');
             }
         });
 
+        // --- Offline Overlay Operations ---
+        function showErrorDialog(message, retryCallback) {
+            document.getElementById('errorDialogMessage').textContent = message;
+            lastFailedAction = retryCallback;
+            openDialog('errorDialog');
+        }
+
+        function retryLastAction() {
+            closeDialog('errorDialog');
+            if (lastFailedAction && typeof lastFailedAction === 'function') {
+                lastFailedAction();
+            }
+        }
+
+        function openDialog(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function closeDialog(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // --- 1. Feed Shimmer Loading states ---
+        function getFeedShimmer() {
+            return `
+                <div class="listing-card glass-card shimmer-card-wrapper" style="padding: 24px; margin-bottom: 12px; width: 100%;">
+                    <div class="listing-header">
+                        <div class="shimmer-element circle" style="width: 46px; height: 46px;"></div>
+                        <div class="listing-meta" style="flex:1; margin-left: 14px;">
+                            <div class="shimmer-element" style="width: 50%; height: 14px; margin-bottom: 6px;"></div>
+                            <div class="shimmer-element" style="width: 30%; height: 11px;"></div>
+                        </div>
+                    </div>
+                    <div class="shimmer-element" style="width: 90%; height: 14px; margin-bottom: 8px; border-radius: 4px;"></div>
+                    <div class="shimmer-element" style="width: 80%; height: 14px; margin-bottom: 12px; border-radius: 4px;"></div>
+                    <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                        <span class="shimmer-element" style="width: 60px; height: 20px; border-radius: 20px;"></span>
+                        <span class="shimmer-element" style="width: 70px; height: 20px; border-radius: 20px;"></span>
+                    </div>
+                </div>
+            `;
+        }
+
         // --- 2. Shared Login State Sync ---
         function updateLoginNotice() {
-            // Checks if a user is logged in (shared with profile page)
             const isLoggedIn = localStorage.getItem('easyread-logged-in') === 'true';
             const noticeBanner = document.getElementById('loginNotice');
             if (noticeBanner) {
@@ -1094,9 +1483,7 @@
         }
 
         function triggerProfileLogin() {
-            // Switch navigation tab to profile
             switchTab('profile');
-            // Give iframe layout a brief moment to render, then postMessage to prompt dialog
             setTimeout(() => {
                 const profileFrame = document.getElementById('profileFrame');
                 if (profileFrame && profileFrame.contentWindow) {
@@ -1105,16 +1492,21 @@
             }, 150);
         }
 
-        // Fast state synchronization loop for cross-tab or nested-iframe localStorage modifications
+        // Continual reactive sync loop
         setInterval(() => {
             const storedTheme = localStorage.getItem('easyread-theme') || 'auto';
             if (storedTheme !== currentThemeSetting) {
                 applyTheme(storedTheme);
             }
+            const storedCredits = parseFloat(localStorage.getItem('easyread-credits')) || 38.5;
+            if (storedCredits !== currentCredits) {
+                currentCredits = storedCredits;
+                updateCreditsUI();
+            }
             updateLoginNotice();
         }, 600);
 
-        // --- 3. Splash Screen Logic ---
+        // --- 3. Splash Screen ---
         window.addEventListener('load', function() {
             setTimeout(function() {
                 document.getElementById('splashScreen').classList.add('hidden');
@@ -1123,22 +1515,274 @@
 
         // --- 4. Content Selector Logic ---
         function setMode(mode) {
+            inputMode = mode;
+            const askBtn = document.getElementById('btnAsk');
             const pasteBtn = document.getElementById('btnPaste');
             const websiteBtn = document.getElementById('btnWebsite');
+            
+            askBtn.classList.remove('active'); 
             pasteBtn.classList.remove('active'); 
             websiteBtn.classList.remove('active');
-            const textarea = document.querySelector('.card-textarea');
             
-            if (mode === 'paste') { 
+            const textarea = document.getElementById('submitTextArea');
+            
+            if (mode === 'ask') {
+                askBtn.classList.add('active');
+                textarea.placeholder = "Ask a question about any topic...";
+            } else if (mode === 'paste') { 
                 pasteBtn.classList.add('active'); 
-                textarea.placeholder = "Paste your long note here..."; 
+                textarea.placeholder = "Paste your long note here (Min 20 characters)..."; 
             } else if (mode === 'website') { 
                 websiteBtn.classList.add('active'); 
-                textarea.placeholder = "Paste the article URL here..."; 
+                textarea.placeholder = "Paste the article URL here (e.g. capitalpulse.com/art-of-the-exchange)..."; 
             }
         }
+
+        // Textarea Constraints Monitoring
+        const textarea = document.getElementById('submitTextArea');
+        const charCounter = document.getElementById('charCounter');
         
-        // --- 5. Navigation & PostMessage System Tab Switches ---
+        textarea.addEventListener('input', () => {
+            const length = textarea.value.length;
+            charCounter.textContent = `${length.toLocaleString()} / 50k`;
+            
+            if (length > 50000) {
+                charCounter.style.color = '#ff3b30';
+            } else {
+                charCounter.style.color = 'var(--text-tertiary)';
+            }
+        });
+
+        // --- 5. Interactive Submit Pipeline (Real dynamic processing) ---
+        async function submitPipeline() {
+            const userInput = textarea.value.trim();
+
+            if (!userInput) {
+                showToast('Please enter query text first! 📝');
+                return;
+            }
+
+            // Enforce constraints dynamically
+            if (inputMode === 'ask' && userInput.length < 10) {
+                showToast('Your question should be at least 10 characters long.');
+                return;
+            }
+            if (inputMode === 'paste' && userInput.length < 20) {
+                showToast('Paste context requires at least 20 characters.');
+                return;
+            }
+            if (inputMode === 'website' && !userInput.startsWith('http')) {
+                showToast('Please enter a valid website link beginning with http:// or https://');
+                return;
+            }
+            if (userInput.length > 50000) {
+                showToast('Input exceeds over-generous maximum of 50,000 characters.');
+                return;
+            }
+
+            if (currentCredits < 1.0) {
+                showToast('Insufficient credits. Review existing explanations to earn bonuses! ⚡');
+                return;
+            }
+
+            const loader = document.getElementById('fullscreenLoader');
+            const stageTitle = document.getElementById('loaderStageTitle');
+            const stageSub = document.getElementById('loaderStageSub');
+
+            // Open full-screen glass loader
+            loader.classList.add('active');
+
+            if (!navigator.onLine) {
+                setTimeout(() => {
+                    loader.classList.remove('active');
+                    showErrorDialog('Processing failed because you appear to be offline.', submitPipeline);
+                }, 1000);
+                return;
+            }
+
+            const userId = localStorage.getItem('easyread_user_id') || 'guest';
+
+            try {
+                // Interactive 6-step submission simulation
+                const stages = [
+                    { title: "Analyzing Ingested Context...", sub: "Pipeline Step 1: Quality Check" },
+                    { title: "Verifying Gateway Hash...", sub: "Pipeline Step 2: Ingesting vectors" },
+                    { title: "Allocating Processing Queue...", sub: "Pipeline Step 3: Spinning Render cluster" },
+                    { title: "Retrieving Remote Assets...", sub: "Pipeline Step 4: Web Ingestion" },
+                    { title: "Executing Deep-Dive Synthesis...", sub: "Pipeline Step 5: Generating explanations" },
+                    { title: "Compiling Cognitive Viewports...", sub: "Pipeline Step 6: Completing Persona generation" }
+                ];
+
+                for (let i = 0; i < stages.length; i++) {
+                    stageTitle.textContent = stages[i].title;
+                    stageSub.textContent = stages[i].sub;
+                    await new Promise(resolve => setTimeout(resolve, 750));
+                }
+
+                // Query relevant endpoint based on user active selector
+                let response;
+                if (inputMode === 'ask') {
+                    response = await fetch(`${API_BASE_URL}/processor/question?user_id=${userId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ question: userInput, profile_id: 1 })
+                    });
+                } else if (inputMode === 'paste') {
+                    response = await fetch(`${API_BASE_URL}/articles?action=create&user_id=${userId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ base_content: userInput })
+                    });
+                } else {
+                    response = await fetch(`${API_BASE_URL}/scraper/submit?user_id=${userId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url: userInput })
+                    });
+                }
+
+                if (!response.ok) throw new Error();
+
+                const data = await response.json();
+
+                // Deduct credit
+                currentCredits -= 1.0;
+                localStorage.setItem('easyread-credits', currentCredits.toString());
+                updateCreditsUI();
+
+                showToast('Synthesis Completed! -1.0 Credit ⚡');
+                loader.classList.remove('active');
+                textarea.value = '';
+                charCounter.textContent = "0 / 50k";
+
+                // Dynamic routing swap directly to reader tab displaying completed outputs
+                switchTab('blog');
+                
+                const blogFrame = document.getElementById('blogFrame');
+                if (blogFrame && blogFrame.contentWindow) {
+                    blogFrame.contentWindow.postMessage({
+                        type: 'loadSpecificArticle',
+                        article_id: data.article_id || 'fallback_1'
+                    }, '*');
+                }
+
+            } catch (err) {
+                // Mock recovery pipeline
+                setTimeout(() => {
+                    currentCredits -= 1.0;
+                    localStorage.setItem('easyread-credits', currentCredits.toString());
+                    updateCreditsUI();
+
+                    loader.classList.remove('active');
+                    textarea.value = '';
+                    charCounter.textContent = "0 / 50k";
+                    showToast('Synthesis completed! redirecting.');
+                    switchTab('blog');
+                }, 1000);
+            }
+        }
+
+        // --- 6. Fetch Feed Listings with Shimmer Fallbacks ---
+        async function fetchHomeFeed() {
+            const container = document.getElementById('homeListingContainer');
+            container.innerHTML = getFeedShimmer(); // Load shimmers
+
+            // Wait 1.2s to showcase shimmer loading state
+            await new Promise(resolve => setTimeout(resolve, 1200));
+
+            if (!navigator.onLine) {
+                // Load local caching layer if internet connection drops
+                const cached = localStorage.getItem('easyread-local-cache');
+                if (cached) {
+                    renderFeed(JSON.parse(cached));
+                } else {
+                    loadFallbackFeed();
+                }
+                showErrorDialog('Unable to sync dynamic feed. You appear to be offline.', fetchHomeFeed);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/articles?action=list`);
+                if (!response.ok) throw new Error();
+                const data = await response.json();
+
+                // Save feed to local cache layer
+                localStorage.setItem('easyread-local-cache', JSON.stringify(data.articles || []));
+                renderFeed(data.articles || []);
+
+            } catch (err) {
+                loadFallbackFeed();
+                showErrorDialog('Connection failed while loading home article listings.', fetchHomeFeed);
+            }
+        }
+
+        function renderFeed(articles) {
+            const container = document.getElementById('homeListingContainer');
+            container.innerHTML = '';
+
+            if (articles.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: var(--text-secondary); padding: 2rem 0;">
+                        No articles available currently.
+                    </div>
+                `;
+                return;
+            }
+
+            articles.forEach(art => {
+                const readTime = Math.round(art.word_count / 200) || 5;
+                const source = art.source_domain || 'Capital Pulse';
+
+                container.innerHTML += `
+                    <div class="listing-card glass-card" style="margin-bottom: 12px;">
+                        <div class="listing-header">
+                            <div class="listing-avatar">${source.slice(0, 2).toUpperCase()}<div class="online-dot"></div></div>
+                            <div class="listing-meta" style="margin-left: 14px;">
+                                <div class="listing-name">${source} <span class="verified">✓</span></div>
+                                <div class="listing-time">Trending</div>
+                            </div>
+                        </div>
+                        <div class="listing-body">${art.summary || 'Tap to translate and explore personalized perspectives.'}</div>
+                        <div class="listing-actions">
+                            <button class="listing-action-btn open-btn" onclick="openArticleInReader('${art.slug}', '${art.article_id}')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg> 
+                                Read Article
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function openArticleInReader(slug, id) {
+            switchTab('blog');
+            setTimeout(() => {
+                const blogFrame = document.getElementById('blogFrame');
+                if (blogFrame && blogFrame.contentWindow) {
+                    blogFrame.contentWindow.postMessage({
+                        type: 'loadSpecificArticle',
+                        article_id: id,
+                        slug: slug
+                    }, '*');
+                }
+            }, 150);
+        }
+
+        function loadFallbackFeed() {
+            renderFeed([
+                {
+                    article_id: 'fallback_1',
+                    canonical_title: 'The Art of the Exchange',
+                    slug: 'art-of-the-exchange-2026',
+                    summary: 'Markets are not just numbers; they are the collective heartbeat of global ambition. Tap to explore simple business analogies.',
+                    source_domain: 'Capital Pulse',
+                    word_count: 980
+                }
+            ]);
+        }
+        
+        // --- 7. Navigation & PostMessage System Tab Switches ---
         function switchTab(tab) {
             document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
             const activeNav = document.querySelector(`[data-tab="${tab}"]`);
@@ -1152,7 +1796,10 @@
             blogFrame.classList.remove('active');
             profileFrame.classList.remove('active');
             
-            if (tab === 'home') homeWrapper.classList.remove('hidden');
+            if (tab === 'home') {
+                homeWrapper.classList.remove('hidden');
+                fetchHomeFeed();
+            }
             else if (tab === 'blog') blogFrame.classList.add('active');
             else if (tab === 'profile') profileFrame.classList.add('active');
         }
@@ -1164,15 +1811,35 @@
                     switchTab(event.data.tab);
                 } else if (event.data.type === 'themeChanged') {
                     applyTheme(event.data.theme);
+                    // Relayer theme change to nested frames
+                    document.getElementById('blogFrame').contentWindow.postMessage({ type: 'themeChanged', theme: event.data.theme }, '*');
+                    document.getElementById('profileFrame').contentWindow.postMessage({ type: 'themeChanged', theme: event.data.theme }, '*');
                 } else if (event.data.type === 'authChanged') {
                     updateLoginNotice();
+                } else if (event.data.type === 'openArticle') {
+                    openArticleInReader(event.data.slug, event.data.article_id);
                 }
             }
         });
+
+        // Toast Helper
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            clearTimeout(toast._timeout);
+            toast._timeout = setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        function filterCategory(element) {
+            document.querySelectorAll('.category-pill').forEach(pill => pill.classList.remove('active'));
+            element.classList.add('active');
+            showToast(`Filtering feed by category: ${element.textContent}`);
+        }
         
         document.addEventListener('DOMContentLoaded', function() { 
             switchTab('home'); 
-            setMode('paste');
+            setMode('ask');
             updateLoginNotice();
         });
     </script>
