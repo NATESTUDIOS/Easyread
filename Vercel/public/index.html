@@ -943,7 +943,7 @@
                     };
                 }
 
-                const createRes = await fetch(`${API_BASE_URL}/articles?action=create`, {
+                const createRes = await fetch(`${API_BASE_URL}/article?action=create`, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
@@ -1031,7 +1031,7 @@
         async function fetchHomeFeed() {
             const container = document.getElementById('homeListingContainer');
             try {
-                const response = await fetch(`${API_BASE_URL}/articles?action=list`);
+                const response = await fetch(`${API_BASE_URL}/article?action=list`);
                 if (!response.ok) throw new Error();
                 const data = await response.json();
                 homeArticles = Array.isArray(data) ? data : (data.articles || []);
