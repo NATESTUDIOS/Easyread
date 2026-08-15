@@ -148,46 +148,6 @@ async function checkGuestLimit(guestId, actionType) {
     };
   }
 
-  if (actionType === 'question') {
-    const questionCount = usage.questions || 0;
-    if (questionCount >= GUEST_LIMITS.QUESTIONS_PER_DAY) {
-      return {
-        allowed: false,
-        limit: GUEST_LIMITS.QUESTIONS_PER_DAY,
-        used: questionCount,
-        remaining: 0,
-        message: `Daily question limit reached (${GUEST_LIMITS.QUESTIONS_PER_DAY} per day)`
-      };
-    }
-    return {
-      allowed: true,
-      limit: GUEST_LIMITS.QUESTIONS_PER_DAY,
-      used: questionCount,
-      remaining: GUEST_LIMITS.QUESTIONS_PER_DAY - questionCount,
-      usage
-    };
-  }
-
-  if (actionType === 'deep_dive') {
-    return {
-      allowed: false,
-      limit: 0,
-      used: 0,
-      remaining: 0,
-      message: 'Deep dive is only available for registered users'
-    };
-  }
-
-  if (actionType === 'context_submit') {
-    return {
-      allowed: false,
-      limit: 0,
-      used: 0,
-      remaining: 0,
-      message: 'Context submit is only available for registered users'
-    };
-  }
-
   return { allowed: true };
 }
 
@@ -226,12 +186,6 @@ async function trackGuestUsage(guestId, actionType) {
   const updateFields = {};
   if (actionType === 'read') {
     updateFields.articles_read = (usage.articles_read || 0) + 1;
-  } else if (actionType === 'question') {
-    updateFields.questions = (usage.questions || 0) + 1;
-  } else if (actionType === 'deep_dive') {
-    updateFields.deep_dives = (usage.deep_dives || 0) + 1;
-  } else if (actionType === 'context_submit') {
-    updateFields.context_submits = (usage.context_submits || 0) + 1;
   }
 
   const { data: updated, error: updateError } = await supabase
@@ -277,9 +231,6 @@ export default async function handler(req, res) {
         if (action === 'bookmark-status') {
           return await getBookmarkStatus(req, res);
         }
-        if (action === 'guest-status') {
-          return await getGuestStatus(req, res);
-        }
         return res.status(200).send(renderNoArticlePage());
       case 'POST':
         if (action === 'rate') {
@@ -290,12 +241,6 @@ export default async function handler(req, res) {
         }
         if (action === 'bookmark') {
           return await toggleBookmark(req, res);
-        }
-        if (action === 'track-read') {
-          return await trackRead(req, res);
-        }
-        if (action === 'track-question') {
-          return await trackQuestion(req, res);
         }
         return res.status(400).json({ error: 'Invalid action' });
       case 'DELETE':
@@ -320,322 +265,23 @@ function renderNoArticlePage() {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EasyRead - Simplified Knowledge</title>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;800&display=swap" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #f6f7f9;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem;
-    }
-    .container { max-width: 640px; width: 100%; text-align: center; }
-    .logo {
-      font-size: 2.5rem;
-      font-weight: 800;
-      color: #1c1c1e;
-      margin-bottom: 0.5rem;
-      letter-spacing: -1px;
-    }
-    .logo span { color: #f59847; }
-    .icon-wrapper {
-      width: 80px;
-      height: 80px;
-      margin: 1.5rem auto;
-      background: linear-gradient(135deg, #f59847 0%, #e08735 100%);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 12px 40px rgba(245, 152, 71, 0.25);
-    }
-    .icon-wrapper svg { width: 40px; height: 40px; fill: white; }
-    h1 { font-size: 1.8rem; font-weight: 700; color: #1c1c1e; margin-bottom: 0.5rem; }
-    .subtitle { font-size: 1rem; color: #5c5c60; line-height: 1.6; max-width: 480px; margin: 0 auto 2rem; }
-    .back-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      color: #fff;
-      background: #f59847;
-      font-weight: 600;
-      text-decoration: none;
-      padding: 0.8rem 1.8rem;
-      border-radius: 30px;
-      transition: all 0.2s;
-      box-shadow: 0 4px 14px rgba(245, 152, 71, 0.3);
-    }
-    .back-link:hover { background: #e08735; transform: translateY(-2px); }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f6f7f9; min-height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 2rem; margin:0; }
+    h1 { font-size: 1.8rem; color: #1c1c1e; margin-bottom: 0.5rem; }
+    p { color: #5c5c60; margin-bottom: 1.5rem; }
+    a { background: #f59847; color: #fff; padding: 10px 22px; border-radius: 20px; text-decoration: none; font-weight: 700; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="logo">Easy<span>Read</span></div>
-    <div class="icon-wrapper">
-      <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-3 4H9v-2h7v2zm3-8H9V5h10v2z"/></svg>
-    </div>
+  <div>
     <h1>No Article Selected</h1>
-    <p class="subtitle">Select an article from your library or homepage to start reading simplified, tailored explanations.</p>
-    <a href="/" class="back-link">Return to Home</a>
+    <p>Select an article from your feed to view tailored explanations.</p>
+    <a href="/">Return Home</a>
   </div>
 </body>
 </html>`;
-}
-
-// ============================================
-// TRACK READ
-// ============================================
-async function trackRead(req, res) {
-  const { article_id } = req.body;
-  const user_id = req.headers['x-user-id'] || req.query.user_id;
-  const guestId = req.headers['x-guest-id'] || req.query.guest_id;
-
-  if (user_id) {
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      const { data: existing } = await supabase
-        .from('reading_history')
-        .select('history_id')
-        .eq('user_id', user_id)
-        .eq('article_id', parseInt(article_id))
-        .eq('date', today)
-        .maybeSingle();
-
-      if (!existing) {
-        await insert('reading_history', {
-          user_id,
-          article_id: parseInt(article_id),
-          date: today,
-          viewed_at: new Date().toISOString()
-        });
-      }
-
-      const usageRecords = await getByColumn('usage', 'user_id', user_id);
-      const todayUsage = usageRecords.find(u => u.date === today);
-
-      if (todayUsage) {
-        await supabase
-          .from('usage')
-          .update({ articles_read: (todayUsage.articles_read || 0) + 1 })
-          .eq('usage_id', todayUsage.usage_id);
-      } else {
-        await insert('usage', {
-          user_id,
-          date: today,
-          articles_read: 1,
-          questions: 0,
-          deep_dives: 0,
-          credits_used: 0
-        });
-      }
-
-      return res.json({ success: true, isAuthenticated: true });
-    } catch (error) {
-      console.error('Track read error:', error);
-      return res.status(500).json({ error: error.message });
-    }
-  }
-
-  if (!guestId) {
-    return res.status(400).json({ error: 'guest_id required for guest tracking' });
-  }
-
-  try {
-    const limitCheck = await checkGuestLimit(guestId, 'read');
-    if (!limitCheck.allowed) {
-      return res.status(429).json({
-        error: 'Daily limit reached',
-        message: limitCheck.message,
-        limit: limitCheck.limit,
-        used: limitCheck.used,
-        remaining: limitCheck.remaining,
-        isGuest: true
-      });
-    }
-
-    await trackGuestUsage(guestId, 'read');
-
-    return res.json({
-      success: true,
-      isGuest: true,
-      limit: limitCheck.limit,
-      used: limitCheck.used + 1,
-      remaining: limitCheck.remaining - 1
-    });
-  } catch (error) {
-    console.error('Track guest read error:', error);
-    return res.status(500).json({ error: error.message });
-  }
-}
-
-// ============================================
-// TRACK QUESTION
-// ============================================
-async function trackQuestion(req, res) {
-  const { question } = req.body;
-  const user_id = req.headers['x-user-id'] || req.query.user_id;
-  const guestId = req.headers['x-guest-id'] || req.query.guest_id;
-
-  if (!question) {
-    return res.status(400).json({ error: 'Question required' });
-  }
-
-  if (user_id) {
-    try {
-      const users = await getByColumn('users', 'user_id', user_id);
-      if (users.length === 0) {
-        return res.status(404).json({ error: 'User not found' });
-      }
-
-      const user = users[0];
-      if (user.credits < CREDIT_COSTS.ASK_QUESTION) {
-        return res.status(402).json({
-          error: 'Insufficient credits',
-          required: CREDIT_COSTS.ASK_QUESTION,
-          available: user.credits
-        });
-      }
-
-      const today = new Date().toISOString().split('T')[0];
-      const usageRecords = await getByColumn('usage', 'user_id', user_id);
-      const todayUsage = usageRecords.find(u => u.date === today);
-      const dailyCreditsUsed = todayUsage ? todayUsage.credits_used : 0;
-
-      if (dailyCreditsUsed + CREDIT_COSTS.ASK_QUESTION > AUTHENTICATED_DAILY_CREDITS) {
-        return res.status(429).json({
-          error: 'Daily credit limit exceeded',
-          limit: AUTHENTICATED_DAILY_CREDITS,
-          used: dailyCreditsUsed,
-          remaining: AUTHENTICATED_DAILY_CREDITS - dailyCreditsUsed
-        });
-      }
-
-      await supabase
-        .from('users')
-        .update({ credits: user.credits - CREDIT_COSTS.ASK_QUESTION })
-        .eq('user_id', user_id);
-
-      if (todayUsage) {
-        await supabase
-          .from('usage')
-          .update({
-            questions: (todayUsage.questions || 0) + 1,
-            credits_used: (todayUsage.credits_used || 0) + CREDIT_COSTS.ASK_QUESTION
-          })
-          .eq('usage_id', todayUsage.usage_id);
-      } else {
-        await insert('usage', {
-          user_id,
-          date: today,
-          questions: 1,
-          credits_used: CREDIT_COSTS.ASK_QUESTION
-        });
-      }
-
-      await insert('credit_transactions', {
-        user_id,
-        amount: -CREDIT_COSTS.ASK_QUESTION,
-        reason: 'ask_question',
-        balance_after: user.credits - CREDIT_COSTS.ASK_QUESTION
-      });
-
-      return res.json({
-        success: true,
-        isAuthenticated: true,
-        credits_remaining: user.credits - CREDIT_COSTS.ASK_QUESTION
-      });
-    } catch (error) {
-      console.error('Track question error:', error);
-      return res.status(500).json({ error: error.message });
-    }
-  }
-
-  if (!guestId) {
-    return res.status(400).json({ error: 'guest_id required for guest tracking' });
-  }
-
-  try {
-    const limitCheck = await checkGuestLimit(guestId, 'question');
-    if (!limitCheck.allowed) {
-      return res.status(429).json({
-        error: 'Daily limit reached',
-        message: limitCheck.message,
-        limit: limitCheck.limit,
-        used: limitCheck.used,
-        remaining: limitCheck.remaining,
-        isGuest: true
-      });
-    }
-
-    await trackGuestUsage(guestId, 'question');
-
-    return res.json({
-      success: true,
-      isGuest: true,
-      limit: limitCheck.limit,
-      used: limitCheck.used + 1,
-      remaining: limitCheck.remaining - 1
-    });
-  } catch (error) {
-    console.error('Track guest question error:', error);
-    return res.status(500).json({ error: error.message });
-  }
-}
-
-// ============================================
-// GET GUEST STATUS
-// ============================================
-async function getGuestStatus(req, res) {
-  const guestId = req.headers['x-guest-id'] || req.query.guest_id;
-
-  if (!guestId) {
-    return res.status(400).json({ error: 'guest_id required' });
-  }
-
-  try {
-    const today = new Date().toISOString().split('T')[0];
-    const { data: usage, error } = await supabase
-      .from('usage')
-      .select('*')
-      .eq('user_id', guestId)
-      .eq('date', today)
-      .maybeSingle();
-
-    if (error && error.code !== 'PGRST116') throw error;
-
-    const articlesRead = usage?.articles_read || 0;
-    const questionsAsked = usage?.questions || 0;
-
-    return res.json({
-      isAuthenticated: false,
-      limits: {
-        articles: {
-          max: GUEST_LIMITS.ARTICLES_PER_DAY,
-          used: articlesRead,
-          remaining: Math.max(0, GUEST_LIMITS.ARTICLES_PER_DAY - articlesRead)
-        },
-        questions: {
-          max: GUEST_LIMITS.QUESTIONS_PER_DAY,
-          used: questionsAsked,
-          remaining: Math.max(0, GUEST_LIMITS.QUESTIONS_PER_DAY - questionsAsked)
-        }
-      },
-      features: {
-        deep_dive: GUEST_LIMITS.HAS_DEEP_DIVE_ACCESS,
-        context_setup: GUEST_LIMITS.HAS_CONTEXT_ACCESS,
-        bookmarks: false
-      }
-    });
-  } catch (error) {
-    console.error('Get guest status error:', error);
-    return res.status(500).json({ error: error.message });
-  }
 }
 
 // ============================================
@@ -660,46 +306,21 @@ async function renderArticlePage(req, res) {
       return res.status(404).send(renderNotFoundPage());
     }
 
-    // Guest tracking
+    // Guest vs Auth tracking
     if (!user_id && guestId) {
       const limitCheck = await checkGuestLimit(guestId, 'read');
-      if (!limitCheck.allowed) {
-        return res.status(200).send(buildArticleHTML({
-          article,
-          explanations: [],
-          ratings: [],
-          userRating: null,
-          userCredits: null,
-          profiles: [],
-          user_id: null,
-          sessionToken: null,
-          ogImageUrl: generateOgImageUrl(article.canonical_title || 'EasyRead Article', '1A1A2E', 'FFFFFF'),
-          colorPair: { bg: '1A1A2E', text: 'FFFFFF' },
-          isBookmarked: false,
-          guestLimitReached: true,
-          guestLimitInfo: {
-            limit: limitCheck.limit,
-            used: limitCheck.used,
-            remaining: limitCheck.remaining,
-            message: limitCheck.message
-          },
-          isGuest: true,
-          guestId: guestId
-        }));
+      if (limitCheck.allowed) {
+        await trackGuestUsage(guestId, 'read');
       }
-
-      await trackGuestUsage(guestId, 'read');
     } else if (user_id) {
       const today = new Date().toISOString().split('T')[0];
-      const { data: existing, error: historyError } = await supabase
+      const { data: existing } = await supabase
         .from('reading_history')
         .select('history_id')
         .eq('user_id', user_id)
         .eq('article_id', article.article_id)
         .eq('date', today)
         .maybeSingle();
-
-      if (historyError && historyError.code !== 'PGRST116') throw historyError;
 
       if (!existing) {
         await insert('reading_history', {
@@ -727,7 +348,7 @@ async function renderArticlePage(req, res) {
     );
 
     // Fetch explanations
-    const { data: explanations, error: expError } = await supabase
+    const { data: explanations } = await supabase
       .from('explanation_views')
       .select(`
         view_id,
@@ -743,74 +364,58 @@ async function renderArticlePage(req, res) {
       .eq('article_id', article.article_id)
       .order('view_count', { ascending: false });
 
-    if (expError) throw expError;
-
-    // Fetch ratings
-    const { data: ratings, error: ratingError } = await supabase
-      .from('ratings')
-      .select('rating, feedback, user_id, created_at')
-      .in('view_id', explanations?.map(e => e.view_id) || [])
-      .order('created_at', { ascending: false })
-      .limit(50);
-
-    if (ratingError) throw ratingError;
+    // Fetch existing deep dives for this article
+    const { data: deepDives } = await supabase
+      .from('deep_dives')
+      .select('*')
+      .eq('article_id', article.article_id)
+      .order('created_at', { ascending: true });
 
     let userRating = null;
     if (user_id && explanations && explanations.length > 0) {
-      const { data: ur, error: urError } = await supabase
+      const { data: ur } = await supabase
         .from('ratings')
         .select('rating, feedback, view_id')
         .eq('user_id', user_id)
         .in('view_id', explanations.map(e => e.view_id))
         .maybeSingle();
-
-      if (urError && urError.code !== 'PGRST116') throw urError;
       userRating = ur;
     }
 
     let userCredits = null;
     if (user_id) {
       const users = await getByColumn('users', 'user_id', user_id);
-      if (users.length > 0) {
-        userCredits = users[0].credits;
-      }
+      if (users.length > 0) userCredits = users[0].credits;
     }
 
     let isBookmarked = false;
     if (user_id) {
-      const { data: bookmark, error: bmError } = await supabase
+      const { data: bookmark } = await supabase
         .from('bookmarks')
         .select('bookmark_id')
         .eq('user_id', user_id)
         .eq('article_id', article.article_id)
         .maybeSingle();
-
-      if (bmError && bmError.code !== 'PGRST116') throw bmError;
       isBookmarked = !!bookmark;
     }
 
-    const { data: profiles, error: profileError } = await supabase
+    const { data: profiles } = await supabase
       .from('profiles')
       .select('*')
       .eq('status', 'active')
       .order('profile_id', { ascending: true });
 
-    if (profileError) throw profileError;
-
     const html = buildArticleHTML({
       article,
       explanations: explanations || [],
-      ratings: ratings || [],
+      deepDives: deepDives || [],
       userRating,
       userCredits,
       profiles: profiles || [],
       user_id,
       sessionToken,
       ogImageUrl,
-      colorPair,
-      isBookmarked,
-      guestId,
-      isGuest: !user_id
+      isBookmarked
     });
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
@@ -827,7 +432,6 @@ async function renderArticlePage(req, res) {
 // ============================================
 async function getArticleData(req, res) {
   const { id, slug } = req.query;
-  const user_id = req.headers['x-user-id'] || req.query.user_id;
 
   try {
     let article;
@@ -842,7 +446,7 @@ async function getArticleData(req, res) {
       return res.status(404).json({ error: 'Article not found' });
     }
 
-    const { data: explanations, error: expError } = await supabase
+    const { data: explanations } = await supabase
       .from('explanation_views')
       .select(`
         view_id,
@@ -857,22 +461,16 @@ async function getArticleData(req, res) {
       `)
       .eq('article_id', article.article_id);
 
-    if (expError) throw expError;
-
     const defaultExp = explanations?.find(e => e.profile_id === 1) || explanations?.[0];
     const readingTime = calculateReadingTime(defaultExp?.content || article.base_content);
 
     return res.json({
       success: true,
-      article: {
-        ...article,
-        reading_time: readingTime
-      },
+      article: { ...article, reading_time: readingTime },
       explanations: explanations || []
     });
 
   } catch (error) {
-    console.error('Get article data error:', error);
     return res.status(500).json({ error: error.message });
   }
 }
@@ -885,25 +483,16 @@ async function toggleBookmark(req, res) {
   const user_id = req.headers['x-user-id'] || req.query.user_id;
 
   if (!user_id) {
-    return res.status(401).json({ 
-      error: 'Authentication required',
-      redirect: `${SITE_URL}#login`
-    });
-  }
-
-  if (!article_id) {
-    return res.status(400).json({ error: 'article_id required' });
+    return res.status(401).json({ error: 'Authentication required' });
   }
 
   try {
-    const { data: existing, error: checkError } = await supabase
+    const { data: existing } = await supabase
       .from('bookmarks')
       .select('bookmark_id')
       .eq('user_id', user_id)
       .eq('article_id', parseInt(article_id))
       .maybeSingle();
-
-    if (checkError) throw checkError;
 
     if (existing) {
       await deleteRecord('bookmarks', existing.bookmark_id);
@@ -917,7 +506,6 @@ async function toggleBookmark(req, res) {
       return res.status(201).json({ success: true, bookmarked: true, bookmark_id: bookmark.bookmark_id, message: 'Bookmark added' });
     }
   } catch (error) {
-    console.error('Toggle bookmark error:', error);
     return res.status(500).json({ error: error.message });
   }
 }
@@ -929,9 +517,7 @@ async function removeBookmark(req, res) {
   const { article_id } = req.query;
   const user_id = req.headers['x-user-id'] || req.query.user_id;
 
-  if (!user_id) {
-    return res.status(401).json({ error: 'Authentication required' });
-  }
+  if (!user_id) return res.status(401).json({ error: 'Authentication required' });
 
   try {
     const { data: existing } = await supabase
@@ -977,19 +563,16 @@ async function getBookmarkStatus(req, res) {
 // SUBMIT RATING
 // ============================================
 async function submitRating(req, res) {
-  const { view_id, rating, feedback } = req.body;
+  const { view_id, rating } = req.body;
   const user_id = req.headers['x-user-id'] || req.query.user_id;
 
-  if (!user_id) {
-    return res.status(401).json({ error: 'Authentication required' });
-  }
+  if (!user_id) return res.status(401).json({ error: 'Authentication required' });
 
   try {
-    const ratingRecord = await insert('ratings', {
+    await insert('ratings', {
       user_id,
       view_id: parseInt(view_id),
-      rating,
-      feedback: feedback || null
+      rating
     });
 
     const { data: viewData } = await supabase
@@ -1019,7 +602,7 @@ async function submitRating(req, res) {
 }
 
 // ============================================
-// HANDLE DEEP DIVE
+// HANDLE DEEP DIVE (Direct Render Delegation)
 // ============================================
 async function handleDeepDive(req, res) {
   const { article_id, profile_id, question } = req.body;
@@ -1059,16 +642,14 @@ async function handleDeepDive(req, res) {
 function buildArticleHTML({ 
   article, 
   explanations, 
-  ratings, 
+  deepDives,
   userRating, 
   userCredits, 
   profiles, 
   user_id,
   sessionToken,
   ogImageUrl,
-  isBookmarked,
-  guestId,
-  isGuest
+  isBookmarked
 }) {
   const title = article.canonical_title || 'Untitled Article';
   const description = article.summary || 'Read this simplified article on EasyRead';
@@ -1119,14 +700,14 @@ function buildArticleHTML({
     ${buildLoginCalloutBannerHTML(user_id)}
     ${buildArticleContentHTML(article, explanations)}
     ${buildSummaryHTML(article, defaultExplanation)}
+    ${buildInlineDeepDivesSectionHTML(deepDives, activeProfile, user_id)}
     ${buildMetadataHTML(article, defaultExplanation, readingTime)}
     ${buildFooterHTML(article, user_id, isBookmarked)}
     ${buildReviewModalHTML(userRating)}
-    ${buildDeepDiveModalHTML()}
   </div>
 
   <script>
-    ${getJavaScript(article, explanations, profiles, userRating, user_id, sessionToken, isBookmarked, userCredits)}
+    ${getJavaScript(article, explanations, profiles, deepDives, userRating, user_id, sessionToken, isBookmarked, userCredits)}
   </script>
 </body>
 </html>`;
@@ -1153,10 +734,6 @@ function buildHeaderHTML(userCredits, user_id) {
       </div>
     </header>\n`;
 }
-
-// ============================================
-// DEDICATED SIGN-IN CALLOUT BANNER
-// ============================================
 
 function buildLoginCalloutBannerHTML(user_id) {
   return `    <div class="guest-login-card" id="guestLoginCard" style="${user_id ? 'display: none;' : 'display: flex;'}">
@@ -1244,6 +821,52 @@ function buildSummaryHTML(article, defaultExplanation) {
     </div>\n`;
 }
 
+// ============================================
+// INLINE DEEP DIVES & QUESTIONS SECTION
+// ============================================
+
+function buildInlineDeepDivesSectionHTML(deepDives, activeProfile, user_id) {
+  let itemsHtml = '';
+  if (Array.isArray(deepDives) && deepDives.length > 0) {
+    deepDives.forEach(dd => {
+      itemsHtml += `
+        <div class="deep-dive-card">
+          <div class="deep-dive-q">
+            <span class="q-badge">Q</span>
+            <h4>${escapeHtml(dd.question)}</h4>
+          </div>
+          <div class="deep-dive-a">
+            ${renderMarkdownToHtml(dd.answer)}
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  return `    <section class="deep-dives-section" id="deepDivesSection">
+      <div class="section-title-row">
+        <h3>Explore Further & Deep Dives</h3>
+        <span class="persona-tag" id="deepDivePersonaBadge">${escapeHtml(activeProfile?.name || 'Everyday')}</span>
+      </div>
+
+      <div class="deep-dives-list" id="deepDivesList">
+        ${itemsHtml}
+      </div>
+
+      <div class="deep-dive-ask-card">
+        <form id="inlineDeepDiveForm" onsubmit="submitInlineDeepDive(event)">
+          <textarea id="inlineDeepDiveInput" placeholder="Ask any specific question about this topic..." rows="2" required></textarea>
+          <div class="ask-card-footer">
+            <span class="cost-hint">⚡ 0.5 Credits</span>
+            <button type="submit" class="ask-submit-btn" id="inlineAskBtn">
+              Ask Question
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>\n`;
+}
+
 function buildMetadataHTML(article, defaultExplanation, readingTime) {
   const date = article.created_at ? new Date(article.created_at).toLocaleDateString('en-US', {
     year: 'numeric',
@@ -1277,7 +900,7 @@ function buildFooterHTML(article, user_id, isBookmarked) {
           <span>🔗 ${escapeHtml(article.source_domain || 'easytoread.vercel.app')}</span>
         </div>
         <div class="glass-actions">
-          <button class="glass-icon-btn" onclick="copyLink()" title="Copy link" aria-label="Copy link">
+          <button class="glass-icon-btn" onclick="copyArticleLink()" title="Copy link" aria-label="Copy link">
             <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
           </button>
           <button class="glass-icon-btn bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" id="bookmarkBtn" onclick="handleBookmark()" title="Bookmark" aria-label="Bookmark">
@@ -1285,9 +908,6 @@ function buildFooterHTML(article, user_id, isBookmarked) {
           </button>
           <button class="glass-icon-btn rate-btn" onclick="openReview()" title="Rate Explanation" aria-label="Rate article">
             <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-          </button>
-          <button class="glass-icon-btn deep-dive-trigger" onclick="openDeepDiveModal()" title="Deep Dive Questions" aria-label="Deep Dive">
-            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
           </button>
         </div>
       </div>
@@ -1324,31 +944,11 @@ function buildReviewModalHTML(userRating) {
     </div>\n`;
 }
 
-function buildDeepDiveModalHTML() {
-  return `    <div class="deep-dive-overlay" id="deepDiveModal">
-      <div class="deep-dive-modal">
-        <button class="modal-close" onclick="closeDeepDiveModal()">✕</button>
-        <div class="deep-dive-header">
-          <div class="deep-dive-icon">🔍</div>
-          <h3>Deep Dive Question</h3>
-          <p>Ask anything about this topic tailored to your active perspective.</p>
-          <form id="deepDiveForm" onsubmit="submitDeepDive(event)">
-            <textarea id="deepDiveQuestion" placeholder="What specific concept would you like to explore?" required></textarea>
-            <div class="modal-actions">
-              <button type="button" class="btn-modal-secondary" onclick="closeDeepDiveModal()">Cancel</button>
-              <button type="submit" class="btn-modal-primary">Ask (0.5 Credits)</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>\n`;
-}
-
 // ============================================
 // CLIENT JAVASCRIPT GENERATOR
 // ============================================
 
-function getJavaScript(article, explanations, profiles, userRating, user_id, sessionToken, isBookmarked, userCredits) {
+function getJavaScript(article, explanations, profiles, deepDives, userRating, user_id, sessionToken, isBookmarked, userCredits) {
   const activeExp = explanations?.find(e => e.profile_id === 1) || explanations?.[0];
 
   return `
@@ -1356,6 +956,7 @@ let currentCredits = ${userCredits || 0};
 let currentViewId = ${activeExp?.view_id || 'null'};
 let currentProfileId = ${activeExp?.profile_id || 1};
 const currentArticleId = ${article.article_id};
+const currentArticleSlug = "${escapeJs(article.slug || '')}";
 let isAuthenticated = ${!!user_id};
 let isBookmarked = ${isBookmarked};
 let userId = "${escapeJs(user_id || '')}";
@@ -1364,7 +965,6 @@ let sessionToken = "${escapeJs(sessionToken || '')}";
 const explanationsData = ${JSON.stringify(explanations || [])};
 const profilesData = ${JSON.stringify(profiles || [])};
 
-// Synchronize with client-side localStorage login saved by profile.html / index.html
 function syncClientAuthState() {
   const localLoggedIn = localStorage.getItem('easyread-logged-in') === 'true';
   const localUserId = localStorage.getItem('easyread_user_id');
@@ -1386,22 +986,6 @@ function syncClientAuthState() {
       const display = document.getElementById('creditsValueDisplay');
       if (display) display.textContent = currentCredits.toFixed(1);
     }
-
-    // Check user bookmark status directly
-    fetch('/api/view?action=bookmark-status&article_id=' + currentArticleId, {
-      headers: { 'x-user-id': userId, 'x-session-token': sessionToken }
-    }).then(res => res.json()).then(data => {
-      if (data.isAuthenticated) {
-        isBookmarked = data.isBookmarked;
-        updateBookmarkButtonUI();
-      }
-    }).catch(() => {});
-  } else {
-    isAuthenticated = false;
-    const guestCard = document.getElementById('guestLoginCard');
-    if (guestCard) guestCard.style.display = 'flex';
-    const creditsBadge = document.getElementById('userCreditsBadge');
-    if (creditsBadge) creditsBadge.style.display = 'none';
   }
 }
 
@@ -1414,10 +998,17 @@ function showToast(message, type) {
   toast.textContent = message;
   toast.className = 'toast show toast-' + type;
   clearTimeout(toast._timeout);
-  toast._timeout = setTimeout(function() {
-    toast.classList.remove('show');
-  }, 2500);
+  toast._timeout = setTimeout(() => toast.classList.remove('show'), 2500);
 }
+
+window.copyArticleLink = function() {
+  const canonicalUrl = window.location.origin + '/article/' + (currentArticleSlug || currentArticleId);
+  navigator.clipboard.writeText(canonicalUrl).then(() => {
+    showToast('Article link copied to clipboard!', 'success');
+  }).catch(() => {
+    showToast('Failed to copy link', 'error');
+  });
+};
 
 window.showLoginModal = function() {
   const overlay = document.getElementById('loginOverlay');
@@ -1427,20 +1018,6 @@ window.showLoginModal = function() {
 window.closeLoginModal = function() {
   const overlay = document.getElementById('loginOverlay');
   if (overlay) overlay.classList.remove('active');
-};
-
-window.openDeepDiveModal = function() {
-  if (!isAuthenticated) {
-    showLoginModal();
-    return;
-  }
-  const modal = document.getElementById('deepDiveModal');
-  if (modal) modal.classList.add('active');
-};
-
-window.closeDeepDiveModal = function() {
-  const modal = document.getElementById('deepDiveModal');
-  if (modal) modal.classList.remove('active');
 };
 
 window.openReview = function() {
@@ -1505,13 +1082,6 @@ window.submitReview = async function() {
   }
 };
 
-function updateBookmarkButtonUI() {
-  const btn = document.getElementById('bookmarkBtn');
-  if (!btn) return;
-  btn.classList.toggle('bookmarked', isBookmarked);
-  btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="' + (isBookmarked ? 'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' : 'M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z') + '"/></svg>';
-}
-
 window.handleBookmark = async function() {
   if (!isAuthenticated) {
     showLoginModal();
@@ -1530,7 +1100,11 @@ window.handleBookmark = async function() {
     const data = await response.json();
     if (data.success) {
       isBookmarked = data.bookmarked;
-      updateBookmarkButtonUI();
+      const btn = document.getElementById('bookmarkBtn');
+      if (btn) {
+        btn.classList.toggle('bookmarked', isBookmarked);
+        btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="' + (isBookmarked ? 'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' : 'M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z') + '"/></svg>';
+      }
       showToast(data.message, 'success');
     }
   } catch (error) {
@@ -1538,16 +1112,47 @@ window.handleBookmark = async function() {
   }
 };
 
-window.submitDeepDive = async function(e) {
+// ============================================
+// NON-BLOCKING INLINE DEEP DIVE SUBMISSION
+// ============================================
+window.submitInlineDeepDive = async function(e) {
   e.preventDefault();
-  const input = document.getElementById('deepDiveQuestion');
-  const question = input?.value.trim();
-  if (!question || question.length < 4) {
-    showToast('Please enter a valid question', 'error');
+  if (!isAuthenticated) {
+    showLoginModal();
     return;
   }
-  closeDeepDiveModal();
-  showToast('Generating deep dive...', 'info');
+
+  const input = document.getElementById('inlineDeepDiveInput');
+  const question = input?.value.trim();
+  if (!question || question.length < 4) {
+    showToast('Please enter a specific question', 'error');
+    return;
+  }
+
+  input.value = '';
+
+  const list = document.getElementById('deepDivesList');
+  const cardId = 'dd-card-' + Date.now();
+  
+  // Create cut-out card with live shimmer state
+  const newCard = document.createElement('div');
+  newCard.className = 'deep-dive-card loading-card';
+  newCard.id = cardId;
+  newCard.innerHTML = \`
+    <div class="deep-dive-q">
+      <span class="q-badge">Q</span>
+      <h4>\${escapeHtml(question)}</h4>
+    </div>
+    <div class="deep-dive-a" id="\${cardId}-answer">
+      <div class="inline-shimmer-box">
+        <div class="shimmer-line line-1"></div>
+        <div class="shimmer-line line-2"></div>
+        <div class="shimmer-line line-3"></div>
+      </div>
+    </div>
+  \`;
+
+  list.appendChild(newCard);
 
   try {
     const response = await fetch('/api/view?action=deep-dive', {
@@ -1563,53 +1168,32 @@ window.submitDeepDive = async function(e) {
         question: question
       })
     });
+
     const data = await response.json();
+    const answerContainer = document.getElementById(cardId + '-answer');
+    
     if (data.success && data.deep_dive) {
+      newCard.classList.remove('loading-card');
+      answerContainer.innerHTML = renderMarkdownClient(data.deep_dive.answer || 'Answer generated.');
       showToast('Deep dive ready!', 'success');
-      displayDeepDiveResult(data.deep_dive, question);
+
+      currentCredits = Math.max(0, currentCredits - 0.5);
+      localStorage.setItem('easyread-credits', currentCredits.toString());
+      const display = document.getElementById('creditsValueDisplay');
+      if (display) display.textContent = currentCredits.toFixed(1);
     } else {
-      showToast(data.error || 'Failed to generate deep dive', 'error');
+      answerContainer.innerHTML = '<p class="error-text">' + (data.error || 'Failed to generate answer') + '</p>';
     }
   } catch (err) {
-    showToast('Error: ' + err.message, 'error');
+    const answerContainer = document.getElementById(cardId + '-answer');
+    if (answerContainer) {
+      answerContainer.innerHTML = '<p class="error-text">Network error generating answer. Please try again.</p>';
+    }
   }
 };
 
-function displayDeepDiveResult(deepDive, question) {
-  const container = document.createElement('div');
-  container.className = 'deep-dive-overlay active';
-
-  const modal = document.createElement('div');
-  modal.className = 'deep-dive-modal result-modal';
-
-  const closeBtn = document.createElement('button');
-  closeBtn.className = 'modal-close';
-  closeBtn.textContent = '✕';
-  closeBtn.onclick = function() { container.remove(); };
-
-  const heading = document.createElement('h3');
-  heading.textContent = 'Deep Dive Result';
-
-  const qElem = document.createElement('p');
-  qElem.className = 'sub-text';
-  qElem.textContent = 'Q: ' + question;
-
-  const contentBox = document.createElement('div');
-  contentBox.className = 'deep-dive-answer-box';
-  contentBox.innerHTML = renderMarkdownClient(deepDive.answer || 'No answer available.');
-
-  modal.appendChild(closeBtn);
-  modal.appendChild(heading);
-  modal.appendChild(qElem);
-  modal.appendChild(contentBox);
-  container.appendChild(modal);
-
-  document.body.appendChild(container);
-}
-
 window.switchProfile = function(profileId, buttonElem) {
-  const pills = document.querySelectorAll('.profile-pill');
-  pills.forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.profile-pill').forEach(p => p.classList.remove('active'));
   buttonElem.classList.add('active');
 
   currentProfileId = profileId;
@@ -1618,10 +1202,12 @@ window.switchProfile = function(profileId, buttonElem) {
 
   const cardBadge = document.getElementById('cardProfileBadge');
   const cardText = document.getElementById('catchLineText');
+  const ddBadge = document.getElementById('deepDivePersonaBadge');
 
   if (profile) {
     if (cardBadge) cardBadge.textContent = profile.name + ' Perspective';
     if (cardText) cardText.textContent = '"' + (profile.description || 'Simplified analysis.') + '"';
+    if (ddBadge) ddBadge.textContent = profile.name;
   }
 
   const textElem = document.getElementById('articleText');
@@ -1630,7 +1216,7 @@ window.switchProfile = function(profileId, buttonElem) {
   if (textElem) textElem.style.display = 'none';
   if (shimmerElem) shimmerElem.style.display = 'block';
 
-  setTimeout(function() {
+  setTimeout(() => {
     if (shimmerElem) shimmerElem.style.display = 'none';
     if (textElem) {
       if (explanation) {
@@ -1669,7 +1255,7 @@ window.generateExplanation = async function(profileId) {
     const data = await response.json();
     if (data.success) {
       showToast('Explanation ready!', 'success');
-      setTimeout(function() { window.location.reload(); }, 500);
+      setTimeout(() => window.location.reload(), 500);
     } else {
       showToast(data.error || 'Failed to generate', 'error');
     }
@@ -1708,11 +1294,10 @@ function renderMarkdownClient(content) {
   return html;
 }
 
-window.copyLink = function() {
-  navigator.clipboard.writeText(window.location.href).then(function() {
-    showToast('Link copied to clipboard!', 'success');
-  });
-};
+function escapeHtml(text) {
+  if (!text) return '';
+  return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
 
 window.addEventListener('scroll', function() {
   const scrollTop = window.scrollY;
@@ -1839,10 +1424,39 @@ body{background-color:var(--bg-color);background-image:var(--bg-glow);background
 .subheading{font-size:1.35rem;font-weight:700;color:var(--text-main);margin-top:1.8rem;margin-bottom:0.8rem;letter-spacing:-0.3px}
 .subheading-h3{font-size:1.15rem;font-weight:600;color:var(--text-main);margin-top:1.4rem;margin-bottom:0.6rem}
 .content-list{padding-left:1.4rem;margin-bottom:1.25rem;color:var(--text-secondary);line-height:1.7}
-.summary-wrapper{margin-top:2rem;margin-bottom:1.2rem}
+.summary-wrapper{margin-top:2rem;margin-bottom:1.5rem}
 .summary-content{background:var(--card-bg);backdrop-filter:var(--card-blur);border-radius:16px;padding:1.25rem;border:var(--glass-border-subtle)}
 .summary-content h4{font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--accent-color);margin-bottom:0.4rem;font-weight:700}
 .summary-content p{font-size:0.95rem;line-height:1.55;color:var(--text-secondary);margin:0}
+
+/* INLINE DEEP DIVES */
+.deep-dives-section{margin-top:2.2rem;margin-bottom:1.8rem}
+.section-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.section-title-row h3{font-size:1.05rem;font-weight:700;color:var(--text-main)}
+.persona-tag{font-size:0.7rem;font-weight:700;background:rgba(245,152,71,0.12);color:var(--accent-color);padding:0.2rem 0.6rem;border-radius:10px;text-transform:uppercase}
+.deep-dives-list{display:flex;flex-direction:column;gap:12px;margin-bottom:1rem}
+.deep-dive-card{background:var(--card-bg);backdrop-filter:var(--card-blur);border:var(--glass-border-subtle);border-radius:16px;padding:16px 18px;box-shadow:var(--glass-shadow);animation:fadeInUp 0.3s ease forwards}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.deep-dive-q{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
+.q-badge{width:22px;height:22px;border-radius:6px;background:var(--accent-color);color:#fff;font-size:0.72rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.deep-dive-q h4{font-size:0.95rem;font-weight:700;color:var(--text-main);line-height:1.4}
+.deep-dive-a{font-size:0.9rem;line-height:1.6;color:var(--text-secondary);padding-left:32px}
+.deep-dive-ask-card{background:var(--card-bg);backdrop-filter:var(--card-blur);border:var(--glass-border);border-radius:16px;padding:14px 16px;box-shadow:var(--glass-shadow)}
+.deep-dive-ask-card textarea{width:100%;background:var(--input-bg);border:var(--glass-border-subtle);border-radius:12px;padding:10px 12px;color:var(--text-main);font-family:inherit;font-size:0.88rem;resize:none;outline:none;line-height:1.4}
+.ask-card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.cost-hint{font-size:0.75rem;font-weight:700;color:var(--accent-color)}
+.ask-submit-btn{background:var(--accent-color);color:#fff;border:none;padding:6px 14px;border-radius:12px;font-size:0.78rem;font-weight:700;cursor:pointer;transition:background 0.2s}
+.ask-submit-btn:hover{background:var(--accent-hover)}
+.inline-shimmer-box{display:flex;flex-direction:column;gap:6px;padding:6px 0}
+.shimmer-line{height:10px;border-radius:4px;background:rgba(0,0,0,0.05);position:relative;overflow:hidden}
+@media(prefers-color-scheme:dark){.shimmer-line{background:rgba(255,255,255,0.06)}}
+.shimmer-line::after{position:absolute;top:0;right:0;bottom:0;left:0;transform:translateX(-100%);background-image:linear-gradient(90deg,rgba(255,255,255,0) 0%,rgba(255,255,255,0.15) 50%,rgba(255,255,255,0) 100%);animation:shimmerSwipe 1.5s infinite;content:''}
+@keyframes shimmerSwipe{100%{transform:translateX(100%)}}
+.shimmer-line.line-1{width:90%}
+.shimmer-line.line-2{width:75%}
+.shimmer-line.line-3{width:60%}
+.error-text{color:#ff3b30;font-size:0.85rem}
+
 .article-metadata{display:flex;align-items:center;justify-content:space-between;margin:1.2rem 0 1.8rem;padding:0.8rem 0;border-top:1px solid var(--border-subtle);border-bottom:1px solid var(--border-subtle);font-size:0.78rem;color:var(--text-muted);flex-wrap:wrap;gap:8px}
 .meta-left,.meta-right{display:flex;align-items:center;gap:6px}
 .source-badge{font-weight:600;color:var(--text-main)}
@@ -1856,9 +1470,9 @@ body{background-color:var(--bg-color);background-image:var(--bg-glow);background
 .glass-icon-btn.bookmarked{color:var(--accent-color);background:rgba(245,152,71,0.15)}
 .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(40px);background:var(--card-bg);backdrop-filter:var(--card-blur);border:var(--glass-border);border-radius:12px;padding:8px 16px;color:var(--text-main);font-size:0.82rem;box-shadow:var(--glass-shadow);z-index:2000;opacity:0;transition:all 0.3s ease;pointer-events:none;font-weight:600}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.login-overlay,.deep-dive-overlay,.review-overlay{position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.4);backdrop-filter:blur(16px);display:none;align-items:center;justify-content:center;z-index:1000;padding:1.2rem;opacity:0;transition:opacity 0.2s}
-.login-overlay.active,.deep-dive-overlay.active,.review-overlay.active{display:flex;opacity:1}
-.login-modal,.deep-dive-modal,.review-modal{background:var(--card-bg);backdrop-filter:var(--card-blur);border:var(--glass-border);border-radius:20px;padding:24px 20px;max-width:380px;width:100%;position:relative;text-align:center}
+.login-overlay,.review-overlay{position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.4);backdrop-filter:blur(16px);display:none;align-items:center;justify-content:center;z-index:1000;padding:1.2rem;opacity:0;transition:opacity 0.2s}
+.login-overlay.active,.review-overlay.active{display:flex;opacity:1}
+.login-modal,.review-modal{background:var(--card-bg);backdrop-filter:var(--card-blur);border:var(--glass-border);border-radius:20px;padding:24px 20px;max-width:380px;width:100%;position:relative;text-align:center}
 .modal-close,.login-close{position:absolute;top:14px;right:14px;background:transparent;border:none;font-size:1.1rem;color:var(--text-muted);cursor:pointer}
 .btn-modal-primary{background:var(--accent-color);color:#fff;border:none;padding:0.65rem 1.4rem;border-radius:24px;font-weight:700;font-size:0.85rem;cursor:pointer;text-decoration:none;display:inline-block}
 .btn-modal-primary:hover{background:var(--accent-hover)}
@@ -1869,8 +1483,6 @@ body{background-color:var(--bg-color);background-image:var(--bg-glow);background
 .rating-scale input{display:none}
 .rating-scale input:checked+label,.rating-scale label:hover{opacity:1;transform:scale(1.15)}
 .rating-description{font-size:0.8rem;color:var(--accent-color);font-weight:600;margin-bottom:0.8rem}
-.deep-dive-modal textarea{width:100%;padding:10px;border-radius:10px;border:var(--glass-border-subtle);background:var(--input-bg);color:var(--text-main);font-family:inherit;font-size:0.9rem;resize:vertical;min-height:80px;margin-top:0.8rem;outline:none}
-.deep-dive-answer-box{background:var(--input-bg);border-radius:10px;padding:14px;text-align:left;color:var(--text-main);max-height:55vh;overflow-y:auto;line-height:1.55;font-size:0.9rem;margin-top:0.8rem}
 `;
 }
 
