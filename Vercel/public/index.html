@@ -108,7 +108,7 @@
             --glass-shadow: 0 6px 24px rgba(0,0,0,0.5) !important;
             --mode-bg: rgba(255, 255, 255, 0.05) !important;
             --mode-bg-hover: rgba(255, 255, 255, 0.1) !important;
-            --divider: rgba(255,255,255,0.06) !important;
+            --divider: rgba(255,255,255,0.06);
             --tag-bg: rgba(255, 255, 255, 0.06) !important;
             --tag-text: #9a9a9e !important;
             --icon-stroke: #e8e8ea !important;
@@ -230,7 +230,6 @@
             padding: 1.8rem 1rem 1rem 1rem;
         }
 
-        /* --- Brand Section --- */
         .brand-section { 
             text-align: center; 
             margin-bottom: 1.2rem;
@@ -258,7 +257,6 @@
             color: var(--text-tertiary);
         }
 
-        /* --- Glass Cards --- */
         .glass-card {
             background: var(--card-bg);
             backdrop-filter: var(--card-blur);
@@ -274,7 +272,6 @@
             box-shadow: var(--glass-shadow-hover);
         }
 
-        /* --- Login Banner --- */
         .login-notice-banner {
             width: 100%;
             padding: 12px 16px;
@@ -304,7 +301,6 @@
             white-space: nowrap;
         }
 
-        /* --- Input Box --- */
         .input-combo-wrapper { 
             width: 100%; 
             margin-bottom: 1.4rem;
@@ -436,7 +432,6 @@
             border-color: var(--accent-color) !important;
         }
 
-        /* --- Categories --- */
         .categories-section { 
             width: 100%; 
             margin-bottom: 1.2rem;
@@ -478,7 +473,6 @@
         .category-pill:hover { color: var(--text-primary); border-color: var(--accent-color); }
         .category-pill.active { background-color: var(--accent-color); color: #fff; border-color: var(--accent-color); }
 
-        /* --- Listings --- */
         .listing-container { 
             width: 100%; 
             margin-bottom: 1.5rem;
@@ -545,6 +539,7 @@
             padding: 4px 10px;
             border-radius: 8px;
             transition: all 0.2s;
+            text-decoration: none;
         }
         .listing-action-btn:hover { background: var(--accent-light); }
         .listing-action-btn svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; }
@@ -744,7 +739,7 @@
                             Paste note
                         </button>
                         <button class="mode-pill" id="btnWebsite" onclick="setMode('website')">
-                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
                             Read website
                         </button>
                     </div>
@@ -789,8 +784,8 @@
         <div class="loader-blur-bg"></div>
         <div class="loader-modal glass-card">
             <div class="pipeline-spinner-ring"></div>
-            <h4 id="loaderStageTitle">Simplifying Concept...</h4>
-            <p id="loaderStageSub">Generating tailored explanations</p>
+            <h4 id="loaderStageTitle">Generating Explanation...</h4>
+            <p id="loaderStageSub">Synthesizing tailored knowledge</p>
         </div>
     </div>
 
@@ -867,7 +862,7 @@
             setTimeout(function() {
                 const splash = document.getElementById('splashScreen');
                 if (splash) splash.classList.add('hidden');
-            }, 600);
+            }, 500);
         });
 
         // Mode toggling
@@ -881,7 +876,7 @@
                 textarea.placeholder = "Ask a question about any topic...";
             } else if (mode === 'paste') { 
                 document.getElementById('btnPaste').classList.add('active'); 
-                textarea.placeholder = "Paste your long note or text here (min 20 chars)..."; 
+                textarea.placeholder = "Paste your note or text here (min 20 chars)..."; 
             } else if (mode === 'website') { 
                 document.getElementById('btnWebsite').classList.add('active'); 
                 textarea.placeholder = "Paste article URL (e.g., https://example.com/article)..."; 
@@ -897,7 +892,7 @@
             charCounter.style.color = length > 50000 ? '#ff3b30' : 'var(--text-tertiary)';
         });
 
-        // Submit Pipeline
+        // Submit Pipeline directly to Articles and Explanation API
         async function submitPipeline() {
             const userInput = textarea.value.trim();
 
@@ -924,45 +919,66 @@
 
             const userId = localStorage.getItem('easyread_user_id') || '';
             const sessionToken = localStorage.getItem('easyread_session_token') || '';
+            const profileId = parseInt(localStorage.getItem('easyread-profile-id') || '1');
 
             try {
-                let response;
+                // 1. Create/Ingest Article
+                let articlePayload = {};
                 if (inputMode === 'ask') {
-                    response = await fetch(`${API_BASE_URL}/processor/question`, {
-                        method: 'POST',
-                        headers: { 
-                            'Content-Type': 'application/json',
-                            'x-user-id': userId,
-                            'x-session-token': sessionToken
-                        },
-                        body: JSON.stringify({ question: userInput, profile_id: 1 })
-                    });
+                    articlePayload = {
+                        canonical_title: userInput.length > 60 ? userInput.substring(0, 60) + '...' : userInput,
+                        base_content: userInput,
+                        source_domain: 'EasyRead Question'
+                    };
                 } else if (inputMode === 'paste') {
-                    response = await fetch(`${API_BASE_URL}/articles?action=create`, {
-                        method: 'POST',
-                        headers: { 
-                            'Content-Type': 'application/json',
-                            'x-user-id': userId,
-                            'x-session-token': sessionToken
-                        },
-                        body: JSON.stringify({ base_content: userInput })
-                    });
+                    articlePayload = {
+                        canonical_title: 'Custom Note ' + new Date().toLocaleDateString(),
+                        base_content: userInput,
+                        source_domain: 'User Note'
+                    };
                 } else {
-                    response = await fetch(`${API_BASE_URL}/scraper/submit`, {
-                        method: 'POST',
-                        headers: { 
-                            'Content-Type': 'application/json',
-                            'x-user-id': userId,
-                            'x-session-token': sessionToken
-                        },
-                        body: JSON.stringify({ url: userInput })
-                    });
+                    articlePayload = {
+                        source_url: userInput,
+                        url: userInput
+                    };
                 }
 
-                const data = await response.json();
+                const createRes = await fetch(`${API_BASE_URL}/articles?action=create`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-user-id': userId,
+                        'x-session-token': sessionToken
+                    },
+                    body: JSON.stringify(articlePayload)
+                });
 
-                if (!response.ok) {
-                    throw new Error(data.error || 'Failed to process request');
+                const createData = await createRes.json();
+                if (!createRes.ok || !createData.success) {
+                    throw new Error(createData.error || 'Failed to initialize article');
+                }
+
+                const articleId = createData.article_id || createData.article?.article_id;
+                const articleSlug = createData.slug || createData.article?.slug || articleId;
+
+                // 2. Generate Explanation via Explanation API
+                const expRes = await fetch(`${API_BASE_URL}/explanation?action=generate`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-user-id': userId,
+                        'x-session-token': sessionToken
+                    },
+                    body: JSON.stringify({
+                        article_id: articleId,
+                        profile_id: profileId,
+                        force: false
+                    })
+                });
+
+                const expData = await expRes.json();
+                if (!expRes.ok || !expData.success) {
+                    throw new Error(expData.error || 'Failed to generate explanation');
                 }
 
                 loader.classList.remove('active');
@@ -970,13 +986,8 @@
                 charCounter.textContent = "0 / 50k";
                 showToast('Explanation ready!');
 
-                if (data.article_id || data.article?.article_id) {
-                    const artId = data.article_id || data.article.article_id;
-                    const slug = data.slug || data.article?.slug;
-                    openArticleInReader(slug, artId);
-                } else {
-                    switchTab('blog');
-                }
+                // Route to /article/:slug or /article/:id
+                openArticleInReader(articleSlug, articleId);
 
             } catch (err) {
                 loader.classList.remove('active');
@@ -1016,7 +1027,7 @@
             renderFeed();
         }
 
-        // Fetch Home Feed
+        // Fetch Dynamic Home Feed from Articles API
         async function fetchHomeFeed() {
             const container = document.getElementById('homeListingContainer');
             try {
@@ -1052,10 +1063,12 @@
             container.innerHTML = '';
             filtered.forEach(art => {
                 const source = art.source_domain || 'EasyRead';
+                const targetIdentifier = art.slug || art.article_id;
+
                 container.innerHTML += `
                     <div class="listing-card glass-card">
                         <div class="listing-header">
-                            <div class="listing-avatar">${source.slice(0, 2).toUpperCase()}</div>
+                            <div class="listing-avatar">${escapeHtml(source.slice(0, 2).toUpperCase())}</div>
                             <div class="listing-meta">
                                 <div class="listing-name">${escapeHtml(art.canonical_title)}</div>
                                 <div class="listing-time">By ${escapeHtml(source)}</div>
@@ -1063,10 +1076,10 @@
                         </div>
                         <div class="listing-body">${escapeHtml(art.summary || 'Tap to read tailored explanations.')}</div>
                         <div class="listing-actions">
-                            <button class="listing-action-btn" onclick="openArticleInReader('${art.slug || ''}', '${art.article_id}')">
+                            <a class="listing-action-btn" href="/article/${encodeURIComponent(targetIdentifier)}" onclick="event.preventDefault(); openArticleInReader('${art.slug || ''}', '${art.article_id}');">
                                 Read Article
                                 <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                            </button>
+                            </a>
                         </div>
                     </div>
                 `;
@@ -1074,17 +1087,16 @@
         }
 
         function openArticleInReader(slug, id) {
-            switchTab('blog');
-            setTimeout(() => {
-                const blogFrame = document.getElementById('blogFrame');
-                if (blogFrame && blogFrame.contentWindow) {
-                    blogFrame.contentWindow.postMessage({
-                        type: 'openArticle',
-                        article_id: id,
-                        slug: slug
-                    }, '*');
-                }
-            }, 100);
+            const targetIdentifier = slug || id;
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'openArticle',
+                    article_id: id,
+                    slug: slug
+                }, '*');
+            } else {
+                window.location.href = `/article/${encodeURIComponent(targetIdentifier)}`;
+            }
         }
 
         function switchTab(tab) {
