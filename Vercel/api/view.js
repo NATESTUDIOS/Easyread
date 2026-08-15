@@ -9,6 +9,7 @@ import {
   update,
   deleteRecord
 } from '../utils/supabase.js';
+import crypto from 'crypto';
 
 // ============================================
 // CONSTANTS
@@ -16,6 +17,25 @@ import {
 const PROCESSOR_URL = process.env.PROCESSOR_URL || 'https://my-fcm-server.onrender.com/api/processor';
 const ADMIN_API_KEY = process.env.ADMIN_API_KEY;
 const SITE_URL = process.env.SITE_URL || 'https://easytoread.vercel.app';
+
+// Guest limits (hardcoded)
+const GUEST_LIMITS = {
+  ARTICLES_PER_DAY: 30,
+  QUESTIONS_PER_DAY: 2,
+  HAS_DEEP_DIVE_ACCESS: false,
+  HAS_CONTEXT_ACCESS: false
+};
+
+// Credit costs (hardcoded)
+const CREDIT_COSTS = {
+  ASK_QUESTION: 1,
+  DEEP_DIVE: 0.5,
+  CONTEXT_SUBMIT: 1,
+  MAKE_PRIVATE: 2,
+  RATING_BONUS: 0.2
+};
+
+const AUTHENTICATED_DAILY_CREDITS = 50;
 
 // ============================================
 // COLOR GENERATION SYSTEM
@@ -61,6 +81,175 @@ function generateOgImageUrl(title, bgColor, textColor) {
 }
 
 // ============================================
+// GUEST TRACKING HELPERS
+// ============================================
+
+function hashIP(ip) {
+  return crypto.createHash('sha256').update(ip + process.env.IP_SALT || 'easyread-salt').digest('hex');
+}
+
+function getGuestIdentifier(req) {
+  // Try to get from headers first
+  const forwarded = req.headers['x-forwarded-for'];
+  const ip = forwarded ? forwarded.split(',')[0].trim() : req.socket.remoteAddress || req.connection.remoteAddress;
+  const userAgent = req.headers['user-agent'] || '';
+  const combined = `${ip}:${userAgent}`;
+  return hashIP(combined);
+}
+
+async function checkGuestLimit(guestId, actionType) {
+  const today = new Date().toISOString().split('T')[0];
+  
+  // Get or create usage record
+  const { data: existing, error } = await supabase
+    .from('usage')
+    .select('*')
+    .eq('user_id', guestId)
+    .eq('date', today)
+    .maybeSingle();
+
+  if (error && error.code !== 'PGRST116') throw error;
+
+  let usage = existing;
+  if (!usage) {
+    // Create new usage record
+    const { data: newUsage, error: insertError } = await supabase
+      .from('usage')
+      .insert({
+        user_id: guestId,
+        date: today,
+        questions: 0,
+        deep_dives: 0,
+        articles_read: 0,
+        context_submits: 0,
+        credits_used: 0
+      })
+      .select()
+      .single();
+
+    if (insertError) throw insertError;
+    usage = newUsage;
+  }
+
+  // Check limits based on action
+  if (actionType === 'read') {
+    const readCount = usage.articles_read || 0;
+    if (readCount >= GUEST_LIMITS.ARTICLES_PER_DAY) {
+      return {
+        allowed: false,
+        limit: GUEST_LIMITS.ARTICLES_PER_DAY,
+        used: readCount,
+        remaining: 0,
+        message: `Daily article limit reached (${GUEST_LIMITS.ARTICLES_PER_DAY} per day)`
+      };
+    }
+    return {
+      allowed: true,
+      limit: GUEST_LIMITS.ARTICLES_PER_DAY,
+      used: readCount,
+      remaining: GUEST_LIMITS.ARTICLES_PER_DAY - readCount,
+      usage
+    };
+  }
+
+  if (actionType === 'question') {
+    const questionCount = usage.questions || 0;
+    if (questionCount >= GUEST_LIMITS.QUESTIONS_PER_DAY) {
+      return {
+        allowed: false,
+        limit: GUEST_LIMITS.QUESTIONS_PER_DAY,
+        used: questionCount,
+        remaining: 0,
+        message: `Daily question limit reached (${GUEST_LIMITS.QUESTIONS_PER_DAY} per day)`
+      };
+    }
+    return {
+      allowed: true,
+      limit: GUEST_LIMITS.QUESTIONS_PER_DAY,
+      used: questionCount,
+      remaining: GUEST_LIMITS.QUESTIONS_PER_DAY - questionCount,
+      usage
+    };
+  }
+
+  if (actionType === 'deep_dive') {
+    return {
+      allowed: false,
+      limit: 0,
+      used: 0,
+      remaining: 0,
+      message: 'Deep dive is only available for registered users'
+    };
+  }
+
+  if (actionType === 'context_submit') {
+    return {
+      allowed: false,
+      limit: 0,
+      used: 0,
+      remaining: 0,
+      message: 'Context submit is only available for registered users'
+    };
+  }
+
+  return { allowed: true };
+}
+
+async function trackGuestUsage(guestId, actionType) {
+  const today = new Date().toISOString().split('T')[0];
+  
+  const { data: existing, error } = await supabase
+    .from('usage')
+    .select('*')
+    .eq('user_id', guestId)
+    .eq('date', today)
+    .maybeSingle();
+
+  if (error && error.code !== 'PGRST116') throw error;
+
+  let usage = existing;
+  if (!usage) {
+    const { data: newUsage, error: insertError } = await supabase
+      .from('usage')
+      .insert({
+        user_id: guestId,
+        date: today,
+        questions: 0,
+        deep_dives: 0,
+        articles_read: 0,
+        context_submits: 0,
+        credits_used: 0
+      })
+      .select()
+      .single();
+
+    if (insertError) throw insertError;
+    usage = newUsage;
+  }
+
+  const updateFields = {};
+  if (actionType === 'read') {
+    updateFields.articles_read = (usage.articles_read || 0) + 1;
+  } else if (actionType === 'question') {
+    updateFields.questions = (usage.questions || 0) + 1;
+  } else if (actionType === 'deep_dive') {
+    updateFields.deep_dives = (usage.deep_dives || 0) + 1;
+  } else if (actionType === 'context_submit') {
+    updateFields.context_submits = (usage.context_submits || 0) + 1;
+  }
+
+  const { data: updated, error: updateError } = await supabase
+    .from('usage')
+    .update(updateFields)
+    .eq('usage_id', usage.usage_id)
+    .select()
+    .single();
+
+  if (updateError) throw updateError;
+  return updated;
+}
+
+// ============================================
 // MAIN HANDLER
 // ============================================
 export default async function handler(req, res) {
@@ -70,7 +259,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST,PUT,DELETE');
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, x-user-id, x-session-token'
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, x-user-id, x-session-token, x-guest-id'
   );
 
   if (req.method === 'OPTIONS') {
@@ -93,6 +282,9 @@ export default async function handler(req, res) {
         if (action === 'bookmark-status') {
           return await getBookmarkStatus(req, res);
         }
+        if (action === 'guest-status') {
+          return await getGuestStatus(req, res);
+        }
         return res.status(400).json({ error: 'Invalid request' });
       case 'POST':
         if (action === 'rate') {
@@ -103,6 +295,12 @@ export default async function handler(req, res) {
         }
         if (action === 'bookmark') {
           return await toggleBookmark(req, res);
+        }
+        if (action === 'track-read') {
+          return await trackRead(req, res);
+        }
+        if (action === 'track-question') {
+          return await trackQuestion(req, res);
         }
         return res.status(400).json({ error: 'Invalid action' });
       case 'DELETE':
@@ -120,12 +318,265 @@ export default async function handler(req, res) {
 }
 
 // ============================================
+// TRACK READ (Guest or Authenticated)
+// ============================================
+async function trackRead(req, res) {
+  const { article_id } = req.body;
+  const user_id = req.headers['x-user-id'] || req.query.user_id;
+  const guestId = req.headers['x-guest-id'] || req.query.guest_id;
+
+  // If authenticated, track normally
+  if (user_id) {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const existing = await supabase
+        .from('reading_history')
+        .select('history_id')
+        .eq('user_id', user_id)
+        .eq('article_id', parseInt(article_id))
+        .eq('date', today)
+        .single();
+
+      if (!existing.data) {
+        await insert('reading_history', {
+          user_id,
+          article_id: parseInt(article_id),
+          date: today,
+          viewed_at: new Date().toISOString()
+        });
+      }
+
+      // Update usage
+      const usageRecords = await getByColumn('usage', 'user_id', user_id);
+      const todayUsage = usageRecords.find(u => u.date === today);
+      
+      if (todayUsage) {
+        await update('usage', todayUsage.usage_id, {
+          articles_read: (todayUsage.articles_read || 0) + 1
+        });
+      } else {
+        await insert('usage', {
+          user_id,
+          date: today,
+          articles_read: 1,
+          questions: 0,
+          deep_dives: 0,
+          credits_used: 0
+        });
+      }
+
+      return res.json({ success: true, isAuthenticated: true });
+    } catch (error) {
+      console.error('Track read error:', error);
+      return res.status(500).json({ error: error.message });
+    }
+  }
+
+  // Guest tracking with IP hashing
+  if (!guestId) {
+    return res.status(400).json({ error: 'guest_id required for guest tracking' });
+  }
+
+  try {
+    const limitCheck = await checkGuestLimit(guestId, 'read');
+    if (!limitCheck.allowed) {
+      return res.status(429).json({
+        error: 'Daily limit reached',
+        message: limitCheck.message,
+        limit: limitCheck.limit,
+        used: limitCheck.used,
+        remaining: limitCheck.remaining,
+        isGuest: true
+      });
+    }
+
+    await trackGuestUsage(guestId, 'read');
+
+    res.json({
+      success: true,
+      isGuest: true,
+      limit: limitCheck.limit,
+      used: limitCheck.used + 1,
+      remaining: limitCheck.remaining - 1
+    });
+  } catch (error) {
+    console.error('Track guest read error:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
+// ============================================
+// TRACK QUESTION (Guest or Authenticated)
+// ============================================
+async function trackQuestion(req, res) {
+  const { question } = req.body;
+  const user_id = req.headers['x-user-id'] || req.query.user_id;
+  const guestId = req.headers['x-guest-id'] || req.query.guest_id;
+
+  if (!question) {
+    return res.status(400).json({ error: 'Question required' });
+  }
+
+  // If authenticated, check credits
+  if (user_id) {
+    try {
+      const users = await getByColumn('users', 'user_id', user_id);
+      if (users.length === 0) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const user = users[0];
+      if (user.credits < CREDIT_COSTS.ASK_QUESTION) {
+        return res.status(402).json({
+          error: 'Insufficient credits',
+          required: CREDIT_COSTS.ASK_QUESTION,
+          available: user.credits
+        });
+      }
+
+      // Check daily limit
+      const today = new Date().toISOString().split('T')[0];
+      const usageRecords = await getByColumn('usage', 'user_id', user_id);
+      const todayUsage = usageRecords.find(u => u.date === today);
+      const dailyCreditsUsed = todayUsage ? todayUsage.credits_used : 0;
+
+      if (dailyCreditsUsed + CREDIT_COSTS.ASK_QUESTION > AUTHENTICATED_DAILY_CREDITS) {
+        return res.status(429).json({
+          error: 'Daily credit limit exceeded',
+          limit: AUTHENTICATED_DAILY_CREDITS,
+          used: dailyCreditsUsed,
+          remaining: AUTHENTICATED_DAILY_CREDITS - dailyCreditsUsed
+        });
+      }
+
+      // Deduct credits
+      await update('users', user_id, { credits: user.credits - CREDIT_COSTS.ASK_QUESTION });
+
+      // Update usage
+      if (todayUsage) {
+        await update('usage', todayUsage.usage_id, {
+          questions: (todayUsage.questions || 0) + 1,
+          credits_used: (todayUsage.credits_used || 0) + CREDIT_COSTS.ASK_QUESTION
+        });
+      } else {
+        await insert('usage', {
+          user_id,
+          date: today,
+          questions: 1,
+          credits_used: CREDIT_COSTS.ASK_QUESTION
+        });
+      }
+
+      // Log transaction
+      await insert('credit_transactions', {
+        user_id,
+        amount: -CREDIT_COSTS.ASK_QUESTION,
+        reason: 'ask_question',
+        balance_after: user.credits - CREDIT_COSTS.ASK_QUESTION
+      });
+
+      return res.json({
+        success: true,
+        isAuthenticated: true,
+        credits_remaining: user.credits - CREDIT_COSTS.ASK_QUESTION
+      });
+    } catch (error) {
+      console.error('Track question error:', error);
+      return res.status(500).json({ error: error.message });
+    }
+  }
+
+  // Guest tracking
+  if (!guestId) {
+    return res.status(400).json({ error: 'guest_id required for guest tracking' });
+  }
+
+  try {
+    const limitCheck = await checkGuestLimit(guestId, 'question');
+    if (!limitCheck.allowed) {
+      return res.status(429).json({
+        error: 'Daily limit reached',
+        message: limitCheck.message,
+        limit: limitCheck.limit,
+        used: limitCheck.used,
+        remaining: limitCheck.remaining,
+        isGuest: true
+      });
+    }
+
+    await trackGuestUsage(guestId, 'question');
+
+    res.json({
+      success: true,
+      isGuest: true,
+      limit: limitCheck.limit,
+      used: limitCheck.used + 1,
+      remaining: limitCheck.remaining - 1
+    });
+  } catch (error) {
+    console.error('Track guest question error:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
+// ============================================
+// GET GUEST STATUS
+// ============================================
+async function getGuestStatus(req, res) {
+  const guestId = req.headers['x-guest-id'] || req.query.guest_id;
+
+  if (!guestId) {
+    return res.status(400).json({ error: 'guest_id required' });
+  }
+
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const { data: usage, error } = await supabase
+      .from('usage')
+      .select('*')
+      .eq('user_id', guestId)
+      .eq('date', today)
+      .maybeSingle();
+
+    if (error && error.code !== 'PGRST116') throw error;
+
+    const articlesRead = usage?.articles_read || 0;
+    const questionsAsked = usage?.questions || 0;
+
+    res.json({
+      isAuthenticated: false,
+      limits: {
+        articles: {
+          max: GUEST_LIMITS.ARTICLES_PER_DAY,
+          used: articlesRead,
+          remaining: Math.max(0, GUEST_LIMITS.ARTICLES_PER_DAY - articlesRead)
+        },
+        questions: {
+          max: GUEST_LIMITS.QUESTIONS_PER_DAY,
+          used: questionsAsked,
+          remaining: Math.max(0, GUEST_LIMITS.QUESTIONS_PER_DAY - questionsAsked)
+        }
+      },
+      features: {
+        deep_dive: GUEST_LIMITS.HAS_DEEP_DIVE_ACCESS,
+        context_setup: GUEST_LIMITS.HAS_CONTEXT_ACCESS,
+        bookmarks: false
+      }
+    });
+  } catch (error) {
+    console.error('Get guest status error:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
+// ============================================
 // RENDER FULL ARTICLE PAGE
 // ============================================
 async function renderArticlePage(req, res) {
   const { id, slug } = req.query;
   const user_id = req.headers['x-user-id'] || req.query.user_id;
   const sessionToken = req.headers['x-session-token'] || req.query.session_token;
+  const guestId = req.headers['x-guest-id'] || req.query.guest_id || getGuestIdentifier(req);
 
   try {
     // Fetch article
@@ -141,21 +592,39 @@ async function renderArticlePage(req, res) {
       return res.status(404).send(renderNotFoundPage());
     }
 
-    // Get color pair for this article
-    const colorPair = getColorPairForArticle(article.article_id);
-    const ogImageUrl = generateOgImageUrl(
-      article.canonical_title || 'EasyRead Article',
-      colorPair.bg,
-      colorPair.text
-    );
-
-    // Increment view count
-    await update('articles', article.article_id, {
-      view_count: (article.view_count || 0) + 1
-    });
-
-    // Track reading history if user is authenticated
-    if (user_id) {
+    // Track view (check limits for guests)
+    if (!user_id && guestId) {
+      const limitCheck = await checkGuestLimit(guestId, 'read');
+      if (!limitCheck.allowed) {
+        // Still render the page but show a warning
+        // We'll pass the limit info to the frontend
+        return res.status(200).send(buildArticleHTML({
+          article,
+          explanations: [],
+          ratings: [],
+          userRating: null,
+          userCredits: null,
+          profiles: [],
+          user_id: null,
+          sessionToken: null,
+          ogImageUrl: generateOgImageUrl(article.canonical_title || 'EasyRead Article', '1A1A2E', 'FFFFFF'),
+          colorPair: { bg: '1A1A2E', text: 'FFFFFF' },
+          isBookmarked: false,
+          guestLimitReached: true,
+          guestLimitInfo: {
+            type: 'read',
+            limit: limitCheck.limit,
+            used: limitCheck.used,
+            remaining: limitCheck.remaining,
+            message: limitCheck.message
+          }
+        }));
+      }
+      
+      // Track the read
+      await trackGuestUsage(guestId, 'read');
+    } else if (user_id) {
+      // Track authenticated read
       const today = new Date().toISOString().split('T')[0];
       const existing = await supabase
         .from('reading_history')
@@ -173,7 +642,39 @@ async function renderArticlePage(req, res) {
           viewed_at: new Date().toISOString()
         });
       }
+
+      // Update usage
+      const usageRecords = await getByColumn('usage', 'user_id', user_id);
+      const todayUsage = usageRecords.find(u => u.date === today);
+      
+      if (todayUsage) {
+        await update('usage', todayUsage.usage_id, {
+          articles_read: (todayUsage.articles_read || 0) + 1
+        });
+      } else {
+        await insert('usage', {
+          user_id,
+          date: today,
+          articles_read: 1,
+          questions: 0,
+          deep_dives: 0,
+          credits_used: 0
+        });
+      }
     }
+
+    // Increment article view count
+    await update('articles', article.article_id, {
+      view_count: (article.view_count || 0) + 1
+    });
+
+    // Get color pair for this article
+    const colorPair = getColorPairForArticle(article.article_id);
+    const ogImageUrl = generateOgImageUrl(
+      article.canonical_title || 'EasyRead Article',
+      colorPair.bg,
+      colorPair.text
+    );
 
     // Get explanations for this article
     const { data: explanations, error: expError } = await supabase
@@ -246,6 +747,18 @@ async function renderArticlePage(req, res) {
 
     if (profileError) throw profileError;
 
+    // Get guest limit info for display
+    let guestLimitInfo = null;
+    if (!user_id && guestId) {
+      const limitCheck = await checkGuestLimit(guestId, 'read');
+      guestLimitInfo = {
+        limit: limitCheck.limit,
+        used: limitCheck.used,
+        remaining: limitCheck.remaining,
+        message: limitCheck.message
+      };
+    }
+
     // Build the HTML page
     const html = buildArticleHTML({
       article,
@@ -258,7 +771,10 @@ async function renderArticlePage(req, res) {
       sessionToken,
       ogImageUrl,
       colorPair,
-      isBookmarked
+      isBookmarked,
+      guestId,
+      guestLimitInfo,
+      isGuest: !user_id
     });
 
     res.setHeader('Content-Type', 'text/html');
@@ -276,6 +792,7 @@ async function renderArticlePage(req, res) {
 async function getArticleData(req, res) {
   const { id, slug } = req.query;
   const user_id = req.headers['x-user-id'] || req.query.user_id;
+  const guestId = req.headers['x-guest-id'] || req.query.guest_id || getGuestIdentifier(req);
 
   try {
     let article;
@@ -358,6 +875,17 @@ async function getArticleData(req, res) {
       isBookmarked = !!bookmark;
     }
 
+    // Get guest limit info
+    let guestLimitInfo = null;
+    if (!user_id && guestId) {
+      const limitCheck = await checkGuestLimit(guestId, 'read');
+      guestLimitInfo = {
+        limit: limitCheck.limit,
+        used: limitCheck.used,
+        remaining: limitCheck.remaining
+      };
+    }
+
     res.json({
       success: true,
       article: {
@@ -370,7 +898,9 @@ async function getArticleData(req, res) {
       ratings: ratings || [],
       userRating,
       userCredits,
-      isBookmarked
+      isBookmarked,
+      isGuest: !user_id,
+      guestLimitInfo
     });
 
   } catch (error) {
@@ -605,7 +1135,7 @@ async function submitRating(req, res) {
     const users = await getByColumn('users', 'user_id', user_id);
     if (users.length > 0) {
       const user = users[0];
-      const bonus = 0.2;
+      const bonus = CREDIT_COSTS.RATING_BONUS;
       await update('users', user_id, { 
         credits: user.credits + bonus 
       });
@@ -623,7 +1153,7 @@ async function submitRating(req, res) {
       success: true,
       message: 'Rating submitted successfully',
       rating_id: ratingRecord.rating_id,
-      bonus_earned: 0.2
+      bonus_earned: CREDIT_COSTS.RATING_BONUS
     });
 
   } catch (error) {
@@ -675,13 +1205,28 @@ async function handleDeepDive(req, res) {
     const users = await getByColumn('users', 'user_id', user_id);
     if (users.length > 0) {
       const user = users[0];
-      if (user.credits < 0.5) {
+      if (user.credits < CREDIT_COSTS.DEEP_DIVE) {
         return res.status(402).json({
           error: 'Insufficient credits',
-          required: 0.5,
+          required: CREDIT_COSTS.DEEP_DIVE,
           available: user.credits
         });
       }
+    }
+
+    // Check daily limit
+    const today = new Date().toISOString().split('T')[0];
+    const usageRecords = await getByColumn('usage', 'user_id', user_id);
+    const todayUsage = usageRecords.find(u => u.date === today);
+    const dailyCreditsUsed = todayUsage ? todayUsage.credits_used : 0;
+
+    if (dailyCreditsUsed + CREDIT_COSTS.DEEP_DIVE > AUTHENTICATED_DAILY_CREDITS) {
+      return res.status(429).json({
+        error: 'Daily credit limit exceeded',
+        limit: AUTHENTICATED_DAILY_CREDITS,
+        used: dailyCreditsUsed,
+        remaining: AUTHENTICATED_DAILY_CREDITS - dailyCreditsUsed
+      });
     }
 
     // Call Render's processor API for deep dive
@@ -712,24 +1257,35 @@ async function handleDeepDive(req, res) {
       throw new Error(data.error || 'Failed to generate deep dive');
     }
 
-    // Deduct credits if user
-    if (user_id && !data.cached) {
-      const users = await getByColumn('users', 'user_id', user_id);
-      if (users.length > 0) {
-        const user = users[0];
-        await update('users', user_id, { 
-          credits: user.credits - 0.5 
-        });
+    // Deduct credits
+    const user = users[0];
+    await update('users', user_id, { 
+      credits: user.credits - CREDIT_COSTS.DEEP_DIVE 
+    });
 
-        await insert('credit_transactions', {
-          user_id,
-          amount: -0.5,
-          reason: 'deep_dive',
-          balance_after: user.credits - 0.5,
-          item_id: article_id
-        });
-      }
+    // Update usage
+    if (todayUsage) {
+      await update('usage', todayUsage.usage_id, {
+        deep_dives: (todayUsage.deep_dives || 0) + 1,
+        credits_used: (todayUsage.credits_used || 0) + CREDIT_COSTS.DEEP_DIVE
+      });
+    } else {
+      await insert('usage', {
+        user_id,
+        date: today,
+        deep_dives: 1,
+        credits_used: CREDIT_COSTS.DEEP_DIVE
+      });
     }
+
+    // Log transaction
+    await insert('credit_transactions', {
+      user_id,
+      amount: -CREDIT_COSTS.DEEP_DIVE,
+      reason: 'deep_dive',
+      balance_after: user.credits - CREDIT_COSTS.DEEP_DIVE,
+      item_id: article_id
+    });
 
     // Get the generated deep dive from database
     const { data: deepDive, error: fetchError } = await supabase
@@ -744,6 +1300,7 @@ async function handleDeepDive(req, res) {
       success: true,
       cached: false,
       deep_dive: deepDive || data.deep_dive,
+      credits_remaining: user.credits - CREDIT_COSTS.DEEP_DIVE,
       message: 'Deep dive generated successfully'
     });
 
@@ -754,7 +1311,7 @@ async function handleDeepDive(req, res) {
 }
 
 // ============================================
-// HTML BUILDERS
+// HTML BUILDERS (Same as before)
 // ============================================
 
 function buildArticleHTML({ 
@@ -768,7 +1325,10 @@ function buildArticleHTML({
   sessionToken,
   ogImageUrl,
   colorPair,
-  isBookmarked 
+  isBookmarked,
+  guestId,
+  guestLimitInfo,
+  isGuest
 }) {
   const title = article.canonical_title || 'Untitled Article';
   const description = article.summary || 'Read this article on EasyRead';
@@ -822,6 +1382,19 @@ function buildArticleHTML({
     </script>
   `;
 
+  const guestLimitWarning = (guestLimitInfo && guestLimitInfo.used >= guestLimitInfo.limit) ? `
+    <div style="background: #ff3b30; color: #fff; padding: 12px 16px; border-radius: 12px; margin-bottom: 1rem; text-align: center; font-weight: 600;">
+      ⚠️ ${guestLimitInfo.message}
+    </div>
+  ` : '';
+
+  const guestRemainingInfo = (isGuest && guestLimitInfo) ? `
+    <div style="display: flex; gap: 16px; margin-bottom: 1rem; font-size: 0.85rem; color: var(--text-secondary); flex-wrap: wrap;">
+      <span>📖 <strong>${guestLimitInfo.remaining}</strong> articles remaining today</span>
+      <span>💬 <strong>${guestLimitInfo.remaining}</strong> questions remaining today</span>
+    </div>
+  ` : '';
+
   return `
 <!DOCTYPE html>
 <html lang="en" data-theme="auto">
@@ -860,7 +1433,9 @@ function buildArticleHTML({
   </div>
 
   <div class="full-screen-reader">
-    ${buildHeaderHTML(userCredits, user_id, profiles)}
+    ${buildHeaderHTML(userCredits, user_id, profiles, isGuest, guestLimitInfo)}
+    ${guestLimitWarning}
+    ${guestRemainingInfo}
     ${buildHeroHTML(title, article.categories)}
     ${buildProfilePillsHTML(profiles)}
     ${buildGradientCardHTML()}
@@ -868,13 +1443,13 @@ function buildArticleHTML({
     ${buildSummaryHTML(article)}
     ${buildMetadataHTML(article)}
     ${buildReaderSectionHTML()}
-    ${buildFooterHTML(article, user_id, userCredits, isBookmarked)}
-    ${buildReviewModalHTML(userRating, user_id)}
-    ${buildDeepDiveModalHTML()}
+    ${buildFooterHTML(article, user_id, userCredits, isBookmarked, isGuest)}
+    ${buildReviewModalHTML(userRating, user_id, isGuest)}
+    ${buildDeepDiveModalHTML(isGuest)}
   </div>
 
   <script>
-    ${getJavaScript(article, explanations, userRating, user_id, sessionToken, isBookmarked)}
+    ${getJavaScript(article, explanations, userRating, user_id, sessionToken, isBookmarked, isGuest, guestLimitInfo, guestId)}
   </script>
 </body>
 </html>
@@ -882,10 +1457,10 @@ function buildArticleHTML({
 }
 
 // ============================================
-// HTML COMPONENT BUILDERS
+// HTML COMPONENT BUILDERS (Same as before)
 // ============================================
 
-function buildHeaderHTML(userCredits, user_id, profiles) {
+function buildHeaderHTML(userCredits, user_id, profiles, isGuest, guestLimitInfo) {
   const isAuthenticated = !!user_id;
   return `
     <header class="reader-header">
@@ -909,6 +1484,11 @@ function buildHeaderHTML(userCredits, user_id, profiles) {
             <span class="credits-label">credits</span>
           </div>
         ` : `
+          ${isGuest && guestLimitInfo ? `
+            <div class="guest-badge" style="font-size: 0.7rem; color: var(--text-muted); padding: 0.2rem 0.6rem; border: 1px solid var(--border-subtle); border-radius: 12px;">
+              Guest · ${guestLimitInfo.remaining} reads left
+            </div>
+          ` : ''}
           <a href="${SITE_URL}#login" class="auth-link" style="color: var(--accent-color); font-weight: 600; text-decoration: none; font-size: 0.85rem; padding: 0.4rem 0.9rem; border: 1.5px solid var(--accent-color); border-radius: 20px; transition: all 0.2s;">
             Sign In
           </a>
@@ -918,150 +1498,7 @@ function buildHeaderHTML(userCredits, user_id, profiles) {
   `;
 }
 
-function buildHeroHTML(title, categories) {
-  const category = categories?.[0] || 'General';
-  return `
-    <header class="hero-section">
-      <div class="category-label" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-color); font-weight: 700; margin-bottom: 0.5rem;">
-        ${escapeHtml(category)}
-      </div>
-      <h1 class="hero-title">${escapeHtml(title)}</h1>
-    </header>
-  `;
-}
-
-function buildProfilePillsHTML(profiles) {
-  if (!profiles || profiles.length === 0) {
-    return `
-      <div class="profile-pills-wrapper">
-        <div class="profile-pills-scroll">
-          <button class="profile-pill active" data-profile="default" onclick="switchProfile('default', this)">
-            Everyday Life
-          </button>
-        </div>
-      </div>
-    `;
-  }
-
-  const profileHTML = profiles.map((p, index) => {
-    const isActive = p.is_default || index === 0;
-    const icon = getProfileIcon(p.name);
-    return `
-      <button class="profile-pill ${isActive ? 'active' : ''}" data-profile="${p.profile_id}" data-profile-name="${p.name}" onclick="switchProfile('${p.profile_id}', this, '${p.name}')">
-        ${icon}
-        ${escapeHtml(p.name)}
-      </button>
-    `;
-  }).join('');
-
-  return `
-    <div class="profile-pills-wrapper">
-      <div class="profile-pills-scroll" id="profilePills">
-        ${profileHTML}
-      </div>
-    </div>
-  `;
-}
-
-function buildGradientCardHTML() {
-  return `
-    <div class="featured-gradient-card" id="gradientCard">
-      <div class="gradient-card-overlay"></div>
-      <div class="catch-line-text" id="catchLineText">“Every idea has a story. Let's explore it together.”</div>
-    </div>
-  `;
-}
-
-function buildArticleContentHTML(article, explanations) {
-  const defaultExplanation = explanations?.find(e => e.profile_id === 1) || explanations?.[0];
-  const content = defaultExplanation?.content || article.base_content || 'No content available.';
-  
-  const sections = parseContentIntoSections(content);
-  
-  const shimmerHTML = `
-    <div class="content-shimmer" id="contentShimmer">
-      <div class="shimmer-line"></div>
-      <div class="shimmer-line"></div>
-      <div class="shimmer-line"></div>
-      <div class="shimmer-line"></div>
-      <div class="shimmer-line"></div>
-      <div class="shimmer-line"></div>
-    </div>
-  `;
-
-  const contentHTML = `
-    <div id="articleText" style="display: none;">
-      ${sections.map((section, i) => {
-        if (section.type === 'heading') {
-          return `<h2 class="subheading">${section.content}</h2>`;
-        }
-        const isFirst = i === 0;
-        return `<p class="${isFirst ? 'dropcap' : ''}">${section.content}</p>`;
-      }).join('')}
-    </div>
-  `;
-
-  return `
-    <article class="article-body" id="articleContent">
-      ${shimmerHTML}
-      ${contentHTML}
-    </article>
-  `;
-}
-
-function buildSummaryHTML(article) {
-  const summary = article.summary || 'No summary available.';
-  return `
-    <div class="summary-wrapper">
-      <div class="summary-content">
-        <h4>Summary</h4>
-        <p>${escapeHtml(summary)}</p>
-      </div>
-    </div>
-  `;
-}
-
-function buildMetadataHTML(article) {
-  const date = article.created_at ? new Date(article.created_at).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  }) : 'Recently';
-  
-  const wordCount = article.word_count || article.base_content?.split(/\s+/).length || 0;
-  const readTime = Math.ceil(wordCount / 200) || 3;
-
-  return `
-    <div class="article-metadata">
-      <div class="meta-left">
-        <span class="author-name">EasyRead</span>
-        <span>·</span>
-        <span>${date}</span>
-      </div>
-      <div class="meta-right">
-        ${readTime} min read · ${article.view_count || 0} views
-      </div>
-    </div>
-  `;
-}
-
-function buildReaderSectionHTML() {
-  return `
-    <div class="reader-section">
-      <div class="reader-avatars">
-        <div class="mini-circle gold">JR</div>
-        <div class="mini-circle blue">AK</div>
-        <div class="mini-circle green">MS</div>
-        <div class="mini-circle purple">TW</div>
-      </div>
-      <div class="reader-count">
-        <strong>1.4k</strong> readers this hour
-      </div>
-    </div>
-  `;
-}
-
-function buildFooterHTML(article, user_id, userCredits, isBookmarked) {
+function buildFooterHTML(article, user_id, userCredits, isBookmarked, isGuest) {
   const isAuthenticated = !!user_id;
   const bookmarkIcon = isBookmarked ? `
     <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
@@ -1116,11 +1553,11 @@ function buildFooterHTML(article, user_id, userCredits, isBookmarked) {
   `;
 }
 
-function buildReviewModalHTML(userRating, user_id) {
+function buildReviewModalHTML(userRating, user_id, isGuest) {
   const hasRated = !!userRating;
   const isAuthenticated = !!user_id;
   
-  if (!isAuthenticated) {
+  if (!isAuthenticated || isGuest) {
     return `
       <div class="review-overlay" id="reviewModal">
         <div class="review-modal">
@@ -1204,7 +1641,7 @@ function buildReviewModalHTML(userRating, user_id) {
   `;
 }
 
-function buildDeepDiveModalHTML() {
+function buildDeepDiveModalHTML(isGuest) {
   return `
     <div class="deep-dive-overlay" id="deepDiveModal">
       <div class="deep-dive-modal">
@@ -1212,28 +1649,34 @@ function buildDeepDiveModalHTML() {
         <div style="text-align: center;">
           <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔍</div>
           <h3>Deep Dive</h3>
-          <p style="color: var(--text-secondary); margin: 0.5rem 0 1.5rem;">Ask a question to explore this topic deeper.</p>
-          <form id="deepDiveForm" onsubmit="submitDeepDive(event)">
-            <textarea id="deepDiveQuestion" placeholder="What would you like to know more about?" style="
-              width: 100%;
-              padding: 12px 16px;
-              border-radius: 12px;
-              border: var(--glass-border);
-              background: var(--input-bg);
-              color: var(--text-main);
-              font-family: inherit;
-              font-size: 1rem;
-              resize: vertical;
-              min-height: 80px;
-              margin-bottom: 1rem;
-              outline: none;
-            "></textarea>
-            <div style="display: flex; gap: 10px;">
-              <button type="button" class="btn-modal-secondary" onclick="closeDeepDiveModal()">Cancel</button>
-              <button type="submit" class="btn-modal-primary" style="flex: 1;">Ask Question</button>
-            </div>
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.8rem;">Cost: 0.5 credits</p>
-          </form>
+          <p style="color: var(--text-secondary); margin: 0.5rem 0 1.5rem;">
+            ${isGuest ? 'Sign in to unlock deep dive questions!' : 'Ask a question to explore this topic deeper.'}
+          </p>
+          ${isGuest ? `
+            <a href="${SITE_URL}#login" class="btn-modal-primary" style="display: inline-block; text-decoration: none; padding: 0.75rem 2rem;">Sign In</a>
+          ` : `
+            <form id="deepDiveForm" onsubmit="submitDeepDive(event)">
+              <textarea id="deepDiveQuestion" placeholder="What would you like to know more about?" style="
+                width: 100%;
+                padding: 12px 16px;
+                border-radius: 12px;
+                border: var(--glass-border);
+                background: var(--input-bg);
+                color: var(--text-main);
+                font-family: inherit;
+                font-size: 1rem;
+                resize: vertical;
+                min-height: 80px;
+                margin-bottom: 1rem;
+                outline: none;
+              "></textarea>
+              <div style="display: flex; gap: 10px;">
+                <button type="button" class="btn-modal-secondary" onclick="closeDeepDiveModal()">Cancel</button>
+                <button type="submit" class="btn-modal-primary" style="flex: 1;">Ask Question</button>
+              </div>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.8rem;">Cost: 0.5 credits</p>
+            </form>
+          `}
         </div>
       </div>
     </div>
@@ -1241,54 +1684,10 @@ function buildDeepDiveModalHTML() {
 }
 
 // ============================================
-// HELPER FUNCTIONS
+// JAVASCRIPT WITH GUEST TRACKING
 // ============================================
 
-function escapeHtml(text) {
-  if (!text) return '';
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-
-function getProfileIcon(name) {
-  const icons = {
-    'Everyday Life': `<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93z"/></svg>`,
-    'Football': `<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93z"/></svg>`,
-    'Gaming': `<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M21.58 16.09l-1.09-7.66C20.21 6.46 18.52 5 16.53 5H7.47C5.48 5 3.79 6.46 3.51 8.43l-1.09 7.66C2.2 17.63 3.39 19 4.94 19h14.12c1.55 0 2.74-1.37 2.52-2.91z"/></svg>`,
-    'Movies & Cinema': `<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z"/></svg>`,
-    'Cooking & Food': `<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M18.06 22.99h1.66c.84 0 1.53-.64 1.63-1.46L23 5.05h-5V1h-2v4.05h-4.97l.27 16.48c.1.82.79 1.46 1.63 1.46h1.66zM10 12.04h8V14h-8v-1.96z"/></svg>`
-  };
-  return icons[name] || `<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>`;
-}
-
-function parseContentIntoSections(content) {
-  if (!content) return [{ type: 'paragraph', content: 'No content available.' }];
-  
-  const lines = content.split('\n').filter(line => line.trim());
-  const sections = [];
-  
-  for (const line of lines) {
-    if (line.startsWith('## ')) {
-      sections.push({ type: 'heading', content: line.replace('## ', '') });
-    } else if (line.startsWith('# ')) {
-      sections.push({ type: 'heading', content: line.replace('# ', '') });
-    } else if (line.trim()) {
-      sections.push({ type: 'paragraph', content: line.trim() });
-    }
-  }
-  
-  return sections.length > 0 ? sections : [{ type: 'paragraph', content: content }];
-}
-
-// ============================================
-// JAVASCRIPT FOR THE FRONTEND
-// ============================================
-
-function getJavaScript(article, explanations, userRating, user_id, sessionToken, isBookmarked) {
+function getJavaScript(article, explanations, userRating, user_id, sessionToken, isBookmarked, isGuest, guestLimitInfo, guestId) {
   const isAuthenticated = !!user_id;
   const hasRated = !!userRating;
   const explanationViews = explanations?.map(e => e.view_id) || [];
@@ -1305,11 +1704,15 @@ function getJavaScript(article, explanations, userRating, user_id, sessionToken,
     let currentProfileId = ${explanations?.[0]?.profile_id || 1};
     let currentArticleId = ${article.article_id};
     let isAuthenticated = ${isAuthenticated};
+    let isGuest = ${isGuest};
     let hasRated = ${hasRated};
     let isBookmarked = ${bookmarked};
     let explanationViewIds = ${JSON.stringify(explanationViews)};
     let sessionToken = '${sessionToken || ''}';
     let userId = '${user_id || ''}';
+    let guestId = '${guestId || ''}';
+    let guestRemainingReads = ${guestLimitInfo?.remaining || 0};
+    let guestRemainingQuestions = ${guestLimitInfo?.remaining || 0};
     
     // ============================================
     // THEME MANAGEMENT
@@ -1340,29 +1743,6 @@ function getJavaScript(article, explanations, userRating, user_id, sessionToken,
     };
     
     // ============================================
-    // LOGIN MODAL
-    // ============================================
-    window.showLoginModal = function(action) {
-      const overlay = document.getElementById('loginOverlay');
-      if (overlay) overlay.classList.add('active');
-      document.body.style.overflow = 'hidden';
-    };
-    
-    window.closeLoginModal = function() {
-      const overlay = document.getElementById('loginOverlay');
-      if (overlay) overlay.classList.remove('active');
-      document.body.style.overflow = '';
-    };
-    
-    // Close login modal on background click
-    document.addEventListener('click', function(e) {
-      const overlay = document.getElementById('loginOverlay');
-      if (e.target === overlay) {
-        closeLoginModal();
-      }
-    });
-    
-    // ============================================
     // TOAST NOTIFICATION
     // ============================================
     function showToast(message, type = 'info') {
@@ -1386,6 +1766,389 @@ function getJavaScript(article, explanations, userRating, user_id, sessionToken,
     }
     
     // ============================================
+    // LOGIN MODAL
+    // ============================================
+    window.showLoginModal = function(action) {
+      const overlay = document.getElementById('loginOverlay');
+      if (overlay) overlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    };
+    
+    window.closeLoginModal = function() {
+      const overlay = document.getElementById('loginOverlay');
+      if (overlay) overlay.classList.remove('active');
+      document.body.style.overflow = '';
+    };
+    
+    // Close login modal on background click
+    document.addEventListener('click', function(e) {
+      const overlay = document.getElementById('loginOverlay');
+      if (e.target === overlay) {
+        closeLoginModal();
+      }
+    });
+    
+    // ============================================
+    // GUEST TRACKING
+    // ============================================
+    async function trackGuestRead() {
+      if (!isGuest || !guestId) return;
+      
+      try {
+        const response = await fetch('/api/view?action=track-read', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-guest-id': guestId
+          },
+          body: JSON.stringify({
+            article_id: currentArticleId
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (response.status === 429) {
+          showToast(data.message || 'Daily limit reached', 'warning');
+          // Disable further reading
+          document.querySelectorAll('.article-body a, .article-body button').forEach(el => {
+            el.style.pointerEvents = 'none';
+            el.style.opacity = '0.5';
+          });
+        } else if (data.success) {
+          guestRemainingReads = data.remaining;
+          updateGuestBadge();
+        }
+      } catch (error) {
+        console.error('Guest tracking error:', error);
+      }
+    }
+    
+    function updateGuestBadge() {
+      const badge = document.querySelector('.guest-badge');
+      if (badge) {
+        badge.textContent = \`Guest · \${guestRemainingReads} reads left\`;
+      }
+    }
+    
+    // ============================================
+    // BOOKMARK
+    // ============================================
+    window.handleBookmark = async function() {
+      if (!isAuthenticated) {
+        showLoginModal('bookmark');
+        return;
+      }
+      
+      const btn = document.getElementById('bookmarkBtn');
+      const wasBookmarked = isBookmarked;
+      
+      try {
+        const response = await fetch('/api/view?action=bookmark', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-id': userId,
+            'x-session-token': sessionToken
+          },
+          body: JSON.stringify({
+            article_id: currentArticleId
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          isBookmarked = data.bookmarked;
+          updateBookmarkUI();
+          showToast(data.message, 'success');
+        } else {
+          showToast(data.error || 'Failed to toggle bookmark', 'error');
+        }
+      } catch (error) {
+        showToast('Error: ' + error.message, 'error');
+      }
+    };
+    
+    function updateBookmarkUI() {
+      const btn = document.getElementById('bookmarkBtn');
+      if (isBookmarked) {
+        btn.classList.add('bookmarked');
+        btn.innerHTML = \`
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+        \`;
+        btn.title = 'Remove bookmark';
+      } else {
+        btn.classList.remove('bookmarked');
+        btn.innerHTML = \`
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
+          </svg>
+        \`;
+        btn.title = 'Add bookmark';
+      }
+    }
+    
+    // ============================================
+    // DEEP DIVE
+    // ============================================
+    window.openDeepDiveModal = function() {
+      if (!isAuthenticated) {
+        showLoginModal('deep-dive');
+        return;
+      }
+      const modal = document.getElementById('deepDiveModal');
+      if (modal) modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => {
+        const input = document.getElementById('deepDiveQuestion');
+        if (input) input.focus();
+      }, 300);
+    };
+    
+    window.closeDeepDiveModal = function() {
+      const modal = document.getElementById('deepDiveModal');
+      if (modal) modal.classList.remove('active');
+      document.body.style.overflow = '';
+      const form = document.getElementById('deepDiveForm');
+      if (form) form.reset();
+    };
+    
+    window.submitDeepDive = async function(e) {
+      e.preventDefault();
+      
+      if (!isAuthenticated) {
+        showLoginModal('deep-dive');
+        return;
+      }
+      
+      const input = document.getElementById('deepDiveQuestion');
+      const question = input.value.trim();
+      
+      if (!question || question.length < 5) {
+        showToast('Please ask a more specific question 📝', 'error');
+        return;
+      }
+      
+      closeDeepDiveModal();
+      showToast('Generating deep dive... ⏳', 'info');
+      
+      try {
+        const response = await fetch('/api/view?action=deep-dive', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-id': userId,
+            'x-session-token': sessionToken
+          },
+          body: JSON.stringify({
+            article_id: currentArticleId,
+            profile_id: currentProfileId,
+            question: question
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          showToast('Deep dive generated! 🎯', 'success');
+          displayDeepDive(data.deep_dive, question);
+        } else {
+          showToast(data.error || 'Failed to generate deep dive', 'error');
+        }
+      } catch (error) {
+        showToast('Error: ' + error.message, 'error');
+      }
+    };
+    
+    function displayDeepDive(deepDive, question) {
+      const overlay = document.createElement('div');
+      overlay.style.cssText = \`
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        backdrop-filter: blur(10px);
+        z-index: 999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      \`;
+      
+      overlay.innerHTML = \`
+        <div style="
+          background: var(--card-bg);
+          backdrop-filter: var(--card-blur);
+          border: var(--glass-border);
+          border-radius: 20px;
+          max-width: 600px;
+          width: 100%;
+          max-height: 80vh;
+          overflow-y: auto;
+          padding: 30px;
+          position: relative;
+        ">
+          <button onclick="this.closest('div[style]').remove()" style="
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: transparent;
+            border: none;
+            font-size: 24px;
+            color: var(--text-secondary);
+            cursor: pointer;
+          ">✕</button>
+          
+          <h3 style="color: var(--accent-color); margin-bottom: 8px;">🔍 Deep Dive</h3>
+          <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 16px;">
+            Question: "${escapeHtml(question)}"
+          </p>
+          <div style="
+            background: var(--input-bg);
+            border-radius: 12px;
+            padding: 20px;
+            color: var(--text-main);
+            line-height: 1.6;
+            white-space: pre-wrap;
+          ">
+            ${deepDive.answer || 'No answer available.'}
+          </div>
+          <button onclick="this.closest('div[style]').remove()" style="
+            margin-top: 20px;
+            background: var(--accent-color);
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+          ">Close</button>
+        </div>
+      \`;
+      
+      document.body.appendChild(overlay);
+    }
+    
+    // ============================================
+    // REVIEW MODAL
+    // ============================================
+    window.addEventListener('scroll', () => {
+      const scrollY = window.scrollY;
+      const windowHeight = window.innerHeight;
+      const docHeight = document.documentElement.scrollHeight;
+      
+      if (scrollY + windowHeight >= docHeight - 200 && !modalTriggered && !hasRated && isAuthenticated && !isGuest) {
+        modalTriggered = true;
+        setTimeout(() => {
+          openReview();
+        }, 600);
+      }
+      
+      if (scrollY + windowHeight < docHeight - 450) {
+        modalTriggered = false;
+      }
+    });
+    
+    window.openReview = function() {
+      const modal = document.getElementById('reviewModal');
+      if (modal) modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    };
+    
+    window.closeReview = function() {
+      const modal = document.getElementById('reviewModal');
+      if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+        const modalBody = document.getElementById('reviewModalBody');
+        if (modalBody) modalBody.className = 'review-modal';
+      }
+    };
+    
+    window.updateRatingFeedback = function(rating) {
+      const ratingDesc = document.getElementById('ratingDesc');
+      const feedbackOptions = document.getElementById('feedbackOptions');
+      const modalBody = document.getElementById('reviewModalBody');
+      
+      const ratingTextMap = {
+        1: 'Extremely confusing or complicated. 😣',
+        2: 'Slightly difficult to follow. 😕',
+        3: 'Average, standard explanation. 😐',
+        4: 'Clear and very easy to follow! 🙂',
+        5: 'Incredible explanation! Mind blown. 🤯'
+      };
+      
+      if (ratingDesc) ratingDesc.textContent = ratingTextMap[rating] || 'Select how clear this text was';
+      
+      if (modalBody) {
+        modalBody.className = 'review-modal rating-glow-' + rating;
+      }
+      
+      if (feedbackOptions) {
+        if (rating <= 3) {
+          feedbackOptions.classList.add('visible');
+        } else {
+          feedbackOptions.classList.remove('visible');
+        }
+      }
+    };
+    
+    window.submitReview = async function() {
+      const selectedRating = document.querySelector('input[name="rating"]:checked');
+      if (!selectedRating) {
+        showToast('Please select a rating first ⭐', 'error');
+        return;
+      }
+      
+      const rating = parseInt(selectedRating.value);
+      const feedbackChips = document.querySelectorAll('.feedback-chip.selected');
+      const feedback = Array.from(feedbackChips).map(el => el.textContent).join(', ');
+      
+      try {
+        const response = await fetch('/api/view?action=rate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-id': userId,
+            'x-session-token': sessionToken
+          },
+          body: JSON.stringify({
+            view_id: currentViewId,
+            rating: rating,
+            feedback: feedback || null
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (response.status === 201) {
+          showToast('Review submitted! +0.2 Credits Awarded ⚡', 'success');
+          hasRated = true;
+          
+          if (data.bonus_earned) {
+            currentCredits += data.bonus_earned;
+            updateCreditsDisplay(currentCredits);
+          }
+          
+          closeReview();
+        } else if (response.status === 409) {
+          showToast('You have already rated this article ⭐', 'info');
+          closeReview();
+        } else {
+          showToast(data.error || 'Failed to submit review', 'error');
+        }
+      } catch (error) {
+        showToast('Error: ' + error.message, 'error');
+      }
+    };
+    
+    // ============================================
     // CREDITS DISPLAY
     // ============================================
     function updateCreditsDisplay(credits) {
@@ -1396,18 +2159,7 @@ function getJavaScript(article, explanations, userRating, user_id, sessionToken,
     }
     
     // ============================================
-    // PROGRESS BAR
-    // ============================================
-    window.addEventListener('scroll', () => {
-      const scrollTop = window.scrollY;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
-      const bar = document.getElementById('progressBar');
-      if (bar) bar.style.width = progress + '%';
-    });
-    
-    // ============================================
-    // CONTENT LOADING WITH SHIMMER
+    // CONTENT LOADING
     // ============================================
     function loadContent() {
       const shimmer = document.getElementById('contentShimmer');
@@ -1560,323 +2312,36 @@ function getJavaScript(article, explanations, userRating, user_id, sessionToken,
     };
     
     // ============================================
-    // BOOKMARK
+    // HELPER FUNCTIONS
     // ============================================
-    window.handleBookmark = async function() {
-      if (!isAuthenticated) {
-        showLoginModal('bookmark');
-        return;
-      }
+    function parseContent(content) {
+      if (!content) return [{ type: 'paragraph', content: 'No content available.' }];
       
-      const btn = document.getElementById('bookmarkBtn');
-      const wasBookmarked = isBookmarked;
+      const lines = content.split('\\n').filter(line => line.trim());
+      const sections = [];
       
-      try {
-        const response = await fetch('/api/view?action=bookmark', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-user-id': userId,
-            'x-session-token': sessionToken
-          },
-          body: JSON.stringify({
-            article_id: currentArticleId
-          })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          isBookmarked = data.bookmarked;
-          updateBookmarkUI();
-          showToast(data.message, 'success');
-        } else {
-          showToast(data.error || 'Failed to toggle bookmark', 'error');
+      for (const line of lines) {
+        if (line.startsWith('## ')) {
+          sections.push({ type: 'heading', content: line.replace('## ', '') });
+        } else if (line.startsWith('# ')) {
+          sections.push({ type: 'heading', content: line.replace('# ', '') });
+        } else if (line.trim()) {
+          sections.push({ type: 'paragraph', content: line.trim() });
         }
-      } catch (error) {
-        showToast('Error: ' + error.message, 'error');
       }
-    };
-    
-    function updateBookmarkUI() {
-      const btn = document.getElementById('bookmarkBtn');
-      if (isBookmarked) {
-        btn.classList.add('bookmarked');
-        btn.innerHTML = \`
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-          </svg>
-        \`;
-        btn.title = 'Remove bookmark';
-      } else {
-        btn.classList.remove('bookmarked');
-        btn.innerHTML = \`
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-            <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
-          </svg>
-        \`;
-        btn.title = 'Add bookmark';
-      }
+      
+      return sections.length > 0 ? sections : [{ type: 'paragraph', content: content }];
     }
     
-    // ============================================
-    // DEEP DIVE MODAL
-    // ============================================
-    window.openDeepDiveModal = function() {
-      if (!isAuthenticated) {
-        showLoginModal('deep-dive');
-        return;
-      }
-      const modal = document.getElementById('deepDiveModal');
-      if (modal) modal.classList.add('active');
-      document.body.style.overflow = 'hidden';
-      setTimeout(() => {
-        const input = document.getElementById('deepDiveQuestion');
-        if (input) input.focus();
-      }, 300);
-    };
-    
-    window.closeDeepDiveModal = function() {
-      const modal = document.getElementById('deepDiveModal');
-      if (modal) modal.classList.remove('active');
-      document.body.style.overflow = '';
-      const form = document.getElementById('deepDiveForm');
-      if (form) form.reset();
-    };
-    
-    // Close deep dive modal on background click
-    document.addEventListener('click', function(e) {
-      const modal = document.getElementById('deepDiveModal');
-      if (e.target === modal) {
-        closeDeepDiveModal();
-      }
-    });
-    
-    window.submitDeepDive = async function(e) {
-      e.preventDefault();
-      
-      const input = document.getElementById('deepDiveQuestion');
-      const question = input.value.trim();
-      
-      if (!question || question.length < 5) {
-        showToast('Please ask a more specific question 📝', 'error');
-        return;
-      }
-      
-      closeDeepDiveModal();
-      showToast('Generating deep dive... ⏳', 'info');
-      
-      try {
-        const response = await fetch('/api/view?action=deep-dive', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-user-id': userId,
-            'x-session-token': sessionToken
-          },
-          body: JSON.stringify({
-            article_id: currentArticleId,
-            profile_id: currentProfileId,
-            question: question
-          })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          showToast('Deep dive generated! 🎯', 'success');
-          displayDeepDive(data.deep_dive, question);
-        } else {
-          showToast(data.error || 'Failed to generate deep dive', 'error');
-        }
-      } catch (error) {
-        showToast('Error: ' + error.message, 'error');
-      }
-    };
-    
-    function displayDeepDive(deepDive, question) {
-      const overlay = document.createElement('div');
-      overlay.style.cssText = \`
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.5);
-        backdrop-filter: blur(10px);
-        z-index: 999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-      \`;
-      
-      overlay.innerHTML = \`
-        <div style="
-          background: var(--card-bg);
-          backdrop-filter: var(--card-blur);
-          border: var(--glass-border);
-          border-radius: 20px;
-          max-width: 600px;
-          width: 100%;
-          max-height: 80vh;
-          overflow-y: auto;
-          padding: 30px;
-          position: relative;
-        ">
-          <button onclick="this.closest('div[style]').remove()" style="
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            background: transparent;
-            border: none;
-            font-size: 24px;
-            color: var(--text-secondary);
-            cursor: pointer;
-          ">✕</button>
-          
-          <h3 style="color: var(--accent-color); margin-bottom: 8px;">🔍 Deep Dive</h3>
-          <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 16px;">
-            Question: "${escapeHtml(question)}"
-          </p>
-          <div style="
-            background: var(--input-bg);
-            border-radius: 12px;
-            padding: 20px;
-            color: var(--text-main);
-            line-height: 1.6;
-            white-space: pre-wrap;
-          ">
-            ${deepDive.answer || 'No answer available.'}
-          </div>
-          <button onclick="this.closest('div[style]').remove()" style="
-            margin-top: 20px;
-            background: var(--accent-color);
-            color: #fff;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-          ">Close</button>
-        </div>
-      \`;
-      
-      document.body.appendChild(overlay);
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
     }
-    
-    // ============================================
-    // REVIEW MODAL
-    // ============================================
-    window.addEventListener('scroll', () => {
-      const scrollY = window.scrollY;
-      const windowHeight = window.innerHeight;
-      const docHeight = document.documentElement.scrollHeight;
-      
-      if (scrollY + windowHeight >= docHeight - 200 && !modalTriggered && !hasRated && isAuthenticated) {
-        modalTriggered = true;
-        setTimeout(() => {
-          openReview();
-        }, 600);
-      }
-      
-      if (scrollY + windowHeight < docHeight - 450) {
-        modalTriggered = false;
-      }
-    });
-    
-    window.openReview = function() {
-      const modal = document.getElementById('reviewModal');
-      if (modal) modal.classList.add('active');
-      document.body.style.overflow = 'hidden';
-    };
-    
-    window.closeReview = function() {
-      const modal = document.getElementById('reviewModal');
-      if (modal) {
-        modal.classList.remove('active');
-        document.body.style.overflow = '';
-        const modalBody = document.getElementById('reviewModalBody');
-        if (modalBody) modalBody.className = 'review-modal';
-      }
-    };
-    
-    window.updateRatingFeedback = function(rating) {
-      const ratingDesc = document.getElementById('ratingDesc');
-      const feedbackOptions = document.getElementById('feedbackOptions');
-      const modalBody = document.getElementById('reviewModalBody');
-      
-      const ratingTextMap = {
-        1: 'Extremely confusing or complicated. 😣',
-        2: 'Slightly difficult to follow. 😕',
-        3: 'Average, standard explanation. 😐',
-        4: 'Clear and very easy to follow! 🙂',
-        5: 'Incredible explanation! Mind blown. 🤯'
-      };
-      
-      if (ratingDesc) ratingDesc.textContent = ratingTextMap[rating] || 'Select how clear this text was';
-      
-      if (modalBody) {
-        modalBody.className = 'review-modal rating-glow-' + rating;
-      }
-      
-      if (feedbackOptions) {
-        if (rating <= 3) {
-          feedbackOptions.classList.add('visible');
-        } else {
-          feedbackOptions.classList.remove('visible');
-        }
-      }
-    };
-    
-    window.submitReview = async function() {
-      const selectedRating = document.querySelector('input[name="rating"]:checked');
-      if (!selectedRating) {
-        showToast('Please select a rating first ⭐', 'error');
-        return;
-      }
-      
-      const rating = parseInt(selectedRating.value);
-      const feedbackChips = document.querySelectorAll('.feedback-chip.selected');
-      const feedback = Array.from(feedbackChips).map(el => el.textContent).join(', ');
-      
-      try {
-        const response = await fetch('/api/view?action=rate', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-user-id': userId,
-            'x-session-token': sessionToken
-          },
-          body: JSON.stringify({
-            view_id: currentViewId,
-            rating: rating,
-            feedback: feedback || null
-          })
-        });
-        
-        const data = await response.json();
-        
-        if (response.status === 201) {
-          showToast('Review submitted! +0.2 Credits Awarded ⚡', 'success');
-          hasRated = true;
-          
-          if (data.bonus_earned) {
-            updateCreditsDisplay(currentCredits + data.bonus_earned);
-          }
-          
-          closeReview();
-        } else if (response.status === 409) {
-          showToast('You have already rated this article ⭐', 'info');
-          closeReview();
-        } else {
-          showToast(data.error || 'Failed to submit review', 'error');
-        }
-      } catch (error) {
-        showToast('Error: ' + error.message, 'error');
-      }
-    };
     
     // ============================================
     // COPY & SHARE
@@ -1909,36 +2374,15 @@ function getJavaScript(article, explanations, userRating, user_id, sessionToken,
     };
     
     // ============================================
-    // PARSE CONTENT HELPER
+    // PROGRESS BAR
     // ============================================
-    function parseContent(content) {
-      if (!content) return [{ type: 'paragraph', content: 'No content available.' }];
-      
-      const lines = content.split('\\n').filter(line => line.trim());
-      const sections = [];
-      
-      for (const line of lines) {
-        if (line.startsWith('## ')) {
-          sections.push({ type: 'heading', content: line.replace('## ', '') });
-        } else if (line.startsWith('# ')) {
-          sections.push({ type: 'heading', content: line.replace('# ', '') });
-        } else if (line.trim()) {
-          sections.push({ type: 'paragraph', content: line.trim() });
-        }
-      }
-      
-      return sections.length > 0 ? sections : [{ type: 'paragraph', content: content }];
-    }
-    
-    function escapeHtml(text) {
-      if (!text) return '';
-      return text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+      const bar = document.getElementById('progressBar');
+      if (bar) bar.style.width = progress + '%';
+    });
     
     // ============================================
     // INIT
@@ -1953,14 +2397,18 @@ function getJavaScript(article, explanations, userRating, user_id, sessionToken,
         modalTriggered = true;
       }
       
-      // Initialize bookmark UI
       updateBookmarkUI();
+      
+      // Track guest read if guest
+      if (isGuest && guestId) {
+        trackGuestRead();
+      }
     });
   `;
 }
 
 // ============================================
-// CSS STYLES
+// CSS STYLES (Same as before)
 // ============================================
 
 function getCSSStyles() {
@@ -2125,6 +2573,14 @@ function getCSSStyles() {
     @keyframes pulse-glow {
       0%, 100% { transform: scale(1); opacity: 1; }
       50% { transform: scale(1.2); opacity: 0.8; }
+    }
+    
+    .guest-badge {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      padding: 0.2rem 0.6rem;
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
     }
     
     .auth-link {
@@ -2488,7 +2944,6 @@ function getCSSStyles() {
       pointer-events: auto;
     }
     
-    /* Login Modal */
     .login-overlay {
       position: fixed;
       top: 0; left: 0;
@@ -2585,7 +3040,6 @@ function getCSSStyles() {
       color: var(--text-muted) !important;
     }
     
-    /* Deep Dive Modal */
     .deep-dive-overlay {
       position: fixed;
       top: 0; left: 0;
