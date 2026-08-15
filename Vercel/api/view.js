@@ -246,7 +246,7 @@ async function trackGuestUsage(guestId, actionType) {
 }
 
 // ============================================
-// MAIN HANDLER
+// MAIN HANDLER - FIXED: Added renderNoArticlePage for invalid requests
 // ============================================
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -280,7 +280,8 @@ export default async function handler(req, res) {
         if (action === 'guest-status') {
           return await getGuestStatus(req, res);
         }
-        return res.status(400).json({ error: 'Invalid request' });
+        // ✅ FIXED: Return beautiful HTML page instead of JSON error
+        return res.status(200).send(renderNoArticlePage());
       case 'POST':
         if (action === 'rate') {
           return await submitRating(req, res);
@@ -310,6 +311,250 @@ export default async function handler(req, res) {
     console.error('View API Error:', error);
     res.status(500).json({ error: error.message });
   }
+}
+
+// ============================================
+// RENDER NO ARTICLE PAGE - Professional icons using SVG
+// ============================================
+function renderNoArticlePage() {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EasyRead</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f6f7f9;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      margin: 0;
+    }
+    .container { max-width: 640px; width: 100%; text-align: center; }
+    .logo {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #1c1c1e;
+      margin-bottom: 0.5rem;
+      letter-spacing: -1px;
+    }
+    .logo span { color: #f59847; }
+    .icon-wrapper {
+      width: 100px;
+      height: 100px;
+      margin: 1.5rem auto;
+      background: linear-gradient(135deg, #f59847 0%, #e08735 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 12px 40px rgba(245, 152, 71, 0.25);
+    }
+    .icon-wrapper svg {
+      width: 48px;
+      height: 48px;
+      fill: white;
+    }
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #1c1c1e;
+      margin-bottom: 0.5rem;
+    }
+    .subtitle {
+      font-size: 1.1rem;
+      color: #5c5c60;
+      line-height: 1.6;
+      max-width: 480px;
+      margin: 0 auto 2rem;
+    }
+    .search-box {
+      background: white;
+      border-radius: 16px;
+      padding: 0.5rem;
+      display: flex;
+      gap: 0.5rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+      border: 1px solid rgba(0,0,0,0.08);
+      margin: 0 0 2rem;
+      transition: box-shadow 0.3s ease;
+    }
+    .search-box:focus-within {
+      box-shadow: 0 4px 24px rgba(245, 152, 71, 0.15);
+      border-color: #f59847;
+    }
+    .search-box input {
+      flex: 1;
+      border: none;
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      font-family: inherit;
+      outline: none;
+      background: transparent;
+      color: #1c1c1e;
+    }
+    .search-box input::placeholder { color: #8e8e93; }
+    .search-box button {
+      background: #f59847;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.75rem;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .search-box button:hover { background: #e08735; }
+    .search-box button svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin: 1.5rem 0 2rem;
+    }
+    .feature-card {
+      background: white;
+      padding: 1.5rem 1rem;
+      border-radius: 16px;
+      border: 1px solid rgba(0,0,0,0.06);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    }
+    .feature-card .icon-wrap {
+      width: 40px;
+      height: 40px;
+      margin: 0 auto 0.5rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .feature-card .icon-wrap.orange { background: rgba(245, 152, 71, 0.12); }
+    .feature-card .icon-wrap.blue { background: rgba(26, 115, 232, 0.12); }
+    .feature-card .icon-wrap.green { background: rgba(52, 168, 83, 0.12); }
+    .feature-card .icon-wrap svg {
+      width: 20px;
+      height: 20px;
+    }
+    .feature-card .icon-wrap.orange svg { fill: #f59847; }
+    .feature-card .icon-wrap.blue svg { fill: #1a73e8; }
+    .feature-card .icon-wrap.green svg { fill: #34a853; }
+    .feature-card h4 {
+      font-size: 0.9rem;
+      color: #1c1c1e;
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+    }
+    .feature-card p {
+      font-size: 0.8rem;
+      color: #8e8e93;
+      margin: 0;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #f59847;
+      font-weight: 600;
+      text-decoration: none;
+      padding: 0.6rem 1.5rem;
+      border: 2px solid #f59847;
+      border-radius: 30px;
+      transition: all 0.2s;
+      margin-top: 0.5rem;
+    }
+    .back-link:hover {
+      background: #f59847;
+      color: white;
+    }
+    .back-link svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+    @media (max-width: 600px) {
+      .logo { font-size: 2rem; }
+      h1 { font-size: 1.5rem; }
+      .search-box { flex-direction: column; }
+      .search-box button { justify-content: center; }
+      .features { grid-template-columns: 1fr 1fr; }
+      .icon-wrapper { width: 80px; height: 80px; }
+      .icon-wrapper svg { width: 36px; height: 36px; }
+    }
+    @media (max-width: 400px) {
+      .features { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">Easy<span>Read</span></div>
+    
+    <div class="icon-wrapper">
+      <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-3 4H9v-2h7v2zm3-8H9V5h10v2z"/></svg>
+    </div>
+    
+    <h1>No Article Selected</h1>
+    <p class="subtitle">Browse our collection of expertly explained articles or search for something that interests you.</p>
+    
+    <form class="search-box" action="/search" method="GET">
+      <input type="text" name="q" placeholder="Search for articles..." aria-label="Search for articles">
+      <button type="submit">
+        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        Search
+      </button>
+    </form>
+    
+    <div class="features">
+      <div class="feature-card">
+        <div class="icon-wrap orange">
+          <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+        </div>
+        <h4>Easy to Read</h4>
+        <p>Simplified explanations</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon-wrap blue">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+        </div>
+        <h4>Multiple Profiles</h4>
+        <p>Choose your style</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon-wrap green">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+        </div>
+        <h4>Deep Dives</h4>
+        <p>Ask questions</p>
+      </div>
+    </div>
+    
+    <a href="/" class="back-link">
+      <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+      Back to Home
+    </a>
+  </div>
+</body>
+</html>`;
 }
 
 // ============================================
@@ -569,7 +814,7 @@ async function getGuestStatus(req, res) {
 }
 
 // ============================================
-// RENDER FULL ARTICLE PAGE - FIXED
+// RENDER FULL ARTICLE PAGE
 // ============================================
 
 async function renderArticlePage(req, res) {
@@ -591,7 +836,7 @@ async function renderArticlePage(req, res) {
       return res.status(404).send(renderNotFoundPage());
     }
 
-    // Guest tracking
+    // GUEST TRACKING
     if (!user_id && guestId) {
       const limitCheck = await checkGuestLimit(guestId, 'read');
       if (!limitCheck.allowed) {
@@ -664,7 +909,7 @@ async function renderArticlePage(req, res) {
       }
     }
 
-    // Update view count
+    // ✅ FIX: Use direct supabase update instead of the imported update function
     const { error: updateError } = await supabase
       .from('articles')
       .update({ view_count: (article.view_count || 0) + 1 })
@@ -679,67 +924,46 @@ async function renderArticlePage(req, res) {
       colorPair.text
     );
 
-    // ✅ FIXED: Get explanations without the problematic join
     const { data: explanations, error: expError } = await supabase
       .from('explanation_views')
-      .select('*')
+      .select(`
+        view_id,
+        title,
+        content,
+        summary,
+        profile_id,
+        view_count,
+        rating_avg,
+        rating_count,
+        profiles:profile_id (name, description)
+      `)
       .eq('article_id', article.article_id)
       .order('view_count', { ascending: false });
 
     if (expError) throw expError;
 
-    // Get profiles separately
-    let explanationsWithProfiles = [];
-    if (explanations && explanations.length > 0) {
-      const profileIds = [...new Set(explanations.map(e => e.profile_id).filter(Boolean))];
-      
-      if (profileIds.length > 0) {
-        const { data: profiles, error: profError } = await supabase
-          .from('profiles')
-          .select('profile_id, name, description')
-          .in('profile_id', profileIds);
-        
-        if (!profError && profiles) {
-          const profileMap = {};
-          profiles.forEach(p => profileMap[p.profile_id] = p);
-          explanationsWithProfiles = explanations.map(e => ({
-            ...e,
-            profiles: profileMap[e.profile_id] || null
-          }));
-        } else {
-          explanationsWithProfiles = explanations;
-        }
-      } else {
-        explanationsWithProfiles = explanations;
-      }
-    }
-
-    // Get ratings
-    const viewIds = explanations?.map(e => e.view_id) || [];
     const { data: ratings, error: ratingError } = await supabase
       .from('ratings')
       .select('rating, feedback, user_id, created_at')
-      .in('view_id', viewIds)
+      .in('view_id', explanations?.map(e => e.view_id) || [])
       .order('created_at', { ascending: false })
       .limit(50);
 
     if (ratingError) throw ratingError;
 
-    // Get user rating
     let userRating = null;
     if (user_id && explanations && explanations.length > 0) {
       const { data: ur, error: urError } = await supabase
         .from('ratings')
         .select('rating, feedback, view_id')
         .eq('user_id', user_id)
-        .in('view_id', viewIds)
+        .in('view_id', explanations.map(e => e.view_id))
         .maybeSingle();
       
       if (urError && urError.code !== 'PGRST116') throw urError;
       userRating = ur;
     }
 
-    // Get user credits
     let userCredits = null;
     if (user_id) {
       const users = await getByColumn('users', 'user_id', user_id);
@@ -748,7 +972,6 @@ async function renderArticlePage(req, res) {
       }
     }
 
-    // Get bookmark status
     let isBookmarked = false;
     if (user_id) {
       const { data: bookmark, error: bmError } = await supabase
@@ -762,7 +985,6 @@ async function renderArticlePage(req, res) {
       isBookmarked = !!bookmark;
     }
 
-    // Get profiles
     const { data: profiles, error: profileError } = await supabase
       .from('profiles')
       .select('*')
@@ -782,10 +1004,9 @@ async function renderArticlePage(req, res) {
       };
     }
 
-    // Build HTML with the fetched data
     const html = buildArticleHTML({
       article,
-      explanations: explanationsWithProfiles,
+      explanations: explanations || [],
       ratings: ratings || [],
       userRating,
       userCredits,
@@ -810,7 +1031,7 @@ async function renderArticlePage(req, res) {
 }
 
 // ============================================
-// GET ARTICLE DATA - FIXED
+// GET ARTICLE DATA
 // ============================================
 async function getArticleData(req, res) {
   const { id, slug } = req.query;
@@ -837,45 +1058,27 @@ async function getArticleData(req, res) {
       colorPair.text
     );
 
-    // ✅ FIXED: Get explanations without the problematic join
     const { data: explanations, error: expError } = await supabase
       .from('explanation_views')
-      .select('*')
+      .select(`
+        view_id,
+        title,
+        content,
+        summary,
+        profile_id,
+        view_count,
+        rating_avg,
+        rating_count,
+        profiles:profile_id (name, description)
+      `)
       .eq('article_id', article.article_id);
 
     if (expError) throw expError;
 
-    // Get profiles separately
-    let explanationsWithProfiles = [];
-    if (explanations && explanations.length > 0) {
-      const profileIds = [...new Set(explanations.map(e => e.profile_id).filter(Boolean))];
-      
-      if (profileIds.length > 0) {
-        const { data: profiles, error: profError } = await supabase
-          .from('profiles')
-          .select('profile_id, name, description')
-          .in('profile_id', profileIds);
-        
-        if (!profError && profiles) {
-          const profileMap = {};
-          profiles.forEach(p => profileMap[p.profile_id] = p);
-          explanationsWithProfiles = explanations.map(e => ({
-            ...e,
-            profiles: profileMap[e.profile_id] || null
-          }));
-        } else {
-          explanationsWithProfiles = explanations;
-        }
-      } else {
-        explanationsWithProfiles = explanations;
-      }
-    }
-
-    const viewIds = explanations?.map(e => e.view_id) || [];
     const { data: ratings, error: ratingError } = await supabase
       .from('ratings')
       .select('rating, feedback, user_id, created_at')
-      .in('view_id', viewIds)
+      .in('view_id', explanations?.map(e => e.view_id) || [])
       .order('created_at', { ascending: false })
       .limit(50);
 
@@ -887,7 +1090,7 @@ async function getArticleData(req, res) {
         .from('ratings')
         .select('rating, feedback, view_id')
         .eq('user_id', user_id)
-        .in('view_id', viewIds)
+        .in('view_id', explanations.map(e => e.view_id))
         .maybeSingle();
       userRating = ur;
     }
@@ -929,7 +1132,7 @@ async function getArticleData(req, res) {
         view_count: (article.view_count || 0) + 1,
         og_image: ogImageUrl
       },
-      explanations: explanationsWithProfiles || [],
+      explanations: explanations || [],
       ratings: ratings || [],
       userRating,
       userCredits,
@@ -1350,9 +1553,6 @@ async function handleDeepDive(req, res) {
 // HTML BUILDERS
 // ============================================
 
-// The HTML builders now use string concatenation instead of template literals
-// to avoid the Unicode character issues
-
 function buildArticleHTML({ 
   article, 
   explanations, 
@@ -1375,7 +1575,6 @@ function buildArticleHTML({
 
   const imageUrl = ogImageUrl || `https://placehold.co/1200x630/1A1A2E/FFFFFF?text=${encodeURIComponent(title.substring(0, 60))}`;
 
-  // Use simple string concatenation to avoid Unicode issues
   let html = '<!DOCTYPE html>\n';
   html += '<html lang="en" data-theme="auto">\n';
   html += '<head>\n';
@@ -1406,7 +1605,6 @@ function buildArticleHTML({
   html += '</head>\n';
   html += '<body>\n';
 
-  // Progress Bar
   html += '  <div class="progress-bar" id="progressBar"></div>\n';
   html += '  <div class="toast" id="toast"></div>\n';
 
@@ -1428,58 +1626,36 @@ function buildArticleHTML({
 
   html += '  <div class="full-screen-reader">\n';
 
-  // Header
   html += buildHeaderHTML(userCredits, user_id, profiles, isGuest, guestLimitInfo);
 
-  // Guest limit warning
   if (guestLimitInfo && guestLimitInfo.used >= guestLimitInfo.limit) {
     html += '    <div style="background: #ff3b30; color: #fff; padding: 12px 16px; border-radius: 12px; margin-bottom: 1rem; text-align: center; font-weight: 600;">\n';
     html += '      ' + guestLimitInfo.message + '\n';
     html += '    </div>\n';
   }
 
-  // Guest remaining info
   if (isGuest && guestLimitInfo) {
     html += '    <div style="display: flex; gap: 16px; margin-bottom: 1rem; font-size: 0.85rem; color: var(--text-secondary); flex-wrap: wrap;">\n';
     html += '      <span>Articles remaining: ' + guestLimitInfo.remaining + '</span>\n';
     html += '    </div>\n';
   }
 
-  // Hero
   html += buildHeroHTML(title, article.categories);
-
-  // Profile pills
   html += buildProfilePillsHTML(profiles);
-
-  // Gradient card
   html += buildGradientCardHTML();
-
-  // Article content
   html += buildArticleContentHTML(article, explanations);
-
-  // Summary
   html += buildSummaryHTML(article);
-
-  // Metadata
   html += buildMetadataHTML(article);
-
-  // Reader section
   html += buildReaderSectionHTML();
-
-  // Footer
   html += buildFooterHTML(article, user_id, userCredits, isBookmarked, isGuest);
-
-  // Review modal
   html += buildReviewModalHTML(userRating, user_id, isGuest);
-
-  // Deep dive modal
   html += buildDeepDiveModalHTML(isGuest);
 
   html += '  </div>\n';
 
-  // JavaScript
+  // ✅ FIXED: Pass userCredits to getJavaScript
   html += '  <script>\n';
-  html += getJavaScript(article, explanations, userRating, user_id, sessionToken, isBookmarked, isGuest, guestLimitInfo, guestId);
+  html += getJavaScript(article, explanations, userRating, user_id, sessionToken, isBookmarked, isGuest, guestLimitInfo, guestId, userCredits);
   html += '  </script>\n';
 
   html += '</body>\n';
@@ -1489,360 +1665,22 @@ function buildArticleHTML({
 }
 
 // ============================================
-// HTML COMPONENT BUILDERS (Using string concatenation)
+// JAVASCRIPT FOR THE FRONTEND - FIXED with userCredits parameter
 // ============================================
 
-function buildHeaderHTML(userCredits, user_id, profiles, isGuest, guestLimitInfo) {
-  const isAuthenticated = !!user_id;
-  let html = '    <header class="reader-header">\n';
-  html += '      <div class="category-breadcrumb">\n';
-  html += '        <a href="/" style="color: var(--text-secondary); text-decoration: none;">EasyRead</a>\n';
-  html += '        <span>›</span>\n';
-  html += '        <span class="current">Reading</span>\n';
-  html += '      </div>\n';
-  html += '      <div class="header-actions" style="display: flex; align-items: center; gap: 8px;">\n';
-  html += '        <button onclick="window.toggleTheme()" class="glass-icon-btn" title="Toggle theme">\n';
-  html += '          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">\n';
-  html += '            <path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.5 5.5 0 0 1-7.64-1.56 5.5 5.5 0 0 1-1.56-7.64A9.02 9.02 0 0 0 12 3z"/>\n';
-  html += '          </svg>\n';
-  html += '        </button>\n';
-
-  if (isAuthenticated) {
-    html += '        <div class="credits-badge" id="userCreditsBadge" title="Credit Balance">\n';
-    html += '          <span class="lightning-icon">⚡</span>\n';
-    html += '          <span class="credits-val" id="creditsValueDisplay">' + (userCredits || 50) + '</span>\n';
-    html += '          <span class="credits-label">credits</span>\n';
-    html += '        </div>\n';
-  } else {
-    if (isGuest && guestLimitInfo) {
-      html += '        <div class="guest-badge" style="font-size: 0.7rem; color: var(--text-muted); padding: 0.2rem 0.6rem; border: 1px solid var(--border-subtle); border-radius: 12px;">\n';
-      html += '          Guest · ' + guestLimitInfo.remaining + ' reads left\n';
-      html += '        </div>\n';
-    }
-    html += '        <a href="' + SITE_URL + '#login" class="auth-link" style="color: var(--accent-color); font-weight: 600; text-decoration: none; font-size: 0.85rem; padding: 0.4rem 0.9rem; border: 1.5px solid var(--accent-color); border-radius: 20px; transition: all 0.2s;">\n';
-    html += '          Sign In\n';
-    html += '        </a>\n';
-  }
-
-  html += '      </div>\n';
-  html += '    </header>\n';
-  return html;
-}
-
-function buildHeroHTML(title, categories) {
-  const category = categories?.[0] || 'General';
-  let html = '    <header class="hero-section">\n';
-  html += '      <div class="category-label" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-color); font-weight: 700; margin-bottom: 0.5rem;">\n';
-  html += '        ' + escapeHtml(category) + '\n';
-  html += '      </div>\n';
-  html += '      <h1 class="hero-title">' + escapeHtml(title) + '</h1>\n';
-  html += '    </header>\n';
-  return html;
-}
-
-function buildProfilePillsHTML(profiles) {
-  if (!profiles || profiles.length === 0) {
-    return '    <div class="profile-pills-wrapper">\n      <div class="profile-pills-scroll">\n        <button class="profile-pill active" data-profile="default" onclick="switchProfile(\'default\', this)">\n          Everyday Life\n        </button>\n      </div>\n    </div>\n';
-  }
-
-  let html = '    <div class="profile-pills-wrapper">\n';
-  html += '      <div class="profile-pills-scroll" id="profilePills">\n';
-
-  profiles.forEach((p, index) => {
-    const isActive = p.is_default || index === 0;
-    const icon = getProfileIcon(p.name);
-    html += '        <button class="profile-pill ' + (isActive ? 'active' : '') + '" data-profile="' + p.profile_id + '" data-profile-name="' + p.name + '" onclick="switchProfile(\'' + p.profile_id + '\', this, \'' + p.name + '\')">\n';
-    html += '          ' + icon + '\n';
-    html += '          ' + escapeHtml(p.name) + '\n';
-    html += '        </button>\n';
-  });
-
-  html += '      </div>\n';
-  html += '    </div>\n';
-  return html;
-}
-
-function buildGradientCardHTML() {
-  return '    <div class="featured-gradient-card" id="gradientCard">\n' +
-         '      <div class="gradient-card-overlay"></div>\n' +
-         '      <div class="catch-line-text" id="catchLineText">"Every idea has a story. Let\'s explore it together."</div>\n' +
-         '    </div>\n';
-}
-
-function buildArticleContentHTML(article, explanations) {
-  const defaultExplanation = explanations?.find(e => e.profile_id === 1) || explanations?.[0];
-  const content = defaultExplanation?.content || article.base_content || 'No content available.';
-
-  const sections = parseContentIntoSections(content);
-
-  let html = '    <article class="article-body" id="articleContent">\n';
-  html += '      <div class="content-shimmer" id="contentShimmer">\n';
-  for (let i = 0; i < 8; i++) {
-    html += '        <div class="shimmer-line"></div>\n';
-  }
-  html += '      </div>\n';
-  html += '      <div id="articleText" style="display: none;">\n';
-
-  sections.forEach((section, i) => {
-    if (section.type === 'heading') {
-      html += '        <h2 class="subheading">' + section.content + '</h2>\n';
-    } else {
-      const isFirst = i === 0;
-      html += '        <p class="' + (isFirst ? 'dropcap' : '') + '">' + section.content + '</p>\n';
-    }
-  });
-
-  html += '      </div>\n';
-  html += '    </article>\n';
-  return html;
-}
-
-function buildSummaryHTML(article) {
-  const summary = article.summary || 'No summary available.';
-  return '    <div class="summary-wrapper">\n' +
-         '      <div class="summary-content">\n' +
-         '        <h4>Summary</h4>\n' +
-         '        <p>' + escapeHtml(summary) + '</p>\n' +
-         '      </div>\n' +
-         '    </div>\n';
-}
-
-function buildMetadataHTML(article) {
-  const date = article.created_at ? new Date(article.created_at).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  }) : 'Recently';
-
-  const wordCount = article.word_count || article.base_content?.split(/\s+/).length || 0;
-  const readTime = Math.ceil(wordCount / 200) || 3;
-
-  return '    <div class="article-metadata">\n' +
-         '      <div class="meta-left">\n' +
-         '        <span class="author-name">EasyRead</span>\n' +
-         '        <span>·</span>\n' +
-         '        <span>' + date + '</span>\n' +
-         '      </div>\n' +
-         '      <div class="meta-right">\n' +
-         '        ' + readTime + ' min read · ' + (article.view_count || 0) + ' views\n' +
-         '      </div>\n' +
-         '    </div>\n';
-}
-
-function buildReaderSectionHTML() {
-  return '    <div class="reader-section">\n' +
-         '      <div class="reader-avatars">\n' +
-         '        <div class="mini-circle gold">JR</div>\n' +
-         '        <div class="mini-circle blue">AK</div>\n' +
-         '        <div class="mini-circle green">MS</div>\n' +
-         '        <div class="mini-circle purple">TW</div>\n' +
-         '      </div>\n' +
-         '      <div class="reader-count">\n' +
-         '        <strong>1.4k</strong> readers this hour\n' +
-         '      </div>\n' +
-         '    </div>\n';
-}
-
-function buildFooterHTML(article, user_id, userCredits, isBookmarked, isGuest) {
-  const isAuthenticated = !!user_id;
-  const bookmarkIcon = isBookmarked ? 
-    '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>' :
-    '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>';
-
-  let html = '    <div class="glass-footer">\n';
-  html += '      <div class="footer-content">\n';
-  html += '        <div class="link-pill">\n';
-  html += '          <span>🔗 ' + (article.source_domain || 'easytoread.vercel.app') + '/</span>' + (article.slug?.substring(0, 20) || 'article') + '...\n';
-  html += '        </div>\n';
-  html += '        <div class="glass-actions">\n';
-  html += '          <button class="glass-icon-btn" onclick="copyLink()" title="Copy link">\n';
-  html += '            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>\n';
-  html += '          </button>\n';
-  html += '          <button class="glass-icon-btn" onclick="shareLink()" title="Share">\n';
-  html += '            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>\n';
-  html += '          </button>\n';
-  html += '          <button class="glass-icon-btn bookmark-btn ' + (isBookmarked ? 'bookmarked' : '') + '" id="bookmarkBtn" onclick="handleBookmark()" title="' + (isBookmarked ? 'Remove bookmark' : 'Add bookmark') + '">\n';
-  html += '            ' + bookmarkIcon + '\n';
-  html += '          </button>\n';
-
-  if (isAuthenticated) {
-    html += '          <button class="glass-icon-btn" onclick="openDeepDiveModal()" title="Deep Dive">\n';
-    html += '            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>\n';
-    html += '          </button>\n';
-  } else {
-    html += '          <button class="glass-icon-btn" onclick="showLoginModal(\'deep-dive\')" title="Deep Dive (Login required)">\n';
-    html += '            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>\n';
-    html += '          </button>\n';
-  }
-
-  html += '        </div>\n';
-  html += '      </div>\n';
-  html += '    </div>\n';
-  return html;
-}
-
-function buildReviewModalHTML(userRating, user_id, isGuest) {
-  const hasRated = !!userRating;
-  const isAuthenticated = !!user_id;
-
-  if (!isAuthenticated || isGuest) {
-    return '    <div class="review-overlay" id="reviewModal">\n' +
-           '      <div class="review-modal">\n' +
-           '        <button class="modal-close" onclick="closeReview()">✕</button>\n' +
-           '        <div class="login-modal-content" style="text-align: center; padding: 20px 0;">\n' +
-           '          <h3>Sign in to rate</h3>\n' +
-           '          <p style="color: var(--text-secondary); margin: 1rem 0;">Help us improve by rating this article!</p>\n' +
-           '          <a href="' + SITE_URL + '#login" class="btn-modal-primary" style="display: inline-block; text-decoration: none; padding: 0.75rem 2rem;">Sign In</a>\n' +
-           '        </div>\n' +
-           '      </div>\n' +
-           '    </div>\n';
-  }
-
-  if (hasRated) {
-    return '    <div class="review-overlay" id="reviewModal">\n' +
-           '      <div class="review-modal">\n' +
-           '        <button class="modal-close" onclick="closeReview()">✕</button>\n' +
-           '        <div style="text-align: center; padding: 20px 0;">\n' +
-           '          <div style="font-size: 3rem; margin-bottom: 0.5rem;">⭐</div>\n' +
-           '          <h3 style="margin-bottom: 0.5rem;">You already rated this</h3>\n' +
-           '          <p style="color: var(--text-secondary);">Your feedback helps us improve!</p>\n' +
-           '          <button class="btn-modal-primary" onclick="closeReview()" style="margin-top: 1rem;">Close</button>\n' +
-           '        </div>\n' +
-           '      </div>\n' +
-           '    </div>\n';
-  }
-
-  return '    <div class="review-overlay" id="reviewModal">\n' +
-         '      <div class="review-modal" id="reviewModalBody">\n' +
-         '        <button class="modal-close" onclick="closeReview()">✕</button>\n' +
-         '        <div class="bonus-incentive-pill">\n' +
-         '          <span>⚡</span> Get +0.2 Credit Reward\n' +
-         '        </div>\n' +
-         '        <h3>Share feedback</h3>\n' +
-         '        <p class="sub-text">Your ratings help fine-tune our personalized AI translations.</p>\n' +
-         '        <div class="review-question">Was this explanation easy to understand?</div>\n' +
-         '        <div class="rating-scale" id="ratingGroup">\n' +
-         '          <input type="radio" id="mRate1" name="rating" value="1" onclick="updateRatingFeedback(1)">\n' +
-         '          <label for="mRate1" title="Confusing">😣</label>\n' +
-         '          <input type="radio" id="mRate2" name="rating" value="2" onclick="updateRatingFeedback(2)">\n' +
-         '          <label for="mRate2" title="Unclear">😕</label>\n' +
-         '          <input type="radio" id="mRate3" name="rating" value="3" onclick="updateRatingFeedback(3)">\n' +
-         '          <label for="mRate3" title="Standard">😐</label>\n' +
-         '          <input type="radio" id="mRate4" name="rating" value="4" onclick="updateRatingFeedback(4)">\n' +
-         '          <label for="mRate4" title="Clear">🙂</label>\n' +
-         '          <input type="radio" id="mRate5" name="rating" value="5" onclick="updateRatingFeedback(5)">\n' +
-         '          <label for="mRate5" title="Amazing">🤯</label>\n' +
-         '        </div>\n' +
-         '        <div class="rating-description" id="ratingDesc">Tap your reaction above</div>\n' +
-         '        <div class="feedback-options" id="feedbackOptions">\n' +
-         '          <p>What could be better?</p>\n' +
-         '          <div class="feedback-grid" id="feedbackGrid">\n' +
-         '            <div class="feedback-chip" onclick="this.classList.toggle(\'selected\')">Too complicated</div>\n' +
-         '            <div class="feedback-chip" onclick="this.classList.toggle(\'selected\')">Too long</div>\n' +
-         '            <div class="feedback-chip" onclick="this.classList.toggle(\'selected\')">Needs examples</div>\n' +
-         '            <div class="feedback-chip" onclick="this.classList.toggle(\'selected\')">Incorrect analogies</div>\n' +
-         '            <div class="feedback-chip" onclick="this.classList.toggle(\'selected\')">Formatting issues</div>\n' +
-         '          </div>\n' +
-         '        </div>\n' +
-         '        <div class="modal-actions">\n' +
-         '          <button class="btn-modal-secondary" onclick="closeReview()">Not now</button>\n' +
-         '          <button class="btn-modal-primary" onclick="submitReview()">Submit Feedback</button>\n' +
-         '        </div>\n' +
-         '      </div>\n' +
-         '    </div>\n';
-}
-
-function buildDeepDiveModalHTML(isGuest) {
-  let html = '    <div class="deep-dive-overlay" id="deepDiveModal">\n';
-  html += '      <div class="deep-dive-modal">\n';
-  html += '        <button class="modal-close" onclick="closeDeepDiveModal()">✕</button>\n';
-  html += '        <div style="text-align: center;">\n';
-  html += '          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔍</div>\n';
-  html += '          <h3>Deep Dive</h3>\n';
-
-  if (isGuest) {
-    html += '          <p style="color: var(--text-secondary); margin: 0.5rem 0 1.5rem;">Sign in to unlock deep dive questions!</p>\n';
-    html += '          <a href="' + SITE_URL + '#login" class="btn-modal-primary" style="display: inline-block; text-decoration: none; padding: 0.75rem 2rem;">Sign In</a>\n';
-  } else {
-    html += '          <p style="color: var(--text-secondary); margin: 0.5rem 0 1.5rem;">Ask a question to explore this topic deeper.</p>\n';
-    html += '          <form id="deepDiveForm" onsubmit="submitDeepDive(event)">\n';
-    html += '            <textarea id="deepDiveQuestion" placeholder="What would you like to know more about?" style="width: 100%; padding: 12px 16px; border-radius: 12px; border: var(--glass-border); background: var(--input-bg); color: var(--text-main); font-family: inherit; font-size: 1rem; resize: vertical; min-height: 80px; margin-bottom: 1rem; outline: none;"></textarea>\n';
-    html += '            <div style="display: flex; gap: 10px;">\n';
-    html += '              <button type="button" class="btn-modal-secondary" onclick="closeDeepDiveModal()">Cancel</button>\n';
-    html += '              <button type="submit" class="btn-modal-primary" style="flex: 1;">Ask Question</button>\n';
-    html += '            </div>\n';
-    html += '            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.8rem;">Cost: 0.5 credits</p>\n';
-    html += '          </form>\n';
-  }
-
-  html += '        </div>\n';
-  html += '      </div>\n';
-  html += '    </div>\n';
-  return html;
-}
-
-// ============================================
-// HELPER FUNCTIONS
-// ============================================
-
-function escapeHtml(text) {
-  if (!text) return '';
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-
-function getProfileIcon(name) {
-  const icons = {
-    'Everyday Life': '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93z"/></svg>',
-    'Football': '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93z"/></svg>',
-    'Gaming': '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M21.58 16.09l-1.09-7.66C20.21 6.46 18.52 5 16.53 5H7.47C5.48 5 3.79 6.46 3.51 8.43l-1.09 7.66C2.2 17.63 3.39 19 4.94 19h14.12c1.55 0 2.74-1.37 2.52-2.91z"/></svg>',
-    'Movies & Cinema': '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z"/></svg>',
-    'Cooking & Food': '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M18.06 22.99h1.66c.84 0 1.53-.64 1.63-1.46L23 5.05h-5V1h-2v4.05h-4.97l.27 16.48c.1.82.79 1.46 1.63 1.46h1.66zM10 12.04h8V14h-8v-1.96z"/></svg>'
-  };
-  return icons[name] || '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>';
-}
-
-function parseContentIntoSections(content) {
-  if (!content) return [{ type: 'paragraph', content: 'No content available.' }];
-
-  const lines = content.split('\n').filter(line => line.trim());
-  const sections = [];
-
-  for (const line of lines) {
-    if (line.startsWith('## ')) {
-      sections.push({ type: 'heading', content: line.replace('## ', '') });
-    } else if (line.startsWith('# ')) {
-      sections.push({ type: 'heading', content: line.replace('# ', '') });
-    } else if (line.trim()) {
-      sections.push({ type: 'paragraph', content: line.trim() });
-    }
-  }
-
-  return sections.length > 0 ? sections : [{ type: 'paragraph', content: content }];
-}
-
-// ============================================
-// JAVASCRIPT FOR THE FRONTEND (Fixed)
-// ============================================
-
-function getJavaScript(article, explanations, userRating, user_id, sessionToken, isBookmarked, isGuest, guestLimitInfo, guestId) {
+function getJavaScript(article, explanations, userRating, user_id, sessionToken, isBookmarked, isGuest, guestLimitInfo, guestId, userCredits) {
   const isAuthenticated = !!user_id;
   const hasRated = !!userRating;
   const explanationViews = explanations?.map(e => e.view_id) || [];
   const bookmarked = isBookmarked || false;
 
-  // Use string concatenation to avoid template literal issues
   let js = '';
 
-  // State
+  // State - now using the passed userCredits parameter
   js += 'let currentThemeSetting = localStorage.getItem("easyread-theme") || "auto";\n';
   js += 'let currentCredits = parseFloat(localStorage.getItem("easyread-credits")) || ' + (userCredits || 50) + ';\n';
   js += 'let modalTriggered = false;\n';
-  js += 'let currentViewId = ' + (explanations?.[0]?.view_id || null) + ';\n';
+  js += 'let currentViewId = ' + (explanations?.[0]?.view_id || 'null') + ';\n';
   js += 'let currentProfileId = ' + (explanations?.[0]?.profile_id || 1) + ';\n';
   js += 'let currentArticleId = ' + article.article_id + ';\n';
   js += 'let isAuthenticated = ' + isAuthenticated + ';\n';
@@ -2385,7 +2223,344 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 // ============================================
-// CSS STYLES (Compressed to avoid issues)
+// HTML COMPONENT BUILDERS
+// ============================================
+
+function buildHeaderHTML(userCredits, user_id, profiles, isGuest, guestLimitInfo) {
+  const isAuthenticated = !!user_id;
+  let html = '    <header class="reader-header">\n';
+  html += '      <div class="category-breadcrumb">\n';
+  html += '        <a href="/" style="color: var(--text-secondary); text-decoration: none;">EasyRead</a>\n';
+  html += '        <span>›</span>\n';
+  html += '        <span class="current">Reading</span>\n';
+  html += '      </div>\n';
+  html += '      <div class="header-actions" style="display: flex; align-items: center; gap: 8px;">\n';
+  html += '        <button onclick="window.toggleTheme()" class="glass-icon-btn" title="Toggle theme">\n';
+  html += '          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">\n';
+  html += '            <path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.5 5.5 0 0 1-7.64-1.56 5.5 5.5 0 0 1-1.56-7.64A9.02 9.02 0 0 0 12 3z"/>\n';
+  html += '          </svg>\n';
+  html += '        </button>\n';
+
+  if (isAuthenticated) {
+    html += '        <div class="credits-badge" id="userCreditsBadge" title="Credit Balance">\n';
+    html += '          <span class="lightning-icon">⚡</span>\n';
+    html += '          <span class="credits-val" id="creditsValueDisplay">' + (userCredits || 50) + '</span>\n';
+    html += '          <span class="credits-label">credits</span>\n';
+    html += '        </div>\n';
+  } else {
+    if (isGuest && guestLimitInfo) {
+      html += '        <div class="guest-badge" style="font-size: 0.7rem; color: var(--text-muted); padding: 0.2rem 0.6rem; border: 1px solid var(--border-subtle); border-radius: 12px;">\n';
+      html += '          Guest · ' + guestLimitInfo.remaining + ' reads left\n';
+      html += '        </div>\n';
+    }
+    html += '        <a href="' + SITE_URL + '#login" class="auth-link" style="color: var(--accent-color); font-weight: 600; text-decoration: none; font-size: 0.85rem; padding: 0.4rem 0.9rem; border: 1.5px solid var(--accent-color); border-radius: 20px; transition: all 0.2s;">\n';
+    html += '          Sign In\n';
+    html += '        </a>\n';
+  }
+
+  html += '      </div>\n';
+  html += '    </header>\n';
+  return html;
+}
+
+function buildHeroHTML(title, categories) {
+  const category = categories?.[0] || 'General';
+  let html = '    <header class="hero-section">\n';
+  html += '      <div class="category-label" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--accent-color); font-weight: 700; margin-bottom: 0.5rem;">\n';
+  html += '        ' + escapeHtml(category) + '\n';
+  html += '      </div>\n';
+  html += '      <h1 class="hero-title">' + escapeHtml(title) + '</h1>\n';
+  html += '    </header>\n';
+  return html;
+}
+
+function buildProfilePillsHTML(profiles) {
+  if (!profiles || profiles.length === 0) {
+    return '    <div class="profile-pills-wrapper">\n      <div class="profile-pills-scroll">\n        <button class="profile-pill active" data-profile="default" onclick="switchProfile(\'default\', this)">\n          Everyday Life\n        </button>\n      </div>\n    </div>\n';
+  }
+
+  let html = '    <div class="profile-pills-wrapper">\n';
+  html += '      <div class="profile-pills-scroll" id="profilePills">\n';
+
+  profiles.forEach((p, index) => {
+    const isActive = p.is_default || index === 0;
+    const icon = getProfileIcon(p.name);
+    html += '        <button class="profile-pill ' + (isActive ? 'active' : '') + '" data-profile="' + p.profile_id + '" data-profile-name="' + p.name + '" onclick="switchProfile(\'' + p.profile_id + '\', this, \'' + p.name + '\')">\n';
+    html += '          ' + icon + '\n';
+    html += '          ' + escapeHtml(p.name) + '\n';
+    html += '        </button>\n';
+  });
+
+  html += '      </div>\n';
+  html += '    </div>\n';
+  return html;
+}
+
+function buildGradientCardHTML() {
+  return '    <div class="featured-gradient-card" id="gradientCard">\n' +
+         '      <div class="gradient-card-overlay"></div>\n' +
+         '      <div class="catch-line-text" id="catchLineText">"Every idea has a story. Let\'s explore it together."</div>\n' +
+         '    </div>\n';
+}
+
+function buildArticleContentHTML(article, explanations) {
+  const defaultExplanation = explanations?.find(e => e.profile_id === 1) || explanations?.[0];
+  const content = defaultExplanation?.content || article.base_content || 'No content available.';
+
+  const sections = parseContentIntoSections(content);
+
+  let html = '    <article class="article-body" id="articleContent">\n';
+  html += '      <div class="content-shimmer" id="contentShimmer">\n';
+  for (let i = 0; i < 8; i++) {
+    html += '        <div class="shimmer-line"></div>\n';
+  }
+  html += '      </div>\n';
+  html += '      <div id="articleText" style="display: none;">\n';
+
+  sections.forEach((section, i) => {
+    if (section.type === 'heading') {
+      html += '        <h2 class="subheading">' + section.content + '</h2>\n';
+    } else {
+      const isFirst = i === 0;
+      html += '        <p class="' + (isFirst ? 'dropcap' : '') + '">' + section.content + '</p>\n';
+    }
+  });
+
+  html += '      </div>\n';
+  html += '    </article>\n';
+  return html;
+}
+
+function buildSummaryHTML(article) {
+  const summary = article.summary || 'No summary available.';
+  return '    <div class="summary-wrapper">\n' +
+         '      <div class="summary-content">\n' +
+         '        <h4>Summary</h4>\n' +
+         '        <p>' + escapeHtml(summary) + '</p>\n' +
+         '      </div>\n' +
+         '    </div>\n';
+}
+
+function buildMetadataHTML(article) {
+  const date = article.created_at ? new Date(article.created_at).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  }) : 'Recently';
+
+  const wordCount = article.word_count || article.base_content?.split(/\s+/).length || 0;
+  const readTime = Math.ceil(wordCount / 200) || 3;
+
+  return '    <div class="article-metadata">\n' +
+         '      <div class="meta-left">\n' +
+         '        <span class="author-name">EasyRead</span>\n' +
+         '        <span>·</span>\n' +
+         '        <span>' + date + '</span>\n' +
+         '      </div>\n' +
+         '      <div class="meta-right">\n' +
+         '        ' + readTime + ' min read · ' + (article.view_count || 0) + ' views\n' +
+         '      </div>\n' +
+         '    </div>\n';
+}
+
+function buildReaderSectionHTML() {
+  return '    <div class="reader-section">\n' +
+         '      <div class="reader-avatars">\n' +
+         '        <div class="mini-circle gold">JR</div>\n' +
+         '        <div class="mini-circle blue">AK</div>\n' +
+         '        <div class="mini-circle green">MS</div>\n' +
+         '        <div class="mini-circle purple">TW</div>\n' +
+         '      </div>\n' +
+         '      <div class="reader-count">\n' +
+         '        <strong>1.4k</strong> readers this hour\n' +
+         '      </div>\n' +
+         '    </div>\n';
+}
+
+function buildFooterHTML(article, user_id, userCredits, isBookmarked, isGuest) {
+  const isAuthenticated = !!user_id;
+  const bookmarkIcon = isBookmarked ? 
+    '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>' :
+    '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>';
+
+  let html = '    <div class="glass-footer">\n';
+  html += '      <div class="footer-content">\n';
+  html += '        <div class="link-pill">\n';
+  html += '          <span>🔗 ' + (article.source_domain || 'easytoread.vercel.app') + '/</span>' + (article.slug?.substring(0, 20) || 'article') + '...\n';
+  html += '        </div>\n';
+  html += '        <div class="glass-actions">\n';
+  html += '          <button class="glass-icon-btn" onclick="copyLink()" title="Copy link">\n';
+  html += '            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>\n';
+  html += '          </button>\n';
+  html += '          <button class="glass-icon-btn" onclick="shareLink()" title="Share">\n';
+  html += '            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>\n';
+  html += '          </button>\n';
+  html += '          <button class="glass-icon-btn bookmark-btn ' + (isBookmarked ? 'bookmarked' : '') + '" id="bookmarkBtn" onclick="handleBookmark()" title="' + (isBookmarked ? 'Remove bookmark' : 'Add bookmark') + '">\n';
+  html += '            ' + bookmarkIcon + '\n';
+  html += '          </button>\n';
+
+  if (isAuthenticated) {
+    html += '          <button class="glass-icon-btn" onclick="openDeepDiveModal()" title="Deep Dive">\n';
+    html += '            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>\n';
+    html += '          </button>\n';
+  } else {
+    html += '          <button class="glass-icon-btn" onclick="showLoginModal(\'deep-dive\')" title="Deep Dive (Login required)">\n';
+    html += '            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>\n';
+    html += '          </button>\n';
+  }
+
+  html += '        </div>\n';
+  html += '      </div>\n';
+  html += '    </div>\n';
+  return html;
+}
+
+function buildReviewModalHTML(userRating, user_id, isGuest) {
+  const hasRated = !!userRating;
+  const isAuthenticated = !!user_id;
+
+  if (!isAuthenticated || isGuest) {
+    return '    <div class="review-overlay" id="reviewModal">\n' +
+           '      <div class="review-modal">\n' +
+           '        <button class="modal-close" onclick="closeReview()">✕</button>\n' +
+           '        <div class="login-modal-content" style="text-align: center; padding: 20px 0;">\n' +
+           '          <h3>Sign in to rate</h3>\n' +
+           '          <p style="color: var(--text-secondary); margin: 1rem 0;">Help us improve by rating this article!</p>\n' +
+           '          <a href="' + SITE_URL + '#login" class="btn-modal-primary" style="display: inline-block; text-decoration: none; padding: 0.75rem 2rem;">Sign In</a>\n' +
+           '        </div>\n' +
+           '      </div>\n' +
+           '    </div>\n';
+  }
+
+  if (hasRated) {
+    return '    <div class="review-overlay" id="reviewModal">\n' +
+           '      <div class="review-modal">\n' +
+           '        <button class="modal-close" onclick="closeReview()">✕</button>\n' +
+           '        <div style="text-align: center; padding: 20px 0;">\n' +
+           '          <div style="font-size: 3rem; margin-bottom: 0.5rem;">⭐</div>\n' +
+           '          <h3 style="margin-bottom: 0.5rem;">You already rated this</h3>\n' +
+           '          <p style="color: var(--text-secondary);">Your feedback helps us improve!</p>\n' +
+           '          <button class="btn-modal-primary" onclick="closeReview()" style="margin-top: 1rem;">Close</button>\n' +
+           '        </div>\n' +
+           '      </div>\n' +
+           '    </div>\n';
+  }
+
+  return '    <div class="review-overlay" id="reviewModal">\n' +
+         '      <div class="review-modal" id="reviewModalBody">\n' +
+         '        <button class="modal-close" onclick="closeReview()">✕</button>\n' +
+         '        <div class="bonus-incentive-pill">\n' +
+         '          <span>⚡</span> Get +0.2 Credit Reward\n' +
+         '        </div>\n' +
+         '        <h3>Share feedback</h3>\n' +
+         '        <p class="sub-text">Your ratings help fine-tune our personalized AI translations.</p>\n' +
+         '        <div class="review-question">Was this explanation easy to understand?</div>\n' +
+         '        <div class="rating-scale" id="ratingGroup">\n' +
+         '          <input type="radio" id="mRate1" name="rating" value="1" onclick="updateRatingFeedback(1)">\n' +
+         '          <label for="mRate1" title="Confusing">😣</label>\n' +
+         '          <input type="radio" id="mRate2" name="rating" value="2" onclick="updateRatingFeedback(2)">\n' +
+         '          <label for="mRate2" title="Unclear">😕</label>\n' +
+         '          <input type="radio" id="mRate3" name="rating" value="3" onclick="updateRatingFeedback(3)">\n' +
+         '          <label for="mRate3" title="Standard">😐</label>\n' +
+         '          <input type="radio" id="mRate4" name="rating" value="4" onclick="updateRatingFeedback(4)">\n' +
+         '          <label for="mRate4" title="Clear">🙂</label>\n' +
+         '          <input type="radio" id="mRate5" name="rating" value="5" onclick="updateRatingFeedback(5)">\n' +
+         '          <label for="mRate5" title="Amazing">🤯</label>\n' +
+         '        </div>\n' +
+         '        <div class="rating-description" id="ratingDesc">Tap your reaction above</div>\n' +
+         '        <div class="feedback-options" id="feedbackOptions">\n' +
+         '          <p>What could be better?</p>\n' +
+         '          <div class="feedback-grid" id="feedbackGrid">\n' +
+         '            <div class="feedback-chip" onclick="this.classList.toggle(\'selected\')">Too complicated</div>\n' +
+         '            <div class="feedback-chip" onclick="this.classList.toggle(\'selected\')">Too long</div>\n' +
+         '            <div class="feedback-chip" onclick="this.classList.toggle(\'selected\')">Needs examples</div>\n' +
+         '            <div class="feedback-chip" onclick="this.classList.toggle(\'selected\')">Incorrect analogies</div>\n' +
+         '            <div class="feedback-chip" onclick="this.classList.toggle(\'selected\')">Formatting issues</div>\n' +
+         '          </div>\n' +
+         '        </div>\n' +
+         '        <div class="modal-actions">\n' +
+         '          <button class="btn-modal-secondary" onclick="closeReview()">Not now</button>\n' +
+         '          <button class="btn-modal-primary" onclick="submitReview()">Submit Feedback</button>\n' +
+         '        </div>\n' +
+         '      </div>\n' +
+         '    </div>\n';
+}
+
+function buildDeepDiveModalHTML(isGuest) {
+  let html = '    <div class="deep-dive-overlay" id="deepDiveModal">\n';
+  html += '      <div class="deep-dive-modal">\n';
+  html += '        <button class="modal-close" onclick="closeDeepDiveModal()">✕</button>\n';
+  html += '        <div style="text-align: center;">\n';
+  html += '          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔍</div>\n';
+  html += '          <h3>Deep Dive</h3>\n';
+
+  if (isGuest) {
+    html += '          <p style="color: var(--text-secondary); margin: 0.5rem 0 1.5rem;">Sign in to unlock deep dive questions!</p>\n';
+    html += '          <a href="' + SITE_URL + '#login" class="btn-modal-primary" style="display: inline-block; text-decoration: none; padding: 0.75rem 2rem;">Sign In</a>\n';
+  } else {
+    html += '          <p style="color: var(--text-secondary); margin: 0.5rem 0 1.5rem;">Ask a question to explore this topic deeper.</p>\n';
+    html += '          <form id="deepDiveForm" onsubmit="submitDeepDive(event)">\n';
+    html += '            <textarea id="deepDiveQuestion" placeholder="What would you like to know more about?" style="width: 100%; padding: 12px 16px; border-radius: 12px; border: var(--glass-border); background: var(--input-bg); color: var(--text-main); font-family: inherit; font-size: 1rem; resize: vertical; min-height: 80px; margin-bottom: 1rem; outline: none;"></textarea>\n';
+    html += '            <div style="display: flex; gap: 10px;">\n';
+    html += '              <button type="button" class="btn-modal-secondary" onclick="closeDeepDiveModal()">Cancel</button>\n';
+    html += '              <button type="submit" class="btn-modal-primary" style="flex: 1;">Ask Question</button>\n';
+    html += '            </div>\n';
+    html += '            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.8rem;">Cost: 0.5 credits</p>\n';
+    html += '          </form>\n';
+  }
+
+  html += '        </div>\n';
+  html += '      </div>\n';
+  html += '    </div>\n';
+  return html;
+}
+
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
+
+function escapeHtml(text) {
+  if (!text) return '';
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function getProfileIcon(name) {
+  const icons = {
+    'Everyday Life': '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93z"/></svg>',
+    'Football': '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93z"/></svg>',
+    'Gaming': '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M21.58 16.09l-1.09-7.66C20.21 6.46 18.52 5 16.53 5H7.47C5.48 5 3.79 6.46 3.51 8.43l-1.09 7.66C2.2 17.63 3.39 19 4.94 19h14.12c1.55 0 2.74-1.37 2.52-2.91z"/></svg>',
+    'Movies & Cinema': '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z"/></svg>',
+    'Cooking & Food': '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M18.06 22.99h1.66c.84 0 1.53-.64 1.63-1.46L23 5.05h-5V1h-2v4.05h-4.97l.27 16.48c.1.82.79 1.46 1.63 1.46h1.66zM10 12.04h8V14h-8v-1.96z"/></svg>'
+  };
+  return icons[name] || '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>';
+}
+
+function parseContentIntoSections(content) {
+  if (!content) return [{ type: 'paragraph', content: 'No content available.' }];
+
+  const lines = content.split('\n').filter(line => line.trim());
+  const sections = [];
+
+  for (const line of lines) {
+    if (line.startsWith('## ')) {
+      sections.push({ type: 'heading', content: line.replace('## ', '') });
+    } else if (line.startsWith('# ')) {
+      sections.push({ type: 'heading', content: line.replace('# ', '') });
+    } else if (line.trim()) {
+      sections.push({ type: 'paragraph', content: line.trim() });
+    }
+  }
+
+  return sections.length > 0 ? sections : [{ type: 'paragraph', content: content }];
+}
+
+// ============================================
+// CSS STYLES (Compressed)
 // ============================================
 
 function getCSSStyles() {
