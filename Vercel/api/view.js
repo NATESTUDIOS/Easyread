@@ -569,7 +569,7 @@ async function getGuestStatus(req, res) {
 }
 
 // ============================================
-// RENDER FULL ARTICLE PAGE
+// RENDER FULL ARTICLE PAGE - FIXED
 // ============================================
 
 async function renderArticlePage(req, res) {
@@ -591,7 +591,7 @@ async function renderArticlePage(req, res) {
       return res.status(404).send(renderNotFoundPage());
     }
 
-    // GUEST TRACKING
+    // Guest tracking
     if (!user_id && guestId) {
       const limitCheck = await checkGuestLimit(guestId, 'read');
       if (!limitCheck.allowed) {
@@ -664,7 +664,7 @@ async function renderArticlePage(req, res) {
       }
     }
 
-    // ✅ FIX: Use direct supabase update instead of the imported update function
+    // Update view count
     const { error: updateError } = await supabase
       .from('articles')
       .update({ view_count: (article.view_count || 0) + 1 })
@@ -679,46 +679,67 @@ async function renderArticlePage(req, res) {
       colorPair.text
     );
 
+    // ✅ FIXED: Get explanations without the problematic join
     const { data: explanations, error: expError } = await supabase
       .from('explanation_views')
-      .select(`
-        view_id,
-        title,
-        content,
-        summary,
-        profile_id,
-        view_count,
-        rating_avg,
-        rating_count,
-        profiles:profile_id (name, description)
-      `)
+      .select('*')
       .eq('article_id', article.article_id)
       .order('view_count', { ascending: false });
 
     if (expError) throw expError;
 
+    // Get profiles separately
+    let explanationsWithProfiles = [];
+    if (explanations && explanations.length > 0) {
+      const profileIds = [...new Set(explanations.map(e => e.profile_id).filter(Boolean))];
+      
+      if (profileIds.length > 0) {
+        const { data: profiles, error: profError } = await supabase
+          .from('profiles')
+          .select('profile_id, name, description')
+          .in('profile_id', profileIds);
+        
+        if (!profError && profiles) {
+          const profileMap = {};
+          profiles.forEach(p => profileMap[p.profile_id] = p);
+          explanationsWithProfiles = explanations.map(e => ({
+            ...e,
+            profiles: profileMap[e.profile_id] || null
+          }));
+        } else {
+          explanationsWithProfiles = explanations;
+        }
+      } else {
+        explanationsWithProfiles = explanations;
+      }
+    }
+
+    // Get ratings
+    const viewIds = explanations?.map(e => e.view_id) || [];
     const { data: ratings, error: ratingError } = await supabase
       .from('ratings')
       .select('rating, feedback, user_id, created_at')
-      .in('view_id', explanations?.map(e => e.view_id) || [])
+      .in('view_id', viewIds)
       .order('created_at', { ascending: false })
       .limit(50);
 
     if (ratingError) throw ratingError;
 
+    // Get user rating
     let userRating = null;
     if (user_id && explanations && explanations.length > 0) {
       const { data: ur, error: urError } = await supabase
         .from('ratings')
         .select('rating, feedback, view_id')
         .eq('user_id', user_id)
-        .in('view_id', explanations.map(e => e.view_id))
+        .in('view_id', viewIds)
         .maybeSingle();
       
       if (urError && urError.code !== 'PGRST116') throw urError;
       userRating = ur;
     }
 
+    // Get user credits
     let userCredits = null;
     if (user_id) {
       const users = await getByColumn('users', 'user_id', user_id);
@@ -727,6 +748,7 @@ async function renderArticlePage(req, res) {
       }
     }
 
+    // Get bookmark status
     let isBookmarked = false;
     if (user_id) {
       const { data: bookmark, error: bmError } = await supabase
@@ -740,6 +762,7 @@ async function renderArticlePage(req, res) {
       isBookmarked = !!bookmark;
     }
 
+    // Get profiles
     const { data: profiles, error: profileError } = await supabase
       .from('profiles')
       .select('*')
@@ -759,9 +782,10 @@ async function renderArticlePage(req, res) {
       };
     }
 
+    // Build HTML with the fetched data
     const html = buildArticleHTML({
       article,
-      explanations: explanations || [],
+      explanations: explanationsWithProfiles,
       ratings: ratings || [],
       userRating,
       userCredits,
@@ -786,7 +810,7 @@ async function renderArticlePage(req, res) {
 }
 
 // ============================================
-// GET ARTICLE DATA
+// GET ARTICLE DATA - FIXED
 // ============================================
 async function getArticleData(req, res) {
   const { id, slug } = req.query;
@@ -813,27 +837,45 @@ async function getArticleData(req, res) {
       colorPair.text
     );
 
+    // ✅ FIXED: Get explanations without the problematic join
     const { data: explanations, error: expError } = await supabase
       .from('explanation_views')
-      .select(`
-        view_id,
-        title,
-        content,
-        summary,
-        profile_id,
-        view_count,
-        rating_avg,
-        rating_count,
-        profiles:profile_id (name, description)
-      `)
+      .select('*')
       .eq('article_id', article.article_id);
 
     if (expError) throw expError;
 
+    // Get profiles separately
+    let explanationsWithProfiles = [];
+    if (explanations && explanations.length > 0) {
+      const profileIds = [...new Set(explanations.map(e => e.profile_id).filter(Boolean))];
+      
+      if (profileIds.length > 0) {
+        const { data: profiles, error: profError } = await supabase
+          .from('profiles')
+          .select('profile_id, name, description')
+          .in('profile_id', profileIds);
+        
+        if (!profError && profiles) {
+          const profileMap = {};
+          profiles.forEach(p => profileMap[p.profile_id] = p);
+          explanationsWithProfiles = explanations.map(e => ({
+            ...e,
+            profiles: profileMap[e.profile_id] || null
+          }));
+        } else {
+          explanationsWithProfiles = explanations;
+        }
+      } else {
+        explanationsWithProfiles = explanations;
+      }
+    }
+
+    const viewIds = explanations?.map(e => e.view_id) || [];
     const { data: ratings, error: ratingError } = await supabase
       .from('ratings')
       .select('rating, feedback, user_id, created_at')
-      .in('view_id', explanations?.map(e => e.view_id) || [])
+      .in('view_id', viewIds)
       .order('created_at', { ascending: false })
       .limit(50);
 
@@ -845,7 +887,7 @@ async function getArticleData(req, res) {
         .from('ratings')
         .select('rating, feedback, view_id')
         .eq('user_id', user_id)
-        .in('view_id', explanations.map(e => e.view_id))
+        .in('view_id', viewIds)
         .maybeSingle();
       userRating = ur;
     }
@@ -887,7 +929,7 @@ async function getArticleData(req, res) {
         view_count: (article.view_count || 0) + 1,
         og_image: ogImageUrl
       },
-      explanations: explanations || [],
+      explanations: explanationsWithProfiles || [],
       ratings: ratings || [],
       userRating,
       userCredits,
