@@ -131,7 +131,6 @@
             transition: background 0.3s ease;
         }
 
-        /* --- SPLASH SCREEN --- */
         #splashScreen {
             position: fixed;
             top: 0; left: 0;
@@ -203,7 +202,6 @@
             100% { width: 100%; }
         }
 
-        /* --- APP SHELL --- */
         .app-shell {
             max-width: 440px;
             width: 100%;
@@ -544,7 +542,6 @@
         .listing-action-btn:hover { background: var(--accent-light); }
         .listing-action-btn svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; }
 
-        /* --- Bottom Navigation --- */
         .bottom-nav {
             position: fixed;
             bottom: 14px;
@@ -598,7 +595,6 @@
             stroke-width: 2; 
         }
 
-        /* --- Full Screen Loader --- */
         .full-screen-loader {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
@@ -637,7 +633,6 @@
         .loader-modal h4 { font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
         .loader-modal p { font-size: 0.78rem; color: var(--text-secondary); }
 
-        /* Toast */
         .toast {
             position: fixed;
             bottom: 80px;
@@ -659,7 +654,6 @@
         }
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-        /* Tab Frames */
         .tab-iframe {
             display: none;
             width: 100%;
@@ -674,7 +668,6 @@
     </style>
 </head>
 <body>
-    <!-- Splash Screen -->
     <div id="splashScreen">
         <div class="splash-content">
             <div class="splash-logo">EasyRead</div>
@@ -685,11 +678,9 @@
         </div>
     </div>
 
-    <!-- Toast Notification -->
     <div class="toast" id="toast"></div>
 
     <div class="app-shell">
-        <!-- HOME CONTENT -->
         <div class="home-content-wrapper" id="homeWrapper">
             <div class="app-container">
                 <div class="brand-section">
@@ -697,19 +688,17 @@
                     <p class="tagline">Explained in a way only you understand</p>
                 </div>
 
-                <!-- Interactive Login Notice Banner -->
                 <div class="login-notice-banner glass-card" id="loginNotice">
                     <div class="notice-icon">
                         <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                     </div>
                     <div class="notice-content">
                         <h4 class="notice-title">Sign in to EasyRead</h4>
-                        <p class="notice-desc">Sync history, bookmarks, and deep dives.</p>
+                        <p class="notice-desc">Sign in to ask questions, simplify notes, and save bookmarks.</p>
                     </div>
                     <button class="notice-btn" onclick="triggerProfileLogin()">Sign In</button>
                 </div>
 
-                <!-- Unified Input Box -->
                 <div class="input-combo-wrapper glass-card">
                     <div class="input-container-inner">
                         <textarea class="card-textarea" id="submitTextArea" placeholder="Ask a question about any topic..." rows="3"></textarea>
@@ -739,13 +728,12 @@
                             Paste note
                         </button>
                         <button class="mode-pill" id="btnWebsite" onclick="setMode('website')">
-                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"></path></svg>
                             Read website
                         </button>
                     </div>
                 </div>
 
-                <!-- Explore categories -->
                 <div class="categories-section">
                     <div class="categories-label">Explore categories</div>
                     <div class="categories-scroll" id="categoriesScroll">
@@ -753,16 +741,13 @@
                     </div>
                 </div>
 
-                <!-- Home Listing Section -->
                 <div class="listing-container" id="homeListingContainer"></div>
             </div>
         </div>
 
-        <!-- IFRAME TABS -->
         <iframe class="tab-iframe" id="blogFrame" src="blog.html" loading="lazy"></iframe>
         <iframe class="tab-iframe" id="profileFrame" src="profile.html" loading="lazy"></iframe>
 
-        <!-- BOTTOM NAVIGATION -->
         <nav class="bottom-nav">
             <button class="nav-item active" data-tab="home" onclick="switchTab('home')">
                 <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
@@ -779,13 +764,12 @@
         </nav>
     </div>
 
-    <!-- Full Screen Loader Overlay -->
     <div class="full-screen-loader" id="fullscreenLoader">
         <div class="loader-blur-bg"></div>
         <div class="loader-modal glass-card">
             <div class="pipeline-spinner-ring"></div>
             <h4 id="loaderStageTitle">Generating Explanation...</h4>
-            <p id="loaderStageSub">Synthesizing tailored knowledge</p>
+            <p id="loaderStageSub">Delegating to explanation processing engine</p>
         </div>
     </div>
 
@@ -844,7 +828,6 @@
             }, 100);
         }
 
-        // Sync local storage updates
         setInterval(() => {
             const storedTheme = localStorage.getItem('easyread-theme') || 'auto';
             if (storedTheme !== currentThemeSetting) applyTheme(storedTheme);
@@ -857,7 +840,6 @@
             updateLoginNotice();
         }, 500);
 
-        // Splash screen dismissal
         window.addEventListener('load', function() {
             setTimeout(function() {
                 const splash = document.getElementById('splashScreen');
@@ -865,7 +847,6 @@
             }, 500);
         });
 
-        // Mode toggling
         function setMode(mode) {
             inputMode = mode;
             document.querySelectorAll('.mode-pill').forEach(p => p.classList.remove('active'));
@@ -892,17 +873,28 @@
             charCounter.style.color = length > 50000 ? '#ff3b30' : 'var(--text-tertiary)';
         });
 
-        // Submit Pipeline directly to Articles and Explanation API
+        // Submit directly to explanation.js with authentication verification
         async function submitPipeline() {
-            const userInput = textarea.value.trim();
+            const isLoggedIn = localStorage.getItem('easyread-logged-in') === 'true';
+            const userId = localStorage.getItem('easyread_user_id');
+            const sessionToken = localStorage.getItem('easyread_session_token') || '';
+            const profileId = parseInt(localStorage.getItem('easyread-profile-id') || '1');
 
+            // Block unauthenticated users
+            if (!isLoggedIn || !userId) {
+                showToast('Please sign in to generate explanations ⚡');
+                triggerProfileLogin();
+                return;
+            }
+
+            const userInput = textarea.value.trim();
             if (!userInput) {
                 showToast('Please enter text first');
                 return;
             }
 
             if (inputMode === 'ask' && userInput.length < 5) {
-                showToast('Question is too short');
+                showToast('Question is too short (minimum 5 characters)');
                 return;
             }
             if (inputMode === 'paste' && userInput.length < 20) {
@@ -917,51 +909,8 @@
             const loader = document.getElementById('fullscreenLoader');
             loader.classList.add('active');
 
-            const userId = localStorage.getItem('easyread_user_id') || '';
-            const sessionToken = localStorage.getItem('easyread_session_token') || '';
-            const profileId = parseInt(localStorage.getItem('easyread-profile-id') || '1');
-
             try {
-                // 1. Create/Ingest Article
-                let articlePayload = {};
-                if (inputMode === 'ask') {
-                    articlePayload = {
-                        canonical_title: userInput.length > 60 ? userInput.substring(0, 60) + '...' : userInput,
-                        base_content: userInput,
-                        source_domain: 'EasyRead Question'
-                    };
-                } else if (inputMode === 'paste') {
-                    articlePayload = {
-                        canonical_title: 'Custom Note ' + new Date().toLocaleDateString(),
-                        base_content: userInput,
-                        source_domain: 'User Note'
-                    };
-                } else {
-                    articlePayload = {
-                        source_url: userInput,
-                        url: userInput
-                    };
-                }
-
-                const createRes = await fetch(`${API_BASE_URL}/article?action=create`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'x-user-id': userId,
-                        'x-session-token': sessionToken
-                    },
-                    body: JSON.stringify(articlePayload)
-                });
-
-                const createData = await createRes.json();
-                if (!createRes.ok || !createData.success) {
-                    throw new Error(createData.error || 'Failed to initialize article');
-                }
-
-                const articleId = createData.article_id || createData.article?.article_id;
-                const articleSlug = createData.slug || createData.article?.slug || articleId;
-
-                // 2. Generate Explanation via Explanation API
+                // Call explanation.js exclusively
                 const expRes = await fetch(`${API_BASE_URL}/explanation?action=generate`, {
                     method: 'POST',
                     headers: { 
@@ -970,7 +919,9 @@
                         'x-session-token': sessionToken
                     },
                     body: JSON.stringify({
-                        article_id: articleId,
+                        content: userInput,
+                        prompt: userInput,
+                        mode: inputMode,
                         profile_id: profileId,
                         force: false
                     })
@@ -986,8 +937,8 @@
                 charCounter.textContent = "0 / 50k";
                 showToast('Explanation ready!');
 
-                // Route to /article/:slug or /article/:id
-                openArticleInReader(articleSlug, articleId);
+                const articleSlug = expData.slug || expData.explanation?.slug || expData.explanation?.article_id || expData.article_id;
+                openArticleInReader(articleSlug, expData.explanation?.article_id || expData.article_id);
 
             } catch (err) {
                 loader.classList.remove('active');
@@ -995,13 +946,12 @@
             }
         }
 
-        // Fetch Dynamic Categories
         async function fetchHomeCategories() {
             const container = document.getElementById('categoriesScroll');
             if (!container) return;
 
             try {
-                const res = await fetch(`${API_BASE_URL}/category`);
+                const res = await fetch(`${API_BASE_URL}/category?action=list`);
                 if (!res.ok) throw new Error();
                 const data = await res.json();
                 const categories = Array.isArray(data) ? data : (data.categories || []);
@@ -1027,7 +977,6 @@
             renderFeed();
         }
 
-        // Fetch Dynamic Home Feed from Articles API
         async function fetchHomeFeed() {
             const container = document.getElementById('homeListingContainer');
             try {
@@ -1122,7 +1071,6 @@
             }
         }
 
-        // PostMessage dispatcher
         window.addEventListener('message', (event) => {
             if (!event.data) return;
             if (event.data.type === 'switchTab') {
