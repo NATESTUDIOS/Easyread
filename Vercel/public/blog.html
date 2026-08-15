@@ -697,7 +697,7 @@
             const userId = localStorage.getItem('easyread_user_id') || '';
 
             try {
-                const response = await fetch(`${API_BASE_URL}/articles?action=list${userId ? `&user_id=${encodeURIComponent(userId)}` : ''}`);
+                const response = await fetch(`${API_BASE_URL}/article?action=list${userId ? `&user_id=${encodeURIComponent(userId)}` : ''}`);
                 if (!response.ok) throw new Error(`HTTP error ${response.status}`);
                 const data = await response.json();
 
