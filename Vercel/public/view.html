@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>The Art of the Exchange | Editorial</title>
+    
+    <!-- Modern standard non-italic grotesque typeface (Plus Jakarta Sans) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- CSS Variables for Dynamic Unified Theme System --- */
+        :root {
+            /* Default Light Theme (Soft neutral off-white) */
+            --bg-color: #f6f7f9;
+            --bg-glow: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.9) 0%, transparent 70%);
+            --text-main: #1c1c1e;
+            --text-secondary: #5c5c60;
+            --text-muted: #8e8e93;
+            --border-color: rgba(0, 0, 0, 0.12);
+            --border-subtle: rgba(0, 0, 0, 0.08);
+            --card-bg: rgba(242, 242, 247, 0.75);
+            --card-blur: blur(20px);
+            --input-bg: rgba(0, 0, 0, 0.04);
+            --shadow-color: rgba(0, 0, 0, 0.05);
+            --glass-border: 1.5px solid rgba(0, 0, 0, 0.12);
+            --glass-border-subtle: 1px solid rgba(0, 0, 0, 0.08);
+            --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            
+            /* Theme brand colors */
+            --accent-color: #f59847; 
+            --accent-hover: #e08735;
+            --accent-glow: rgba(245, 152, 71, 0.15);
+            --icon-color: #5c5c60;
+            
+            /* Fluid Premium Gradient Palettes (Light) */
+            --gradient-color-1: #ffd3b6;
+            --gradient-color-2: #ffaaa5;
+            --gradient-color-3: #f59847;
+            --gradient-color-4: #d4e5f7;
+            
+            /* Shimmer details */
+            --shimmer-color: rgba(255,255,255,0.4);
+            --shimmer-bg: linear-gradient(90deg, var(--card-bg) 0%, var(--shimmer-color) 50%, var(--card-bg) 100%);
+        }
+
+        /* Dark Theme (Auto system override) */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #000000;
+                --bg-glow: radial-gradient(circle at 50% 0%, rgba(40, 40, 42, 0.4) 0%, transparent 60%);
+                --text-main: #e8e8ea;
+                --text-secondary: #9a9a9e;
+                --text-muted: #6c6c70;
+                --border-color: #2a2a2a;
+                --border-subtle: rgba(255,255,255,0.06);
+                --card-bg: rgba(18, 18, 18, 0.95);
+                --card-blur: blur(16px);
+                --input-bg: #181818;
+                --shadow-color: rgba(0,0,0,0.8);
+                --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+                --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.04);
+                --glass-shadow: 0 8px 32px rgba(0,0,0,0.6);
+                
+                --accent-color: #f59847; 
+                --accent-hover: #e08735;
+                --accent-glow: rgba(245, 152, 71, 0.2);
+                --icon-color: #9aa0a6;
+                
+                /* Fluid Premium Gradient Palettes (Dark) */
+                --gradient-color-1: #1f130f;
+                --gradient-color-2: #30170a;
+                --gradient-color-3: #c49a45;
+                --gradient-color-4: #12161f;
+                
+                --shimmer-color: rgba(255,255,255,0.1);
+            }
+        }
+
+        /* --- Manual Switcher Overrides --- */
+        [data-theme="light"] {
+            --bg-color: #f6f7f9 !important;
+            --bg-glow: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.9) 0%, transparent 70%) !important;
+            --text-main: #1c1c1e !important;
+            --text-secondary: #5c5c60 !important;
+            --text-muted: #8e8e93 !important;
+            --border-color: rgba(0, 0, 0, 0.12) !important;
+            --border-subtle: rgba(0, 0, 0, 0.08) !important;
+            --card-bg: rgba(242, 242, 247, 0.75) !important;
+            --input-bg: rgba(0, 0, 0, 0.04) !important;
+            --shadow-color: rgba(0, 0, 0, 0.05) !important;
+            --glass-border: 1.5px solid rgba(0, 0, 0, 0.12) !important;
+            --glass-border-subtle: 1px solid rgba(0, 0, 0, 0.08) !important;
+            --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
+            --accent-color: #f59847 !important;
+            --accent-hover: #e08735 !important;
+            --icon-color: #5c5c60 !important;
+            --shimmer-color: rgba(255,255,255,0.4) !important;
+            --gradient-color-1: #ffd3b6 !important;
+            --gradient-color-2: #ffaaa5 !important;
+            --gradient-color-3: #f59847 !important;
+            --gradient-color-4: #d4e5f7 !important;
+        }
+        
+        [data-theme="dark"] {
+            --bg-color: #000000 !important;
+            --bg-glow: radial-gradient(circle at 50% 0%, rgba(40, 40, 42, 0.4) 0%, transparent 60%) !important;
+            --text-main: #e8e8ea !important;
+            --text-secondary: #9a9a9e !important;
+            --text-muted: #6c6c70 !important;
+            --border-color: #2a2a2a !important;
+            --border-subtle: rgba(255,255,255,0.06) !important;
+            --card-bg: rgba(18, 18, 18, 0.95) !important;
+            --input-bg: #181818 !important;
+            --shadow-color: rgba(0,0,0,0.8) !important;
+            --glass-border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.04) !important;
+            --glass-shadow: 0 8px 32px rgba(0,0,0,0.6) !important;
+            --accent-color: #f59847 !important;
+            --accent-hover: #e08735 !important;
+            --icon-color: #9aa0a6 !important;
+            --shimmer-color: rgba(255,255,255,0.1) !important;
+            --gradient-color-1: #1f130f !important;
+            --gradient-color-2: #30170a !important;
+            --gradient-color-3: #c49a45 !important;
+            --gradient-color-4: #12161f !important;
+        }
+
+        /* --- Global Reset & Typography --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background-color: var(--bg-color);
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E"),
+                          var(--bg-glow);
+            background-repeat: no-repeat, no-repeat;
+            background-size: auto, 100% 100%;
+            background-position: center, center;
+            
+            color: var(--text-main);
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-style: normal;
+            min-height: 100vh;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            padding: 3rem 1.5rem 6rem 1.5rem;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        .full-screen-reader {
+            max-width: 780px;
+            width: 100%;
+        }
+
+        /* --- Progress Bar --- */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: var(--accent-color);
+            width: 0%;
+            z-index: 100;
+            transition: width 0.1s linear;
+        }
+
+        /* --- Reader Header Block --- */
+        .reader-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            width: 100%;
+        }
+
+        .category-breadcrumb {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+        }
+        
+        .category-breadcrumb span { color: var(--text-muted); }
+        .category-breadcrumb .current { color: var(--accent-color); }
+
+        /* Unified Credit Balance Pill */
+        .credits-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--card-bg);
+            backdrop-filter: var(--card-blur);
+            -webkit-backdrop-filter: var(--card-blur);
+            border: var(--glass-border-subtle);
+            border-radius: 20px;
+            padding: 0.4rem 0.9rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            box-shadow: var(--glass-shadow);
+            transition: transform 0.2s, background-color 0.2s;
+            cursor: pointer;
+        }
+        .credits-badge:hover {
+            transform: scale(1.02);
+            border-color: var(--accent-color);
+        }
+        .credits-badge .lightning-icon {
+            color: var(--accent-color);
+            font-size: 0.9rem;
+            animation: pulse-glow 2s infinite ease-in-out;
+        }
+        .credits-badge .credits-val {
+            color: var(--text-main);
+        }
+        .credits-badge .credits-label {
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+        }
+
+        /* Credit Balance Flash (when review bonus is awarded) */
+        .flash-success {
+            animation: green-flash 1s ease-out;
+        }
+        @keyframes green-flash {
+            0% { background: var(--card-bg); }
+            50% { background: rgba(52, 199, 89, 0.25); border-color: #34c759; }
+            100% { background: var(--card-bg); }
+        }
+
+        /* --- Hero Section --- */
+        .hero-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-title {
+            font-size: 2.8rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 0.5rem;
+            color: var(--text-main);
+            letter-spacing: -1.5px;
+        }
+        .hero-title .accent { color: var(--accent-color); }
+
+        /* --- Profile Pills (Grey Glass) --- */
+        .profile-pills-wrapper {
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .profile-pills-scroll {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        
+        .profile-pills-scroll::-webkit-scrollbar { display: none; }
+
+        .profile-pill {
+            flex: 0 0 auto;
+            scroll-snap-align: start;
+            background: var(--card-bg);
+            backdrop-filter: var(--card-blur);
+            -webkit-backdrop-filter: var(--card-blur);
+            border: var(--glass-border-subtle);
+            border-radius: 40px;
+            padding: 0.55rem 1.2rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .profile-pill svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+            flex-shrink: 0;
+        }
+
+        .profile-pill:hover {
+            background: var(--card-bg-hover);
+            color: var(--text-main);
+            transform: translateY(-2px);
+        }
+
+        .profile-pill.active {
+            background: var(--accent-color);
+            color: #fff;
+            border-color: var(--accent-color);
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+
+        /* --- PREMIUM ANIMATED GRADIENT CANVAS (CATCH LINE BOX) --- */
+        .featured-gradient-card {
+            width: 100%;
+            min-height: 250px;
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            border: var(--glass-border-subtle);
+            background: linear-gradient(-45deg, var(--gradient-color-1), var(--gradient-color-2), var(--gradient-color-3), var(--gradient-color-4));
+            background-size: 300% 300%;
+            animation: gradientShift 15s ease infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2.2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--glass-shadow);
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .gradient-card-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.15);
+            z-index: 1;
+        }
+
+        .catch-line-text {
+            font-size: 1.55rem;
+            font-weight: 800;
+            line-height: 1.4;
+            color: #ffffff;
+            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 580px;
+            z-index: 2;
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            letter-spacing: -0.5px;
+        }
+
+        /* --- Article Content with Shimmer --- */
+        .article-body {
+            position: relative;
+        }
+
+        .content-shimmer {
+            position: relative;
+            min-height: 400px;
+        }
+
+        .content-shimmer .shimmer-line {
+            height: 20px;
+            background: var(--shimmer-bg);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .content-shimmer .shimmer-line:nth-child(1) { width: 95%; height: 24px; }
+        .content-shimmer .shimmer-line:nth-child(2) { width: 88%; height: 24px; }
+        .content-shimmer .shimmer-line:nth-child(3) { width: 92%; height: 24px; }
+        .content-shimmer .shimmer-line:nth-child(4) { width: 75%; height: 24px; margin-bottom: 32px; }
+        .content-shimmer .shimmer-line:nth-child(5) { width: 60%; height: 32px; margin-bottom: 16px; }
+        .content-shimmer .shimmer-line:nth-child(6) { width: 90%; height: 24px; }
+        .content-shimmer .shimmer-line:nth-child(7) { width: 85%; height: 24px; }
+        .content-shimmer .shimmer-line:nth-child(8) { width: 70%; height: 24px; }
+        
+        .article-body p {
+            font-size: 1.15rem;
+            line-height: 1.65;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            opacity: 0;
+            animation: fadeInContent 0.6s ease forwards;
+        }
+
+        .article-body p:nth-child(1) { animation-delay: 0.1s; }
+        .article-body p:nth-child(2) { animation-delay: 0.2s; }
+        .article-body p:nth-child(3) { animation-delay: 0.3s; }
+        .article-body p:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes fadeInContent {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .article-body .dropcap::first-letter {
+            font-size: 4rem;
+            float: left;
+            line-height: 0.8;
+            margin-right: 12px;
+            color: var(--accent-color);
+            font-weight: 800;
+            margin-top: 4px;
+        }
+
+        .subheading {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            letter-spacing: -0.5px;
+        }
+
+        .highlight-text { color: var(--accent-color); font-weight: 700; }
+
+        /* --- Summary Section --- */
+        .summary-wrapper {
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            border-top: 1px solid var(--border-subtle);
+            padding-top: 1.5rem;
+        }
+
+        .summary-content {
+            background: var(--card-bg);
+            backdrop-filter: var(--card-blur);
+            -webkit-backdrop-filter: var(--card-blur);
+            border-radius: 18px;
+            padding: 1.5rem;
+            border: var(--glass-border-subtle);
+            box-shadow: var(--glass-shadow);
+        }
+
+        .summary-content h4 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .summary-content p {
+            font-size: 1rem;
+            line-height: 1.5;
+            color: var(--text-secondary);
+            margin: 0;
+            font-style: italic;
+        }
+
+        /* --- Article Meta Data --- */
+        .article-metadata {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+            margin-bottom: 2.5rem;
+            padding: 1rem 0;
+            border-top: 1px solid var(--border-subtle);
+            border-bottom: 1px solid var(--border-subtle);
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        .article-metadata .meta-left { display: flex; align-items: center; gap: 12px; }
+        .article-metadata .author-name { font-weight: 700; color: var(--text-main); }
+        .article-metadata .meta-right { color: var(--text-muted); }
+
+        /* --- Reader Avatars --- */
+        .reader-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 3rem;
+            padding: 0.8rem 1rem 0.8rem 1.5rem;
+            background: var(--card-bg);
+            backdrop-filter: var(--card-blur);
+            -webkit-backdrop-filter: var(--card-blur);
+            border-radius: 60px;
+            width: fit-content;
+            border: var(--glass-border-subtle);
+            box-shadow: var(--glass-shadow);
+            transition: all 0.3s ease;
+        }
+
+        .reader-avatars { display: flex; }
+        .mini-circle {
+            width: 32px; height: 32px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem; font-weight: 700; color: white;
+            margin-right: -8px; border: 2px solid var(--bg-color);
+            position: relative;
+            transition: transform 0.2s ease;
+        }
+        .mini-circle:hover { transform: scale(1.15); z-index: 1; }
+        .mini-circle.gold { background: var(--accent-color); }
+        .mini-circle.blue { background: #1a73e8; }
+        .mini-circle.green { background: #34a853; }
+        .mini-circle.purple { background: #9c27b0; }
+        .mini-circle.orange { background: #fbbc04; }
+
+        .reader-count { font-size: 0.9rem; color: var(--text-secondary); padding-left: 12px; font-weight: 500; }
+        .reader-count strong { color: var(--text-main); font-weight: 700; }
+
+        /* --- Glass Footer --- */
+        .glass-footer {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 720px;
+            
+            background: var(--card-bg);
+            backdrop-filter: var(--card-blur);
+            -webkit-backdrop-filter: var(--card-blur);
+            border: var(--glass-border);
+            border-radius: 24px;
+            padding: 0.8rem 1.5rem;
+            
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--glass-shadow);
+            z-index: 100;
+            gap: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .footer-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            gap: 12px;
+        }
+        
+        .link-pill {
+            display: inline-flex;
+            align-items: center;
+            background: var(--input-bg);
+            border: var(--glass-border-subtle);
+            border-radius: 40px;
+            padding: 0.35rem 1.1rem;
+            max-width: 180px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            flex-shrink: 1;
+            min-width: 0;
+            font-weight: 600;
+        }
+        .link-pill span { color: var(--text-muted); font-weight: 500; }
+        
+        @media (min-width: 600px) { .link-pill { max-width: 280px; } }
+
+        .glass-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .glass-icon-btn {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(4px);
+            border: var(--glass-border-subtle);
+            border-radius: 50%;
+            width: 38px; height: 38px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: var(--icon-color);
+            transition: all 0.2s ease;
+        }
+        .glass-icon-btn:hover {
+            background: var(--accent-color);
+            color: #fff;
+            border-color: var(--accent-color);
+            transform: scale(1.05);
+        }
+        .glass-icon-btn svg { width: 18px; height: 18px; fill: currentColor; }
+        .glass-icon-btn.liked { color: var(--accent-color); }
+        .glass-icon-btn.liked:hover { color: #fff; }
+
+        /* ========================================================== */
+        /* PREMIUM CENTRED REVIEW MODAL (Dynamic Shadows & Emojis Glow)*/
+        /* ========================================================== */
+        .review-overlay {
+            position: fixed;
+            top: 0; left: 0; 
+            width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            display: none; 
+            align-items: center; justify-content: center;
+            z-index: 1000; padding: 1.5rem;
+            opacity: 0; 
+            transition: opacity 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        [data-theme="dark"] .review-overlay {
+            background: rgba(0, 0, 0, 0.55);
+        }
+        .review-overlay.active { 
+            display: flex; 
+            opacity: 1; 
+        }
+
+        .review-modal {
+            background: var(--card-bg);
+            backdrop-filter: var(--card-blur);
+            -webkit-backdrop-filter: var(--card-blur);
+            border: var(--glass-border);
+            border-radius: 28px;
+            padding: 36px 24px 28px 24px;
+            max-width: 410px; 
+            width: 100%;
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.15);
+            position: relative;
+            transform: scale(0.9) translateY(15px);
+            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease;
+            text-align: center;
+        }
+        [data-theme="dark"] .review-modal {
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.55);
+        }
+        .review-overlay.active .review-modal { 
+            transform: scale(1) translateY(0); 
+        }
+
+        /* Incentive Bonus Pill */
+        .bonus-incentive-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(245, 152, 71, 0.1);
+            border: 1px solid rgba(245, 152, 71, 0.25);
+            border-radius: 30px;
+            padding: 6px 14px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin-bottom: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            animation: bounce-soft 3s infinite ease-in-out;
+        }
+
+        @keyframes bounce-soft {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
+        }
+
+        .modal-close {
+            position: absolute; top: 18px; right: 20px;
+            background: transparent; border: none; font-size: 1.4rem;
+            color: var(--text-muted); cursor: pointer; transition: color 0.2s, transform 0.2s;
+            display: flex; align-items: center; justify-content: center;
+            width: 32px; height: 32px; border-radius: 50%;
+        }
+        .modal-close:hover {
+            color: var(--text-main);
+            background: var(--input-bg);
+            transform: rotate(90deg);
+        }
+
+        .review-modal h3 { font-size: 1.4rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.4rem; letter-spacing: -0.5px; }
+        .review-modal .sub-text { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.5rem; font-weight: 500; }
+        .review-question { font-size: 1.1rem; color: var(--text-main); margin-bottom: 1.2rem; font-weight: 700; }
+        
+        /* Interactive Scales UI */
+        .rating-scale { 
+            display: flex; 
+            gap: 14px; 
+            margin-bottom: 0.8rem; 
+            justify-content: center; 
+        }
+        .rating-scale label {
+            cursor: pointer; 
+            font-size: 2.3rem; 
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s;
+            opacity: 0.55;
+            user-select: none;
+        }
+        .rating-scale input[type="radio"] { display: none; }
+        .rating-scale input[type="radio"]:checked + label {
+            transform: scale(1.35);
+            opacity: 1;
+        }
+        .rating-scale label:hover {
+            transform: scale(1.2);
+            opacity: 0.9;
+        }
+
+        .rating-description {
+            font-size: 0.85rem;
+            color: var(--accent-color);
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            min-height: 18px;
+            transition: color 0.2s;
+        }
+
+        /* Dynamic dialog colors depending on selected value */
+        .rating-glow-1 { box-shadow: 0 20px 40px rgba(255, 59, 48, 0.15) !important; }
+        .rating-glow-2 { box-shadow: 0 20px 40px rgba(255, 149, 0, 0.15) !important; }
+        .rating-glow-3 { box-shadow: 0 20px 40px rgba(142, 142, 147, 0.15) !important; }
+        .rating-glow-4 { box-shadow: 0 20px 40px rgba(52, 199, 89, 0.15) !important; }
+        .rating-glow-5 { box-shadow: 0 20px 40px var(--accent-glow) !important; }
+
+        /* Constructive Feedback Option Chips */
+        .feedback-options {
+            display: none; 
+            margin-top: 1rem; 
+            text-align: left;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .feedback-options.visible {
+            display: block;
+            max-height: 200px;
+        }
+
+        .feedback-options p { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.8rem; font-weight: 700; text-align: center; text-transform: uppercase; letter-spacing: 0.5px;}
+        
+        .feedback-grid { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 8px; 
+            justify-content: center; 
+        }
+        .feedback-chip {
+            background: var(--input-bg);
+            border: var(--glass-border-subtle);
+            color: var(--text-secondary);
+            padding: 8px 14px;
+            border-radius: 40px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+            user-select: none;
+        }
+        .feedback-chip:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-main);
+            transform: scale(1.02);
+        }
+        .feedback-chip.selected {
+            background: var(--accent-color);
+            color: #fff;
+            border-color: var(--accent-color);
+            box-shadow: 0 4px 10px var(--accent-glow);
+            transform: scale(0.98);
+        }
+        
+        .modal-actions {
+            display: flex; gap: 10px; margin-top: 2rem; justify-content: center;
+            width: 100%;
+        }
+        .btn-modal-secondary {
+            background: transparent; 
+            border: var(--glass-border-subtle); 
+            color: var(--text-secondary);
+            padding: 0.75rem 1.5rem; border-radius: 30px; font-weight: 600; cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+        }
+        .btn-modal-secondary:hover { background: var(--input-bg); color: var(--text-main); }
+        
+        .btn-modal-primary {
+            background: var(--accent-color); color: #fff; border: none;
+            padding: 0.75rem 1.5rem; border-radius: 30px; font-weight: 600; cursor: pointer;
+            transition: background 0.2s;
+            box-shadow: 0 4px 12px var(--accent-glow);
+            flex: 1;
+        }
+        .btn-modal-primary:hover { background: var(--accent-hover); }
+
+        /* --- Toast Notification --- */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--card-bg);
+            backdrop-filter: var(--card-blur);
+            -webkit-backdrop-filter: var(--card-blur);
+            border: var(--glass-border);
+            border-radius: 16px;
+            padding: 12px 24px;
+            color: var(--text-main);
+            font-size: 0.9rem;
+            box-shadow: var(--glass-shadow);
+            z-index: 2000;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none;
+            font-weight: 600;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        @media (max-width: 600px) {
+            .hero-title { font-size: 2rem; }
+            .featured-gradient-card { min-height: 200px; padding: 1.5rem; }
+            .catch-line-text { font-size: 1.25rem; }
+            .glass-footer { bottom: 10px; width: 95%; border-radius: 20px; padding: 0.6rem 1rem; }
+            .footer-content { gap: 8px; }
+            .link-pill { max-width: 110px; font-size: 0.75rem; padding: 0.2rem 0.8rem; }
+            .glass-icon-btn { width: 34px; height: 34px; }
+            .glass-icon-btn svg { width: 16px; height: 16px; }
+            .review-modal { padding: 24px 20px; margin: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Progress Bar -->
+    <div class="progress-bar" id="progressBar"></div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
+    <div class="full-screen-reader">
+        
+        <!-- Reader Header: Category Breadcrumb + Credits Indicator -->
+        <header class="reader-header">
+            <div class="category-breadcrumb">
+                Finance <span>›</span> <span class="current">Stock Exchange</span>
+            </div>
+            
+            <!-- Credits Display Pill (Connected to DB backend schema) -->
+            <div class="credits-badge" id="userCreditsBadge" title="Credit Balance">
+                <span class="lightning-icon">⚡</span>
+                <span class="credits-val" id="creditsValueDisplay">38.5</span>
+                <span class="credits-label">credits</span>
+            </div>
+        </header>
+
+        <!-- Hero Title Section -->
+        <header class="hero-section">
+            <h1 class="hero-title">The Art of the <span class="accent">Exchange</span></h1>
+
+            <!-- Horizontal Scrolling Profile Pills with SVG Icons -->
+            <div class="profile-pills-wrapper">
+                <div class="profile-pills-scroll" id="profilePills">
+                    <button class="profile-pill active" data-profile="everyday" onclick="switchProfile('everyday', this)">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                        Everyday Life
+                    </button>
+                    <button class="profile-pill" data-profile="football" onclick="switchProfile('football', this)">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                        Football
+                    </button>
+                    <button class="profile-pill" data-profile="gaming" onclick="switchProfile('gaming', this)">
+                        <svg viewBox="0 0 24 24"><path d="M21.58 16.09l-1.09-7.66C20.21 6.46 18.52 5 16.53 5H7.47C5.48 5 3.79 6.46 3.51 8.43l-1.09 7.66C2.2 17.63 3.39 19 4.94 19h14.12c1.55 0 2.74-1.37 2.52-2.91zM7 10c.83 0 1.5.67 1.5 1.5S7.83 13 7 13s-1.5-.67-1.5-1.5S6.17 10 7 10zm10 0c.83 0 1.5.67 1.5 1.5S17.83 13 17 13s-1.5-.67-1.5-1.5S16.17 10 17 10z"/></svg>
+                        Gaming
+                    </button>
+                    <button class="profile-pill" data-profile="movies" onclick="switchProfile('movies', this)">
+                        <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z"/></svg>
+                        Movies
+                    </button>
+                    <button class="profile-pill" data-profile="cooking" onclick="switchProfile('cooking', this)">
+                        <svg viewBox="0 0 24 24"><path d="M18.06 22.99h1.66c.84 0 1.53-.64 1.63-1.46L23 5.05h-5V1h-2v4.05h-4.97l.27 16.48c.1.82.79 1.46 1.63 1.46h1.66zM10 12.04h8V14h-8v-1.96z"/></svg>
+                        Cooking
+                    </button>
+                    <button class="profile-pill" data-profile="tech" onclick="switchProfile('tech', this)">
+                        <svg viewBox="0 0 24 24"><path d="M20 18c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/></svg>
+                        Tech
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Premium Animated Gradient Canvas (Instead of Static Image) -->
+        <div class="featured-gradient-card" id="gradientCard">
+            <div class="gradient-card-overlay"></div>
+            <div class="catch-line-text" id="catchLineText">“Every tick tells a story of risk, resilience, and patience.”</div>
+        </div>
+
+        <!-- Article Content with Shimmer -->
+        <article class="article-body" id="articleContent">
+            <div class="content-shimmer" id="contentShimmer">
+                <div class="shimmer-line"></div>
+                <div class="shimmer-line"></div>
+                <div class="shimmer-line"></div>
+                <div class="shimmer-line"></div>
+                <div class="shimmer-line"></div>
+                <div class="shimmer-line"></div>
+            </div>
+            <div id="articleText" style="display: none;">
+                <p class="dropcap">
+                    Markets are not just numbers; they are the collective heartbeat of global ambition. Every tick on the stock exchange tells a story of risk, resilience, and the relentless pursuit of value. 
+                </p>
+
+                <p>
+                    Today, the <span class="highlight-text">S&P 500</span> reflects a cautious optimism, while the tech-heavy sectors paint a picture of volatility. But to the seasoned eye, the real movement happens beneath the surface — in the <strong>bid-ask spreads</strong>, the volume spikes, and the whispers of institutional shifts.
+                </p>
+
+                <h2 class="subheading">The <span class="highlight-text">Psychology</span> of the Floor</h2>
+                
+                <p>
+                    Understanding the exchange requires more than algorithms; it demands <span class="highlight-text">emotional intelligence</span>. Fear drives sell-offs. Greed fuels bull runs. The smartest capital isn't always the fastest — it's the <strong>most patient</strong>.
+                </p>
+
+                <p>
+                    As we navigate the <span class="highlight-text">bear</span> and <span class="highlight-text">bull</span> cycles of 2026, one truth remains: the market is a mirror of human nature. To profit, you must first understand the crowd.
+                </p>
+            </div>
+        </article>
+
+        <!-- Summary Section -->
+        <div class="summary-wrapper">
+            <div class="summary-content">
+                <h4>Summary</h4>
+                <p>Market movements reflect human psychology. Patience and emotional intelligence outweigh speed in navigating the 2026 bull and bear cycles. True success lies in understanding the crowd, not just the charts.</p>
+            </div>
+        </div>
+
+        <!-- Article Metadata -->
+        <div class="article-metadata">
+            <div class="meta-left">
+                <span class="author-name">By Capital Pulse</span>
+                <span>·</span>
+                <span>August 14, 2026</span>
+            </div>
+            <div class="meta-right">
+                5 min read
+            </div>
+        </div>
+
+        <!-- Reader Avatars -->
+        <div class="reader-section">
+            <div class="reader-avatars">
+                <div class="mini-circle gold">JR</div>
+                <div class="mini-circle blue">AK</div>
+                <div class="mini-circle green">MS</div>
+                <div class="mini-circle purple">TW</div>
+                <div class="mini-circle orange">PL</div>
+            </div>
+            <div class="reader-count">
+                <strong>1.4k</strong> readers this hour
+            </div>
+        </div>
+
+        <!-- Glass Footer -->
+        <div class="glass-footer">
+            <div class="footer-content">
+                <div class="link-pill">
+                    <span>🔗 capitalpulse.com/</span>art...
+                </div>
+                
+                <div class="glass-actions">
+                    <button class="glass-icon-btn" id="copyLinkBtn" onclick="copyLink()" title="Copy link">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    
+                    <button class="glass-icon-btn" onclick="shareLink()" title="Share link">
+                        <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
+                    </button>
+
+                    <button class="glass-icon-btn liked" id="bookmarkBtn" onclick="toggleBookmark()" title="Like">
+                        <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Redesigned Centered Review Modal with dynamic emotional feedback -->
+    <div class="review-overlay" id="reviewModal">
+        <div class="review-modal" id="reviewModalBody">
+            <button class="modal-close" onclick="closeReview()">✕</button>
+            
+            <!-- Dynamic Bonus Incentive Badge -->
+            <div class="bonus-incentive-pill">
+                <span>⚡</span> Get +0.2 Credit Reward
+            </div>
+            
+            <h3>Share feedback</h3>
+            <p class="sub-text">Your ratings help fine-tune our personalized AI translations.</p>
+            
+            <div class="review-question">Was this explanation easy to understand?</div>
+            
+            <!-- Highly Expressive Scales UI -->
+            <div class="rating-scale" id="ratingGroup">
+                <input type="radio" id="mRate1" name="rating" value="1" onclick="updateRatingFeedback(1)">
+                <label for="mRate1" title="Confusing">😣</label>
+                
+                <input type="radio" id="mRate2" name="rating" value="2" onclick="updateRatingFeedback(2)">
+                <label for="mRate2" title="Unclear">😕</label>
+                
+                <input type="radio" id="mRate3" name="rating" value="3" onclick="updateRatingFeedback(3)">
+                <label for="mRate3" title="Standard">😐</label>
+                
+                <input type="radio" id="mRate4" name="rating" value="4" onclick="updateRatingFeedback(4)">
+                <label for="mRate4" title="Clear">🙂</label>
+                
+                <input type="radio" id="mRate5" name="rating" value="5" onclick="updateRatingFeedback(5)">
+                <label for="mRate5" title="Amazing">🤯</label>
+            </div>
+            
+            <div class="rating-description" id="ratingDesc">Tap your reaction above</div>
+
+            <!-- Sleek Feedback Chip Grid (Collapses smoothly) -->
+            <div class="feedback-options" id="feedbackOptions">
+                <p>What could be better?</p>
+                <div class="feedback-grid" id="feedbackGrid">
+                    <div class="feedback-chip" onclick="this.classList.toggle('selected')">Too complicated</div>
+                    <div class="feedback-chip" onclick="this.classList.toggle('selected')">Too long</div>
+                    <div class="feedback-chip" onclick="this.classList.toggle('selected')">Needs examples</div>
+                    <div class="feedback-chip" onclick="this.classList.toggle('selected')">Incorrect analogies</div>
+                    <div class="feedback-chip" onclick="this.classList.toggle('selected')">Formatting issues</div>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn-modal-secondary" onclick="closeReview()">Not now</button>
+                <button class="btn-modal-primary" onclick="submitReview()">Submit Feedback</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. State Configuration ---
+        let currentThemeSetting = 'auto';
+        let currentCredits = parseFloat(localStorage.getItem('easyread-credits')) || 38.5;
+
+        // Sync header on launch
+        document.getElementById('creditsValueDisplay').textContent = currentCredits.toFixed(1);
+
+        function applyTheme(theme) {
+            currentThemeSetting = theme;
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else if (theme === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+        }
+
+        // Apply theme instantly on load
+        applyTheme(localStorage.getItem('easyread-theme') || 'auto');
+
+        // Watch storage events from sibling frames
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'easyread-theme') {
+                applyTheme(event.newValue || 'auto');
+            }
+        });
+
+        // Watch message broadcasts from parent frame
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'themeChanged') {
+                applyTheme(event.data.theme);
+            }
+        });
+
+        // Continuous sync verification loop
+        setInterval(() => {
+            const storedTheme = localStorage.getItem('easyread-theme') || 'auto';
+            if (storedTheme !== currentThemeSetting) {
+                applyTheme(storedTheme);
+            }
+        }, 600);
+
+        // --- 2. Toast Notification ---
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            clearTimeout(toast._timeout);
+            toast._timeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        // --- 3. Progress Bar Logic ---
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+            document.getElementById('progressBar').style.width = progress + '%';
+        });
+
+        // --- 4. Content Loading with Shimmer ---
+        function loadContent() {
+            const shimmer = document.getElementById('contentShimmer');
+            const text = document.getElementById('articleText');
+            
+            setTimeout(() => {
+                if (shimmer) shimmer.style.display = 'none';
+                if (text) {
+                    text.style.display = 'block';
+                    const paragraphs = text.querySelectorAll('p');
+                    paragraphs.forEach((p, index) => {
+                        p.style.opacity = '0';
+                        p.style.animation = `fadeInContent 0.6s ease forwards`;
+                        p.style.animationDelay = `${(index + 1) * 0.1}s`;
+                    });
+                    const headings = text.querySelectorAll('.subheading');
+                    headings.forEach((h, index) => {
+                        h.style.opacity = '0';
+                        h.style.animation = `fadeInContent 0.6s ease forwards`;
+                        h.style.animationDelay = `${(paragraphs.length + index + 1) * 0.1}s`;
+                    });
+                }
+            }, 1200);
+        }
+
+        // --- 5. Clever Review Modal Logic ---
+        const modal = document.getElementById('reviewModal');
+        const modalBody = document.getElementById('reviewModalBody');
+        let modalTriggered = false;
+
+        window.addEventListener('scroll', () => {
+            const scrollY = window.scrollY;
+            const windowHeight = window.innerHeight;
+            const docHeight = document.documentElement.scrollHeight;
+
+            if (scrollY + windowHeight >= docHeight - 120 && !modalTriggered) {
+                modalTriggered = true;
+                setTimeout(() => {
+                    openReview();
+                }, 600);
+            }
+            
+            if (scrollY + windowHeight < docHeight - 450) {
+                modalTriggered = false; // allow re-trigger if they scroll back up
+            }
+        });
+
+        function openReview() {
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeReview() {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+            
+            // Reset modal classes
+            modalBody.className = "review-modal";
+        }
+
+        // Dismiss modal on background clicks
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeReview();
+            }
+        });
+
+        // Live Descriptive updates & interactive glow triggers
+        function updateRatingFeedback(rating) {
+            const ratingDesc = document.getElementById('ratingDesc');
+            const feedbackOptions = document.getElementById('feedbackOptions');
+            
+            const ratingTextMap = {
+                1: "Extremely confusing or complicated. 😣",
+                2: "Slightly difficult to follow. 😕",
+                3: "Average, standard explanation. 😐",
+                4: "Clear and very easy to follow! 🙂",
+                5: "Incredible explanation! Mind blown. 🤯"
+            };
+
+            ratingDesc.textContent = ratingTextMap[rating] || "Select how clear this text was";
+            
+            // Morph glow color matching user response
+            modalBody.className = `review-modal rating-glow-${rating}`;
+
+            // Show constructive feedback chips only for score <= 3
+            if (rating <= 3) {
+                feedbackOptions.classList.add('visible');
+            } else {
+                feedbackOptions.classList.remove('visible');
+            }
+        }
+
+        function submitReview() {
+            const selectedRating = document.querySelector('input[name="rating"]:checked');
+            if (!selectedRating) {
+                showToast('Please select a rating first ⭐');
+                return;
+            }
+            
+            // Add rating bonus with visual response
+            currentCredits += 0.2;
+            localStorage.setItem('easyread-credits', currentCredits.toString());
+            
+            const creditDisplay = document.getElementById('creditsValueDisplay');
+            const creditBadge = document.getElementById('userCreditsBadge');
+            
+            creditDisplay.textContent = currentCredits.toFixed(1);
+            creditBadge.classList.add('flash-success');
+            
+            setTimeout(() => {
+                creditBadge.classList.remove('flash-success');
+            }, 1100);
+
+            showToast('Review submitted! +0.2 Credits Awarded ⚡');
+            closeReview();
+        }
+
+        // --- 6. Profile Switcher Logic with Dynamic Catch Line Updates ---
+        const catchLines = {
+            everyday: "“Every tick tells a story of risk, resilience, and patience.”",
+            football: "“When panic sets in, even the best tactical players can get sold off.”",
+            gaming: "“Winning isn't about reflexes—it's about mastering game fundamentals.”",
+            movies: "“Plot twists, dramatic cliffhangers, and heroes: every day is a storyboard.”",
+            cooking: "“Balancing flavors and heat is exactly like managing portfolio risk.”",
+            tech: "“Algorithms rule the exchange, but emotional intelligence still wins the floor.”"
+        };
+
+        function switchProfile(profileId, element) {
+            const pills = document.querySelectorAll('.profile-pill');
+            pills.forEach(p => p.classList.remove('active'));
+            element.classList.add('active');
+
+            const text = document.getElementById('articleText');
+            const shimmer = document.getElementById('contentShimmer');
+            const catchLineText = document.getElementById('catchLineText');
+
+            if (text) text.style.display = 'none';
+            if (shimmer) shimmer.style.display = 'block';
+            
+            // Transition and swap the catch line dynamically
+            if (catchLineText) {
+                catchLineText.style.opacity = '0';
+                catchLineText.style.transform = 'translateY(10px)';
+            }
+            
+            setTimeout(() => {
+                const contentArea = document.getElementById('articleContent');
+                
+                if (catchLineText) {
+                    catchLineText.textContent = catchLines[profileId] || catchLines.everyday;
+                    catchLineText.style.opacity = '1';
+                    catchLineText.style.transform = 'translateY(0)';
+                }
+
+                if (profileId === 'football') {
+                    contentArea.innerHTML = `
+                        <div class="content-shimmer" id="contentShimmer" style="display: none;"></div>
+                        <div id="articleText">
+                            <p class="dropcap">
+                                Think of the stock market like a massive football league. Each company is a team, and the S&P 500 is the league table. 
+                                When a team wins (makes profit), their fans (investors) buy more merchandise (stocks), pushing them higher up the table.
+                            </p>
+                            <p>
+                                The "Psychology of the Floor" is exactly like a derby match. When the home team scores (good news), the crowd (market) goes wild. 
+                                But when the opposing team scores (bad news), panic sets in, and even the best players (stocks) can get sold off.
+                            </p>
+                            <h2 class="subheading">The <span class="highlight-text">Tactics</span> on the Pitch</h2>
+                            <p>
+                                Understanding the market is like understanding tactical game management. You need to know when to defend (hold) 
+                                and when to push for an attack (buy). The smartest players are the ones who keep their heads cool while the crowd screams.
+                            </p>
+                        </div>
+                    `;
+                } else if (profileId === 'gaming') {
+                    contentArea.innerHTML = `
+                        <div class="content-shimmer" id="contentShimmer" style="display: none;"></div>
+                        <div id="articleText">
+                            <p class="dropcap">
+                                The stock market is the ultimate strategy game. Every trade is a dynamic move, every position is an item, and the objective is to scale your portfolio stats while watching your risk meter.
+                            </p>
+                            <p>
+                                Think of <span class="highlight-text">bull markets</span> as special damage multipliers and <span class="highlight-text">bear markets</span> as demanding boss fights. 
+                                The path to a high score isn't fast button-mashing, but learning game mechanics (fundamental structures).
+                            </p>
+                            <h2 class="subheading">Managing Your <span class="highlight-text">Health Bar</span></h2>
+                            <p>
+                                Just like in gaming, the market has recurring patterns. Recognizing indicators is like learning enemy animation frames. 
+                                Keep your health bar safe: never over-commit on a single quest, and always keep a spare save file.
+                            </p>
+                        </div>
+                    `;
+                } else if (profileId === 'movies') {
+                    contentArea.innerHTML = `
+                        <div class="content-shimmer" id="contentShimmer" style="display: none;"></div>
+                        <div id="articleText">
+                            <p class="dropcap">
+                                Every trading day on the exchange is a three-act cinematic blockbuster. There are heroes (bulls), antagonists (bears), sudden plot twists (volatility), and major cliffhangers (earnings calls).
+                            </p>
+                            <p>
+                                The S&P 500 is our lead character, but there are multiple cinematic sub-franchises: the tech division thriller, emerging tech dramas, and commodity documentaries. Each tells a cohesive story.
+                            </p>
+                            <h2 class="subheading">Storyboarding the <span class="highlight-text">Trendlines</span></h2>
+                            <p>
+                                Reading technical charts is like analyzing storyboards. Green frames (scenes of triumph), red frames (conflict), and trading volume (audience reaction) map human desire in real time.
+                            </p>
+                        </div>
+                    `;
+                } else if (profileId === 'cooking') {
+                    contentArea.innerHTML = `
+                        <div class="content-shimmer" id="contentShimmer" style="display: none;"></div>
+                        <div id="articleText">
+                            <p class="dropcap">
+                                Balancing flavours and managing heat is exactly like managing portfolio risk. Every ingredient you toss into the pan represents a position, and the fire is the current market volatility.
+                            </p>
+                            <p>
+                                A seasoned chef knows not to rush the process. If you turn the flame up too high (over-leverage), you will burn the dish (blow your account). Success in the kitchen, like on the trading floor, demands patience, timing, and structural balance.
+                            </p>
+                        </div>
+                    `;
+                } else if (profileId === 'tech') {
+                    contentArea.innerHTML = `
+                        <div class="content-shimmer" id="contentShimmer" style="display: none;"></div>
+                        <div id="articleText">
+                            <p class="dropcap">
+                                Algorithms and microprocessors rule the exchange today, executing millions of calculations in a fraction of a millisecond. Yet, behind the servers and logic units, human psychology remains the true driver of long-term price action.
+                            </p>
+                            <p>
+                                High-frequency trading and automated systems operate on structural inputs, but the macro-cycles are defined by collective emotion. To excel in the digital-era exchange, you must understand both the code and the crowd.
+                            </p>
+                        </div>
+                    `;
+                } else {
+                    // Default / Everyday Life
+                    contentArea.innerHTML = `
+                        <div class="content-shimmer" id="contentShimmer" style="display: none;"></div>
+                        <div id="articleText">
+                            <p class="dropcap">
+                                Markets are not just numbers; they are the collective heartbeat of global ambition. Every tick on the stock exchange tells a story of risk, resilience, and the relentless pursuit of value. 
+                            </p>
+                            <p>
+                                Today, the <span class="highlight-text">S&P 500</span> reflects a cautious optimism, while the tech-heavy sectors paint a picture of volatility. But to the seasoned eye, the real movement happens beneath the surface — in the <strong>bid-ask spreads</strong>, the volume spikes, and the whispers of institutional shifts.
+                            </p>
+                            <h2 class="subheading">The <span class="highlight-text">Psychology</span> of the Floor</h2>
+                            <p>
+                                Understanding the exchange requires more than algorithms; it demands <span class="highlight-text">emotional intelligence</span>. Fear drives sell-offs. Greed fuels bull runs. The smartest capital isn't always the fastest — it's the <strong>most patient</strong>.
+                            </p>
+                        </div>
+                    `;
+                }
+                
+                // Re-trigger visual fade-in transitions for updated contents
+                const newText = contentArea.querySelector('#articleText');
+                if (newText) {
+                    const paragraphs = newText.querySelectorAll('p');
+                    paragraphs.forEach((p, index) => {
+                        p.style.opacity = '0';
+                        p.style.animation = `fadeInContent 0.6s ease forwards`;
+                        p.style.animationDelay = `${(index + 1) * 0.1}s`;
+                    });
+                    const headings = newText.querySelectorAll('.subheading');
+                    headings.forEach((h, index) => {
+                        h.style.opacity = '0';
+                        h.style.animation = `fadeInContent 0.6s ease forwards`;
+                        h.style.animationDelay = `${(paragraphs.length + index + 1) * 0.1}s`;
+                    });
+                }
+            }, 800);
+        }
+
+        // --- 7. Helper Sharing & Bookmark Functions ---
+        function copyLink() {
+            const dummy = document.createElement('input');
+            document.body.appendChild(dummy);
+            dummy.value = 'https://capitalpulse.com/art-of-the-exchange-2026';
+            dummy.select();
+            document.execCommand('copy');
+            document.body.removeChild(dummy);
+            
+            const btn = document.getElementById('copyLinkBtn');
+            btn.style.color = '#28a745';
+            setTimeout(() => btn.style.color = '', 2000);
+            showToast('Link copied to clipboard! 📋');
+        }
+
+        function shareLink() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'The Art of the Exchange',
+                    text: 'Check out this deep dive into market psychology!',
+                    url: 'https://capitalpulse.com/art-of-the-exchange-2026'
+                }).catch(() => {});
+            } else {
+                navigator.clipboard.writeText('https://capitalpulse.com/art-of-the-exchange-2026').then(() => {
+                    showToast('Link copied to clipboard! 📋');
+                });
+            }
+        }
+
+        function toggleBookmark() {
+            const btn = document.getElementById('bookmarkBtn');
+            const active = btn.classList.toggle('liked');
+            showToast(active ? 'Article saved to Bookmarks! 🔖' : 'Bookmark removed.');
+        }
+
+        document.addEventListener('DOMContentLoaded', loadContent);
+    </script>
+</body>
+</html>

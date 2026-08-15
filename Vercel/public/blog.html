@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>EasyRead | Blog Feed</title>
+    
+    <!-- Fonts: Grotesque Sans (Plus Jakarta Sans) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* ========================================= */
+        /* UNIFIED THEME SYSTEM (LIGHT & DARK)       */
+        /* ========================================= */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        *:focus-visible { outline: 2px solid #f59847; outline-offset: 2px; }
+        
+        :root {
+            /* DEFAULT LIGHT THEME (Clean Neutral Slate) */
+            --bg-color: #f6f7f9;
+            --bg-glow: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.9) 0%, transparent 70%);
+            --text-main: #1c1c1e;
+            --text-muted: #5c5c60;
+            --text-placeholder: #c7c7cc;
+            
+            --card-bg: rgba(242, 242, 247, 0.75);
+            --card-bg-hover: rgba(230, 230, 235, 0.88);
+            --card-blur: blur(20px);
+            --glass-border: 1.5px solid rgba(0, 0, 0, 0.12);
+            --glass-border-subtle: 1px solid rgba(0, 0, 0, 0.08);
+            --glass-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            
+            --mode-bg: rgba(0, 0, 0, 0.04);
+            --mode-text: #5f5f5f;
+            --accent-color: #f59847;
+            --pill-arrow: rgba(0, 0, 0, 0.06);
+            --divider: rgba(0,0,0,0.08);
+            --list-text: #1c1c1e;
+            
+            --hero-img: url('https://images.unsplash.com/photo-1611974739785-0e4f3d2f4c8d?q=80&w=800&auto=format&fit=crop');
+            --hero-gradient-overlay: linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.45) 40%, rgba(0,0,0,0.85) 100%);
+        }
+
+        /* DARK THEME (AUTO SYSTEM OR DATA-THEME OVERRIDE) */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #000000;
+                --bg-glow: radial-gradient(circle at 50% 0%, rgba(40, 40, 42, 0.4) 0%, transparent 60%);
+                --text-main: #e8e8ea;
+                --text-muted: #9a9a9e;
+                --text-placeholder: #6c6c70;
+                
+                --card-bg: rgba(18, 18, 18, 0.65);
+                --card-bg-hover: rgba(28, 28, 28, 0.8);
+                --card-blur: blur(16px);
+                --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+                --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.04);
+                --glass-shadow: 0 8px 32px rgba(0,0,0,0.6);
+                
+                --mode-bg: rgba(44, 44, 46, 0.5);
+                --mode-text: #a0a0a4;
+                --accent-color: #f59847;
+                --pill-arrow: #3a3a3c;
+                --divider: rgba(255,255,255,0.06);
+                --list-text: #c0c0c4;
+                
+                --hero-img: url('https://images.unsplash.com/photo-1611974739785-0e4f3d2f4c8d?q=80&w=800&auto=format&fit=crop');
+                --hero-gradient-overlay: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.55) 35%, rgba(0,0,0,0.92) 100%);
+            }
+        }
+        
+        /* MANUAL OVERRIDE VIA [data-theme] ATTRIBUTE */
+        [data-theme="light"] {
+            --bg-color: #f6f7f9 !important;
+            --bg-glow: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.9) 0%, transparent 70%) !important;
+            --text-main: #1c1c1e !important;
+            --text-muted: #5c5c60 !important;
+            --text-placeholder: #c7c7cc !important;
+            --card-bg: rgba(242, 242, 247, 0.75) !important;
+            --card-bg-hover: rgba(230, 230, 235, 0.88) !important;
+            --glass-border: 1.5px solid rgba(0, 0, 0, 0.12) !important;
+            --glass-border-subtle: 1px solid rgba(0, 0, 0, 0.08) !important;
+            --glass-shadow: 0 10px 30px rgba(0,0,0,0.05) !important;
+            --mode-bg: rgba(0, 0, 0, 0.04) !important;
+            --mode-text: #5f5f5f !important;
+            --pill-arrow: rgba(0, 0, 0, 0.06) !important;
+            --divider: rgba(0,0,0,0.08) !important;
+            --list-text: #1c1c1e !important;
+        }
+        
+        [data-theme="dark"] {
+            --bg-color: #000000 !important;
+            --bg-glow: radial-gradient(circle at 50% 0%, rgba(40, 40, 42, 0.4) 0%, transparent 60%) !important;
+            --text-main: #e8e8ea !important;
+            --text-muted: #9a9a9e !important;
+            --text-placeholder: #6c6c70 !important;
+            --card-bg: rgba(18, 18, 18, 0.65) !important;
+            --glass-border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.04) !important;
+            --glass-shadow: 0 8px 32px rgba(0,0,0,0.6) !important;
+            --mode-bg: rgba(44, 44, 46, 0.5) !important;
+            --mode-text: #a0a0a4 !important;
+            --pill-arrow: #3a3a3c !important;
+            --divider: rgba(255,255,255,0.06) !important;
+            --list-text: #c0c0c4 !important;
+        }
+
+        /* ========================================= */
+        /* RESET & BASE STYLES                      */
+        /* ========================================= */
+        body {
+            background-color: var(--bg-color);
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E"),
+                          var(--bg-glow);
+            background-repeat: no-repeat, no-repeat;
+            background-size: auto, 100% 100%;
+            background-position: center, center;
+            
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0 0 4rem 0;
+            color: var(--text-main);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .app-container {
+            max-width: 480px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* --- Header --- */
+        .header {
+            width: 100%;
+            padding: 1.2rem 1.5rem 0.5rem 1.5rem;
+            background: var(--bg-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -1.5px;
+        }
+        .header-title .accent { color: var(--accent-color); }
+
+        .header-actions { display: flex; gap: 12px; align-items: center; }
+        .header-icon {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            background: var(--mode-bg);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .header-icon:active { transform: scale(0.92); }
+        .header-icon:hover { background: var(--pill-arrow); }
+        .header-icon svg { width: 18px; height: 18px; fill: var(--text-muted); }
+
+        /* --- Content Area --- */
+        .content-area {
+            width: 100%;
+            padding: 0 1.5rem 1.5rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* --- Search Bar --- */
+        .search-container { width: 100%; }
+        .search-bar {
+            display: flex; align-items: center;
+            background: var(--card-bg);
+            backdrop-filter: var(--card-blur);
+            -webkit-backdrop-filter: var(--card-blur);
+            border: var(--glass-border);
+            border-radius: 40px;
+            padding: 0.65rem 1.25rem;
+            box-shadow: var(--glass-shadow);
+            transition: all 0.2s ease;
+        }
+        .search-bar:focus-within {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 4px rgba(245, 152, 71, 0.15);
+        }
+        .search-bar:active { transform: scale(0.98); }
+        .search-bar svg { width: 18px; height: 18px; fill: var(--text-placeholder); margin-right: 12px; flex-shrink: 0; }
+        .search-bar input {
+            width: 100%; background: transparent; border: none; outline: none;
+            font-family: inherit; font-size: 0.95rem; font-weight: 500; color: var(--text-main);
+        }
+        .search-bar input::placeholder { color: var(--text-placeholder); }
+
+        /* --- Refined Overlay Hero Card --- */
+        .hero-card {
+            width: 100%;
+            height: 345px;
+            position: relative;
+            border-radius: 24px;
+            overflow: hidden;
+            border: var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: flex-end;
+        }
+        .hero-card:active { transform: scale(0.98); }
+
+        .hero-card .bg-img {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: var(--hero-img); background-size: cover; background-position: center; 
+            z-index: 1;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .hero-card:hover .bg-img {
+            transform: scale(1.03);
+        }
+        .hero-card .overlay-gradient {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--hero-gradient-overlay); z-index: 2;
+        }
+        .hero-text-content {
+            position: relative; width: 100%; padding: 1.8rem 1.5rem; z-index: 3;
+            color: #ffffff; display: flex; flex-direction: column; gap: 0.5rem;
+        }
+        .hero-meta-row { display: flex; align-items: center; gap: 10px; margin-bottom: 0.2rem; }
+        .hero-tag {
+            background: rgba(255,255,255,0.2); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            padding: 0.25rem 0.8rem; border-radius: 40px; font-size: 0.7rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.8px; border: 1px solid rgba(255,255,255,0.15);
+        }
+        .hero-icon {
+            width: 32px; height: 32px; background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 10px;
+            display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.15);
+        }
+        .hero-icon svg { width: 16px; height: 16px; fill: #fff; }
+        
+        .hero-text-content h2 { 
+            font-size: 1.55rem; font-weight: 800; line-height: 1.25; 
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5); letter-spacing: -0.5px; 
+        }
+        .hero-lead { 
+            font-size: 0.95rem; font-weight: 600; color: var(--accent-color); 
+            text-shadow: 0 1px 4px rgba(0,0,0,0.4); 
+        }
+        .hero-description { 
+            font-size: 0.85rem; line-height: 1.5; opacity: 0.85; font-weight: 400; 
+            text-shadow: 0 1px 4px rgba(0,0,0,0.4); margin-top: 0.2rem;
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+        }
+
+        /* --- Category Pills --- */
+        .categories-scroll {
+            width: 100%; display: flex; gap: 8px; overflow-x: auto;
+            padding-bottom: 6px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+        }
+        .categories-scroll::-webkit-scrollbar { display: none; }
+        
+        .category-pill {
+            flex: 0 0 auto; scroll-snap-align: start;
+            background: var(--card-bg); backdrop-filter: var(--card-blur); -webkit-backdrop-filter: var(--card-blur);
+            color: var(--text-muted); padding: 0.55rem 1.25rem; border-radius: 40px;
+            font-size: 0.85rem; font-weight: 600; border: var(--glass-border-subtle);
+            cursor: pointer; transition: all 0.2s ease;
+        }
+        .category-pill:active { transform: scale(0.95); }
+        .category-pill.active { background: var(--accent-color) !important; color: #fff !important; border-color: var(--accent-color) !important; }
+        .category-pill:hover { transform: translateY(-1px); background: var(--card-bg-hover); color: var(--text-main); }
+
+        /* --- Article List --- */
+        .article-list {
+            display: flex; flex-direction: column; gap: 0.8rem; padding-top: 0.5rem;
+        }
+        .article-item {
+            background: transparent; border: none; box-shadow: none;
+            padding: 0.5rem 0; display: flex; align-items: center; gap: 16px;
+            cursor: pointer; transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+            animation: fadeSlideUp 0.4s ease forwards;
+            opacity: 0;
+        }
+        .article-item:nth-child(1) { animation-delay: 0.05s; }
+        .article-item:nth-child(2) { animation-delay: 0.1s; }
+        .article-item:nth-child(3) { animation-delay: 0.15s; }
+        .article-item:nth-child(4) { animation-delay: 0.2s; }
+
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .article-item:active { transform: scale(0.97); }
+        .article-item:hover { transform: translateX(4px); opacity: 0.85; }
+
+        .article-icon {
+            width: 48px; height: 48px; border-radius: 14px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center; color: #fff;
+            transition: transform 0.2s;
+        }
+        .article-item:active .article-icon { transform: scale(0.9); }
+        .article-icon svg { width: 22px; height: 22px; fill: currentColor; }
+
+        .article-content { flex: 1; min-width: 0; }
+        .article-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-main); }
+        .article-subtitle { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
+        .article-meta { font-size: 0.75rem; color: var(--text-placeholder); margin-top: 0.2rem; display: flex; align-items: center; gap: 6px; font-weight: 500; }
+        .article-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--text-placeholder); }
+        .article-action {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: var(--pill-arrow); display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; transition: all 0.2s;
+        }
+        .article-item:hover .article-action { background: var(--mode-bg); transform: scale(1.05); }
+        .article-action svg { width: 14px; height: 14px; fill: var(--text-placeholder); }
+
+        /* --- Skeleton Loader --- */
+        .skeleton-container {
+            display: flex; flex-direction: column; gap: 0.8rem; padding-top: 0.5rem;
+        }
+        .skeleton-item {
+            display: flex; align-items: center; gap: 16px; padding: 0.5rem 0;
+        }
+        .skeleton-icon { width: 48px; height: 48px; border-radius: 14px; background: var(--mode-bg); }
+        .skeleton-lines { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+        .skeleton-line { height: 12px; border-radius: 8px; background: var(--mode-bg); width: 100%; animation: shimmerLoader 1.5s infinite; }
+        .skeleton-line.short { width: 60%; }
+        @keyframes shimmerLoader {
+            0% { opacity: 0.6; }
+            50% { opacity: 0.3; }
+            100% { opacity: 0.6; }
+        }
+        .skeleton-action { width: 32px; height: 32px; border-radius: 50%; background: var(--mode-bg); }
+
+        /* --- Responsive --- */
+        @media (max-width: 420px) {
+            .header { padding: 1rem 1rem 0.5rem 1rem; }
+            .content-area { padding: 0 1rem 1rem 1rem; }
+            .search-bar { padding: 0.5rem 1rem; }
+            .search-bar input { font-size: 0.9rem; }
+            .hero-card { height: 320px; }
+            .hero-text-content { padding: 1.2rem 1rem; }
+            .hero-text-content h2 { font-size: 1.35rem; }
+            .hero-description { font-size: 0.8rem; -webkit-line-clamp: 2; }
+            .article-icon { width: 40px; height: 40px; }
+            .article-icon svg { width: 18px; height: 18px; }
+            .article-item { padding: 0.3rem 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- Static Header -->
+        <header class="header">
+            <div class="header-title">EASY<span class="accent">READ</span></div>
+            <div class="header-actions">
+                <div class="header-icon">
+                    <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                </div>
+                <div class="header-icon">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+                </div>
+            </div>
+        </header>
+
+        <main class="content-area">
+            
+            <!-- Glass Search Bar -->
+            <div class="search-container">
+                <div class="search-bar">
+                    <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                    <input type="text" placeholder="Search articles..." />
+                </div>
+            </div>
+
+            <!-- 1. Refined Premium Overlay Hero Card -->
+            <div class="hero-card">
+                <div class="bg-img"></div>
+                <div class="overlay-gradient"></div>
+                <div class="hero-text-content">
+                    <div class="hero-meta-row">
+                        <span class="hero-tag">Featured</span>
+                        <div class="hero-icon">
+                            <svg viewBox="0 0 24 24"><path d="M12 2l-5 5v10l5 5 5-5V7l-5-5zm0 4.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5-1.5-.67-1.5-1.5.67-1.5 1.5-1.5zm0 11c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                        </div>
+                    </div>
+                    <h2>Market Psychology</h2>
+                    <p class="hero-lead">Understanding the crowd, not just the charts.</p>
+                    <p class="hero-description">Markets are not just numbers; they are the collective heartbeat of global ambition. Every tick on the stock exchange tells a story of risk, resilience, and patience.</p>
+                </div>
+            </div>
+
+            <!-- 2. Horizontal Category Pills -->
+            <div class="categories-scroll">
+                <button class="category-pill active">For you</button>
+                <button class="category-pill">Top charts</button>
+                <button class="category-pill">Finance</button>
+                <button class="category-pill">Crypto</button>
+                <button class="category-pill">Economy</button>
+                <button class="category-pill">Tech</button>
+            </div>
+
+            <!-- 3. Transparent Article List -->
+            <div id="articleContainer">
+                <!-- Skeleton Loader -->
+                <div class="skeleton-container" id="skeletonLoader">
+                    <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-lines"><div class="skeleton-line"></div><div class="skeleton-line short"></div></div><div class="skeleton-action"></div></div>
+                    <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-lines"><div class="skeleton-line"></div><div class="skeleton-line short"></div></div><div class="skeleton-action"></div></div>
+                    <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-lines"><div class="skeleton-line"></div><div class="skeleton-line short"></div></div><div class="skeleton-action"></div></div>
+                    <div class="skeleton-item"><div class="skeleton-icon"></div><div class="skeleton-lines"><div class="skeleton-line"></div><div class="skeleton-line short"></div></div><div class="skeleton-action"></div></div>
+                </div>
+                <!-- Actual Content -->
+                <div class="article-list" id="articleList" style="display: none;"></div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // --- 1. Load and Sync Theme from localStorage/Parent Broadcasts ---
+        let currentThemeSetting = 'auto';
+
+        function applyTheme(theme) {
+            currentThemeSetting = theme;
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else if (theme === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+        }
+
+        // Apply theme instantly on startup
+        applyTheme(localStorage.getItem('easyread-theme') || 'auto');
+
+        // Watch storage events from sister frames
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'easyread-theme') {
+                applyTheme(event.newValue || 'auto');
+            }
+        });
+
+        // Watch message broadcasts from parent index frame
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'themeChanged') {
+                applyTheme(event.data.theme);
+            }
+        });
+
+        // Loop verification backup
+        setInterval(() => {
+            const storedTheme = localStorage.getItem('easyread-theme') || 'auto';
+            if (storedTheme !== currentThemeSetting) {
+                applyTheme(storedTheme);
+            }
+        }, 600);
+
+        // --- 2. List of Assets ---
+        const svgIcons = [
+            `<svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>`,
+            `<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>`,
+            `<svg viewBox="0 0 24 24"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg>`,
+            `<svg viewBox="0 0 24 24"><path d="M20 18c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/></svg>`,
+            `<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`,
+            `<svg viewBox="0 0 24 24"><path d="M12 2c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm9 7h-6v13h-2v-6h-2v6H9V9H3V7h18v2z"/></svg>`,
+            `<svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`,
+            `<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>`,
+            `<svg viewBox="0 0 24 24"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"/></svg>`,
+            `<svg viewBox="0 0 24 24"><path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z"/></svg>`
+        ];
+        const pastelColors = ['#ffadad','#ffd6a5','#fdffb6','#caffbf','#9bf6ff','#a0c4ff','#bdb2ff','#ffc6ff','#ffb3c6','#fbc4ab'];
+        const articles = [
+            { title: "The Art of the Exchange", author: "By Capital Pulse", views: "143", time: "2 hours ago" },
+            { title: "Why Bonds Matter", author: "By Finance 101", views: "89", time: "5 hours ago" },
+            { title: "Crypto Volatility Explained", author: "By Crypto Insider", views: "212", time: "1 day ago" },
+            { title: "Bear Market Survival Guide", author: "By Market Analyst", views: "56", time: "2 days ago" }
+        ];
+
+        // --- 3. Render List with Fade-in Animation ---
+        function renderArticles() {
+            const container = document.getElementById('articleList');
+            const skeleton = document.getElementById('skeletonLoader');
+            
+            // Simulate loading delay for the animation
+            setTimeout(() => {
+                skeleton.style.display = 'none';
+                container.style.display = 'flex';
+                
+                container.innerHTML = '';
+                articles.forEach(article => {
+                    const randomIcon = svgIcons[Math.floor(Math.random() * svgIcons.length)];
+                    const randomColor = pastelColors[Math.floor(Math.random() * pastelColors.length)];
+                    const item = document.createElement('div');
+                    item.className = 'article-item';
+                    item.innerHTML = `
+                        <div class="article-icon" style="background: ${randomColor};">${randomIcon}</div>
+                        <div class="article-content"><div class="article-title">${article.title}</div><div class="article-subtitle">${article.author}</div><div class="article-meta">${article.views} views <span class="dot"></span> ${article.time}</div></div>
+                        <div class="article-action"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg></div>
+                    `;
+                    container.appendChild(item);
+                });
+            }, 800); // 800ms loading animation
+        }
+
+        document.addEventListener('DOMContentLoaded', renderArticles);
+    </script>
+</body>
+</html>

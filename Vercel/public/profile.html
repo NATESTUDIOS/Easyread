@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>EasyRead | Profile</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- CSS Variables for Auto Light/Dark Theme --- */
+        :root {
+            /* Light Theme Defaults */
+            --bg-color: #f5f5f7;
+            --bg-glow: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.8) 0%, transparent 70%);
+            --text-main: #1c1c1e;
+            --text-secondary: #6c6c70;
+            --text-muted: #9a9a9e;
+            --text-tertiary: rgba(0,0,0,0.3);
+            
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --card-blur: blur(20px);
+            --glass-border: 1.5px solid rgba(0, 0, 0, 0.12);
+            --glass-border-subtle: 1px solid rgba(0, 0, 0, 0.08);
+            --glass-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            
+            --accent-color: #f59847;
+            --accent-dark: #b8860b;
+            --accent-glow: rgba(245, 152, 71, 0.2);
+            --theme-primary: #f59847;
+        }
+
+        /* Dark Theme (Auto-detected) - TRUE AMOLED BLACK */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #000000;
+                --bg-glow: radial-gradient(circle at 50% 0%, rgba(40, 40, 42, 0.4) 0%, transparent 60%);
+                --text-main: #e8e8ea;
+                --text-secondary: #9a9a9e;
+                --text-muted: #6c6c70;
+                --text-tertiary: rgba(255,255,255,0.3);
+                
+                --card-bg: rgba(18, 18, 18, 0.85);
+                --card-blur: blur(16px);
+                --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+                --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.04);
+                --glass-shadow: 0 8px 32px rgba(0,0,0,0.6);
+                
+                --accent-color: #c49a45;
+                --accent-dark: #b8860b;
+                --accent-glow: rgba(196, 154, 69, 0.2);
+                --theme-primary: #c49a45;
+            }
+        }
+
+        /* --- Manual Theme Switching Overrides --- */
+        [data-theme="light"] {
+            --bg-color: #f5f5f7;
+            --bg-glow: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.8) 0%, transparent 70%);
+            --text-main: #1c1c1e;
+            --text-secondary: #6c6c70;
+            --text-muted: #9a9a9e;
+            --text-tertiary: rgba(0,0,0,0.3);
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: 1.5px solid rgba(0, 0, 0, 0.12);
+            --glass-border-subtle: 1px solid rgba(0, 0, 0, 0.08);
+            --glass-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            --accent-color: #f59847;
+            --accent-glow: rgba(245, 152, 71, 0.2);
+        }
+        [data-theme="dark"] {
+            --bg-color: #000000;
+            --bg-glow: radial-gradient(circle at 50% 0%, rgba(40, 40, 42, 0.4) 0%, transparent 60%);
+            --text-main: #e8e8ea;
+            --text-secondary: #9a9a9e;
+            --text-muted: #6c6c70;
+            --text-tertiary: rgba(255,255,255,0.3);
+            --card-bg: rgba(18, 18, 18, 0.85);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+            --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.04);
+            --glass-shadow: 0 8px 32px rgba(0,0,0,0.6);
+            --accent-color: #c49a45;
+            --accent-glow: rgba(196, 154, 69, 0.2);
+        }
+
+        /* --- Reset & Base Styles --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        *:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 2px; }
+        
+        body {
+            background-color: var(--bg-color);
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E"),
+                          var(--bg-glow);
+            background-repeat: no-repeat, no-repeat;
+            background-size: auto, 100% 100%;
+            background-position: center, center;
+            
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0 0 4rem 0;
+            color: var(--text-main);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .app-container {
+            max-width: 480px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* --- Header --- */
+        .header {
+            width: 100%;
+            padding: 1.2rem 1.5rem 0.8rem 1.5rem;
+            background: var(--bg-color);
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 12px;
+        }
+
+        .header .back-btn {
+            width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            color: var(--text-main);
+        }
+        .header .back-btn svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; }
+        .header-title { font-size: 1.2rem; font-weight: 700; }
+
+        /* --- Main Content Area --- */
+        .content-area {
+            width: 100%;
+            padding: 0 1.5rem 1.5rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* ========================================= */
+        /* SECTION 1: IDENTITY & STATS (Always Visible) */
+        /* ========================================= */
+        .shareable-card {
+            border: var(--glass-border);
+            border-radius: 24px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--glass-shadow);
+        }
+        
+        /* Light Mode specific gradient */
+        [data-theme="light"] .shareable-card,
+        .shareable-card {
+            background: linear-gradient(135deg, var(--card-bg), rgba(255, 255, 255, 0.4));
+        }
+        
+        /* Dark Mode specific gradient */
+        [data-theme="dark"] .shareable-card,
+        @media (prefers-color-scheme: dark) {
+            .shareable-card {
+                background: linear-gradient(135deg, var(--card-bg), rgba(40, 30, 20, 0.9));
+            }
+        }
+
+        .shareable-card::before {
+            content: "";
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--accent-glow), transparent 70%);
+            pointer-events: none;
+        }
+        
+        .card-share-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 2;
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: var(--glass-border-subtle);
+            color: var(--text-secondary);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .card-share-btn:active { background: var(--accent-color); color: #fff; }
+        .card-share-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+        .card-top-row {
+            display: flex; align-items: center; gap: 16px;
+            margin-bottom: 20px;
+            position: relative; z-index: 1;
+        }
+        .profile-avatar {
+            width: 64px; height: 64px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, var(--accent-color), var(--accent-dark));
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 28px; color: #fff;
+            flex-shrink: 0; border: 2px solid rgba(255,255,255,0.1);
+        }
+        .profile-info { flex: 1; min-width: 0; }
+        .profile-name { font-size: 18px; font-weight: 700; margin-bottom: 2px; }
+        .profile-email { font-size: 12px; color: var(--text-secondary); }
+        
+        .profile-rank-row {
+            display: flex; align-items: center; gap: 8px;
+            margin-top: 6px;
+        }
+        .profile-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 11px; font-weight: 600;
+            padding: 4px 10px; border-radius: 20px;
+            background: var(--accent-glow);
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .profile-signin-btn {
+            display: inline-flex;
+            margin-top: 8px;
+            background: var(--accent-color);
+            color: #fff;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 10px var(--accent-glow);
+        }
+        .profile-signin-btn:active {
+            transform: scale(0.95);
+        }
+
+        .profile-stats {
+            display: flex; gap: 16px;
+            position: relative; z-index: 1;
+        }
+        .stat-box {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.03);
+            border: var(--glass-border-subtle);
+            border-radius: 14px; padding: 14px 12px; text-align: center;
+        }
+        .stat-value { font-size: 20px; font-weight: 800; color: var(--accent-color); }
+        .stat-label { font-size: 10px; color: var(--text-tertiary); font-weight: 600; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* ========================================= */
+        /* TAB NAVIGATION */
+        /* ========================================= */
+        .tab-nav {
+            width: 100%;
+            display: flex;
+            background: var(--card-bg);
+            backdrop-filter: var(--card-blur);
+            -webkit-backdrop-filter: var(--card-blur);
+            border: var(--glass-border-subtle);
+            border-radius: 40px;
+            padding: 4px;
+            box-shadow: var(--glass-shadow);
+            margin-top: 0.5rem;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 0.6rem 0;
+            text-align: center;
+            border: none; background: transparent;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8rem; font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: 40px;
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            background: var(--accent-color);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(245, 152, 71, 0.2);
+        }
+        .tab-btn:hover:not(.active) { color: var(--text-main); }
+
+        /* ========================================= */
+        /* TAB CONTENT CONTAINERS */
+        /* ========================================= */
+        .tab-content {
+            display: none;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .tab-content.active { display: flex; }
+
+        /* ========================================= */
+        /* SECTION 2: HISTORY & COLLECTIONS          */
+        /* ========================================= */
+        .section-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 12px;
+        }
+        .section-header h3 { font-size: 16px; font-weight: 700; }
+        .section-header .see-all {
+            font-size: 13px; font-weight: 500;
+            color: var(--accent-color); cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .section-header .see-all:active { opacity: 0.6; }
+        .section-header .see-all.expanded { color: var(--text-secondary); }
+
+        /* --- Expandable Lists --- */
+        .mini-list {
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .mini-list:not(.expanded) .mini-card:nth-child(n+4) { display: none; }
+
+        .mini-card {
+            background: var(--card-bg);
+            backdrop-filter: var(--card-blur);
+            border: var(--glass-border-subtle);
+            border-radius: 14px; padding: 14px 16px;
+            display: flex; align-items: center; gap: 12px;
+            cursor: pointer; transition: border-color 0.2s;
+            box-shadow: var(--glass-shadow);
+        }
+        .mini-card:active { border-color: var(--accent-color); }
+        
+        .mini-icon {
+            width: 44px; height: 44px;
+            border-radius: 12px; background: rgba(255, 255, 255, 0.05);
+            border: var(--glass-border-subtle);
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+            font-size: 20px;
+        }
+        .mini-info { flex: 1; min-width: 0; }
+        .mini-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mini-meta { font-size: 12px; color: var(--text-secondary); }
+        
+        .status-pill {
+            font-size: 11px; font-weight: 600;
+            padding: 4px 10px; border-radius: 20px; flex-shrink: 0;
+        }
+        .status-completed { background: rgba(52, 199, 89, 0.12); color: #34c759; }
+        .status-reading { background: rgba(255, 149, 0, 0.12); color: #ff9500; }
+
+        /* ========================================= */
+        /* BOOKMARKS TAB CONTENT */
+        /* ========================================= */
+        .saved-list {
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .saved-list:not(.expanded) .saved-row:nth-child(n+4) { display: none; }
+
+        .saved-row {
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px 0; border-bottom: var(--glass-border-subtle);
+            cursor: pointer;
+        }
+        .saved-row:last-child { border-bottom: none; }
+        .saved-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-color); flex-shrink: 0; }
+        .saved-info { flex: 1; min-width: 0; }
+        .saved-name { font-size: 14px; font-weight: 500; }
+        .saved-meta { font-size: 12px; color: var(--text-secondary); }
+        .saved-arrow { color: var(--text-tertiary); font-size: 18px; }
+
+        /* ========================================= */
+        /* SECTION 3: CONTROL & SETTINGS             */
+        /* ========================================= */
+        .settings-list {
+            background: var(--card-bg);
+            backdrop-filter: var(--card-blur);
+            border: var(--glass-border-subtle);
+            border-radius: 16px; overflow: hidden;
+            box-shadow: var(--glass-shadow);
+        }
+        .settings-item {
+            display: flex; align-items: center; gap: 14px;
+            padding: 16px 18px; border-bottom: var(--glass-border-subtle);
+            cursor: pointer; transition: opacity 0.2s;
+        }
+        .settings-item:last-child { border-bottom: none; }
+        .settings-item:active { opacity: 0.6; }
+        
+        .settings-icon {
+            width: 40px; height: 40px;
+            border-radius: 12px; background: rgba(255, 255, 255, 0.05);
+            border: var(--glass-border-subtle);
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .settings-icon svg { width: 20px; height: 20px; stroke: var(--text-secondary); fill: none; stroke-width: 2; }
+        
+        .settings-info { flex: 1; }
+        .settings-label { font-size: 15px; font-weight: 500; }
+        .settings-sub { font-size: 12px; color: var(--text-secondary); }
+        .settings-arrow { color: var(--text-tertiary); font-size: 18px; }
+
+        /* --- Toggle Switches --- */
+        .toggle-container {
+            background: var(--card-bg);
+            backdrop-filter: var(--card-blur);
+            border: var(--glass-border-subtle);
+            border-radius: 16px; overflow: hidden;
+            margin-top: 1rem;
+            box-shadow: var(--glass-shadow);
+        }
+        .toggle-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 18px; border-bottom: var(--glass-border-subtle);
+            cursor: pointer;
+        }
+        .toggle-row:last-child { border-bottom: none; }
+        .toggle-label { font-size: 15px; font-weight: 500; }
+        .toggle {
+            width: 48px; height: 28px; border-radius: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            position: relative; transition: background 0.3s;
+        }
+        .toggle.active { background: var(--accent-color); }
+        .toggle::after {
+            content: ""; position: absolute; top: 3px; left: 3px;
+            width: 22px; height: 22px; border-radius: 50%;
+            background: #fff; transition: transform 0.3s;
+        }
+        .toggle.active::after { transform: translateX(20px); }
+
+        /* ========================================= */
+        /* DIALOG / MODAL SYSTEM (STYLISH BLUR) */
+        /* ========================================= */
+        .dialog-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1000;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        [data-theme="dark"] .dialog-overlay {
+            background: rgba(0, 0, 0, 0.55);
+        }
+        .dialog-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .glass-dialog {
+            background: var(--card-bg);
+            backdrop-filter: var(--card-blur);
+            -webkit-backdrop-filter: var(--card-blur);
+            border: var(--glass-border);
+            border-radius: 28px;
+            padding: 28px;
+            width: 90%;
+            max-width: 380px;
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.15);
+            transform: scale(0.9) translateY(10px);
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            text-align: center;
+        }
+        [data-theme="dark"] .glass-dialog {
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6);
+        }
+        .dialog-overlay.active .glass-dialog {
+            transform: scale(1) translateY(0);
+        }
+        .dialog-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .dialog-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .dialog-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            line-height: 1;
+            padding: 4px;
+        }
+
+        /* Dialog options lists */
+        .dialog-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .dialog-option-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border: var(--glass-border-subtle);
+            border-radius: 14px;
+            color: var(--text-main);
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+        .dialog-option-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .dialog-option-btn.active {
+            background: var(--accent-color);
+            color: #fff;
+            border-color: var(--accent-color);
+        }
+        .dialog-option-btn .option-title {
+            font-size: 15px;
+            font-weight: 700;
+        }
+        .dialog-option-btn .option-sub {
+            font-size: 11px;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+
+        /* Auth form styling */
+        .form-group {
+            margin-bottom: 16px;
+            text-align: left;
+        }
+        .form-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.06);
+            border: var(--glass-border-subtle);
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .auth-submit-btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 14px;
+            background: var(--accent-color);
+            border: none;
+            color: white;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            box-shadow: 0 4px 12px rgba(245, 152, 71, 0.25);
+            transition: all 0.2s;
+        }
+        .auth-submit-btn:active {
+            transform: scale(0.98);
+        }
+        .auth-toggle-link {
+            text-align: center;
+            font-size: 13px;
+            color: var(--accent-color);
+            margin-top: 16px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .auth-toggle-link:hover {
+            text-decoration: underline;
+        }
+
+        /* --- Responsive --- */
+        @media (max-width: 420px) {
+            .header { padding: 1rem 1rem 0.5rem 1rem; }
+            .content-area { padding: 0 1rem 1rem 1rem; }
+            .profile-avatar { width: 48px; height: 48px; font-size: 22px; }
+            .stat-box { padding: 10px 8px; }
+            .stat-value { font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- Header -->
+        <header class="header">
+            <div class="back-btn" onclick="window.parent.postMessage({ type: 'switchTab', tab: 'home' }, '*');">
+                <svg viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+            </div>
+            <div class="header-title">Profile</div>
+        </header>
+
+        <main class="content-area">
+            
+            <!-- SECTION 1: IDENTITY & STATS (Always Visible) -->
+            <section>
+                <div class="shareable-card">
+                    <button class="card-share-btn" aria-label="Share profile">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="18" cy="5" r="3" />
+                            <circle cx="6" cy="12" r="3" />
+                            <circle cx="18" cy="19" r="3" />
+                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                        </svg>
+                    </button>
+                    <div class="card-top-row">
+                        <div class="profile-avatar" id="avatarIcon">ER</div>
+                        <div class="profile-info">
+                            <div class="profile-name" id="profileName">EasyReader</div>
+                            <div class="profile-email" id="profileEmail">user@email.com</div>
+                            <div class="profile-rank-row" id="profileRankRow">
+                                <span class="profile-badge" id="activeProfileHeaderBadge">🎓 L5 (Explain Like I'm 5)</span>
+                            </div>
+                            <button class="profile-signin-btn" id="profileSignInBtn" style="display: none;" onclick="openDialog('loginDialog')">Sign In</button>
+                        </div>
+                    </div>
+                    <div class="profile-stats">
+                        <div class="stat-box">
+                            <div class="stat-value" id="userCreditsValue">38.5 ⚡</div>
+                            <div class="stat-label">Credits</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value">47</div>
+                            <div class="stat-label">Read</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value">14</div>
+                            <div class="stat-label">Bookmarks</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================= -->
+            <!-- TAB NAVIGATION                             -->
+            <!-- ========================================= -->
+            <div class="tab-nav">
+                <button class="tab-btn active" data-tab="tab-history">History</button>
+                <button class="tab-btn" data-tab="tab-bookmarks">Bookmarks</button>
+                <button class="tab-btn" data-tab="tab-settings">Settings</button>
+            </div>
+
+            <!-- ========================================= -->
+            <!-- TAB: HISTORY (Reading History Only)       -->
+            <!-- ========================================= -->
+            <div class="tab-content active" id="tab-history">
+                <div class="section-header">
+                    <h3>Reading History</h3>
+                    <span class="see-all" id="seeAllHistory">See all</span>
+                </div>
+                <div class="mini-list" id="historyList">
+                    <div class="mini-card">
+                        <div class="mini-icon">📈</div>
+                        <div class="mini-info">
+                            <div class="mini-name">The Art of the Exchange</div>
+                            <div class="mini-meta">2 hours ago · 5 min read</div>
+                        </div>
+                        <span class="status-pill status-reading">75%</span>
+                    </div>
+                    <div class="mini-card">
+                        <div class="mini-icon">💰</div>
+                        <div class="mini-info">
+                            <div class="mini-name">Understanding Inflation</div>
+                            <div class="mini-meta">Yesterday · 3 min read</div>
+                        </div>
+                        <span class="status-pill status-completed">100%</span>
+                    </div>
+                    <div class="mini-card">
+                        <div class="mini-icon">🤖</div>
+                        <div class="mini-info">
+                            <div class="mini-name">AI for Beginners</div>
+                            <div class="mini-meta">2 days ago · 8 min read</div>
+                        </div>
+                        <span class="status-pill status-reading">45%</span>
+                    </div>
+                    <div class="mini-card">
+                        <div class="mini-icon">🌍</div>
+                        <div class="mini-info">
+                            <div class="mini-name">Global Markets 2026</div>
+                            <div class="mini-meta">3 days ago · 6 min read</div>
+                        </div>
+                        <span class="status-pill status-completed">100%</span>
+                    </div>
+                    <div class="mini-card">
+                        <div class="mini-icon">🔗</div>
+                        <div class="mini-info">
+                            <div class="mini-name">Blockchain Basics</div>
+                            <div class="mini-meta">5 days ago · 10 min read</div>
+                        </div>
+                        <span class="status-pill status-reading">20%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================= -->
+            <!-- TAB: BOOKMARKS                             -->
+            <!-- ========================================= -->
+            <div class="tab-content" id="tab-bookmarks">
+                <div class="section-header">
+                    <h3>Saved Articles</h3>
+                    <span class="see-all" id="seeAllBookmarks">See all</span>
+                </div>
+                <div class="saved-list" id="bookmarksList">
+                    <div class="saved-row">
+                        <div class="saved-dot"></div>
+                        <div class="saved-info">
+                            <div class="saved-name">Quantum Computing Explained</div>
+                            <div class="saved-meta">Added Jan 2024</div>
+                        </div>
+                        <div class="saved-arrow">›</div>
+                    </div>
+                    <div class="saved-row">
+                        <div class="saved-dot"></div>
+                        <div class="saved-info">
+                            <div class="saved-name">Machine Learning Basics</div>
+                            <div class="saved-meta">Added Jan 2024</div>
+                        </div>
+                        <div class="saved-arrow">›</div>
+                    </div>
+                    <div class="saved-row">
+                        <div class="saved-dot"></div>
+                        <div class="saved-info">
+                            <div class="saved-name">Stock Market 101</div>
+                            <div class="saved-meta">Added Dec 2023</div>
+                        </div>
+                        <div class="saved-arrow">›</div>
+                    </div>
+                    <div class="saved-row">
+                        <div class="saved-dot"></div>
+                        <div class="saved-info">
+                            <div class="saved-name">Cryptocurrency Trends</div>
+                            <div class="saved-meta">Added Dec 2023</div>
+                        </div>
+                        <div class="saved-arrow">›</div>
+                    </div>
+                    <div class="saved-row">
+                        <div class="saved-dot"></div>
+                        <div class="saved-info">
+                            <div class="saved-name">The Psychology of Money</div>
+                            <div class="saved-meta">Added Nov 2023</div>
+                        </div>
+                        <div class="saved-arrow">›</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================= -->
+            <!-- TAB: SETTINGS (Control & Settings)         -->
+            <!-- ========================================= -->
+            <div class="tab-content" id="tab-settings">
+                
+                <div class="settings-list">
+                    <div class="settings-item" onclick="openDialog('loginDialog')">
+                        <div class="settings-icon">
+                            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                        </div>
+                        <div class="settings-info">
+                            <div class="settings-label">Edit Profile</div>
+                            <div class="settings-sub">Name, photo, and email</div>
+                        </div>
+                        <div class="settings-arrow">›</div>
+                    </div>
+                    <!-- AI Learning Profile Setting (mapped to database preferred_profile_id) -->
+                    <div class="settings-item" id="aiProfileSelectorBtn" onclick="openDialog('profileDialog')">
+                        <div class="settings-icon">
+                            <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+                        </div>
+                        <div class="settings-info">
+                            <div class="settings-label">AI Learning Profile</div>
+                            <div class="settings-sub" id="currentProfileLabel">L5 (Explain Like I'm 5)</div>
+                        </div>
+                        <div class="settings-arrow">›</div>
+                    </div>
+                    <!-- Unified Theme Setting Item -->
+                    <div class="settings-item" id="themeSelectorBtn" onclick="openDialog('themeDialog')">
+                        <div class="settings-icon">
+                            <svg viewBox="0 0 24 24"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/><circle cx="12" cy="12" r="4"/></svg>
+                        </div>
+                        <div class="settings-info">
+                            <div class="settings-label">Theme Preference</div>
+                            <div class="settings-sub" id="currentThemeLabel">Auto (System)</div>
+                        </div>
+                        <div class="settings-arrow">›</div>
+                    </div>
+                    <!-- Adaptive Auth Button -->
+                    <div class="settings-item" id="authSettingItem" onclick="handleAuthAction()">
+                        <div class="settings-icon">
+                            <svg id="authIcon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
+                        </div>
+                        <div class="settings-info">
+                            <div class="settings-label" id="authLabel" style="color: #ff3b30">Log Out</div>
+                            <div class="settings-sub" id="authSub">Sign out of your account</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Match Pipeline Step 6 background options -->
+                <div class="toggle-container">
+                    <div class="toggle-row" id="autoRegToggle">
+                        <span class="toggle-label">Auto-Generate Explanations</span>
+                        <div class="toggle" id="autoRegSwitch"></div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ========================================= -->
+    <!-- DIALOGS & OVERLAYS                         -->
+    <!-- ========================================= -->
+
+    <!-- AI Profile Selection Dialog (Mapped to database profile_id options) -->
+    <div class="dialog-overlay" id="profileDialog">
+        <div class="glass-dialog">
+            <div class="dialog-header">
+                <h3 class="dialog-title">Select AI Persona</h3>
+                <button class="dialog-close" onclick="closeDialog('profileDialog')">&times;</button>
+            </div>
+            <div class="dialog-options">
+                <button class="dialog-option-btn" data-profile-id="1" onclick="selectProfile(1, 'L5 (Explain Like I\'m 5)')">
+                    <span class="option-title">🎓 Explain Like I'm 5</span>
+                    <span class="option-sub">Extreme simplification using highly digestible analogies.</span>
+                </button>
+                <button class="dialog-option-btn" data-profile-id="2" onclick="selectProfile(2, '💼 Executive Briefing')">
+                    <span class="option-title">💼 Executive Briefing</span>
+                    <span class="option-sub">High-level takeaways, metrics, and core outcomes.</span>
+                </button>
+                <button class="dialog-option-btn" data-profile-id="3" onclick="selectProfile(3, '🔬 Technical Deep-Dive')">
+                    <span class="option-title">🔬 Technical Deep-Dive</span>
+                    <span class="option-sub">Advanced mechanics, algorithms, and technical terminology.</span>
+                </button>
+                <button class="dialog-option-btn" data-profile-id="4" onclick="selectProfile(4, '🌍 General Public')">
+                    <span class="option-title">🌍 General Public</span>
+                    <span class="option-sub">Standard newsroom layout designed for casual reading.</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Theme Selection Dialog -->
+    <div class="dialog-overlay" id="themeDialog">
+        <div class="glass-dialog">
+            <div class="dialog-header">
+                <h3 class="dialog-title">Select Theme</h3>
+                <button class="dialog-close" onclick="closeDialog('themeDialog')">&times;</button>
+            </div>
+            <div class="dialog-options">
+                <button class="dialog-option-btn" data-theme-val="light" onclick="selectTheme('light')">
+                    <span class="option-title">☀️ Light Mode</span>
+                </button>
+                <button class="theme-option-btn dialog-option-btn" data-theme-val="dark" onclick="selectTheme('dark')">
+                    <span class="option-title">🌙 Dark Mode</span>
+                </button>
+                <button class="theme-option-btn dialog-option-btn" data-theme-val="auto" onclick="selectTheme('auto')">
+                    <span class="option-title">⚙️ System Preference</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login/Sign Up Glass Dialog -->
+    <div class="dialog-overlay" id="loginDialog">
+        <div class="glass-dialog">
+            <div class="dialog-header">
+                <h3 class="dialog-title" id="authTitle">Sign In</h3>
+                <button class="dialog-close" onclick="closeDialog('loginDialog')">&times;</button>
+            </div>
+            <form id="authForm" onsubmit="executeAuth(event)">
+                <div class="form-group">
+                    <label class="form-label" for="authEmail">Email Address</label>
+                    <input class="form-input" type="email" id="authEmail" required placeholder="name@domain.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="authPassword">Password</label>
+                    <input class="form-input" type="password" id="authPassword" required placeholder="••••••••">
+                </div>
+                <button class="auth-submit-btn" type="submit" id="authSubmitBtn">Continue</button>
+            </form>
+            <div class="auth-toggle-link" id="authToggleLink" onclick="toggleAuthMode()">
+                Don't have an account? Sign Up
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. Load Persistent Theme Setup ---
+        let currentThemeSetting = localStorage.getItem('easyread-theme') || 'auto';
+
+        function applyTheme(theme) {
+            currentThemeSetting = theme;
+            localStorage.setItem('easyread-theme', theme);
+            
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else if (theme === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+
+            const labelMap = {
+                'light': 'Light Mode',
+                'dark': 'Dark Mode',
+                'auto': 'Auto (System)'
+            };
+            const currentThemeLabel = document.getElementById('currentThemeLabel');
+            if (currentThemeLabel) currentThemeLabel.textContent = labelMap[theme];
+
+            document.querySelectorAll('#themeDialog .dialog-option-btn').forEach(btn => {
+                const val = btn.getAttribute('data-theme-val');
+                btn.classList.toggle('active', val === theme);
+            });
+        }
+
+        applyTheme(currentThemeSetting);
+
+        function selectTheme(theme) {
+            applyTheme(theme);
+            closeDialog('themeDialog');
+        }
+
+        // --- 2. Load Persistent AI Explanation Profile Setup ---
+        let preferredProfileId = localStorage.getItem('easyread-profile-id') || '1';
+        
+        const profileLabels = {
+            '1': 'L5 (Explain Like I\'m 5)',
+            '2': '💼 Executive Briefing',
+            '3': '🔬 Technical Deep-Dive',
+            '4': '🌍 General Public'
+        };
+
+        function applyProfile(profileId) {
+            preferredProfileId = profileId.toString();
+            localStorage.setItem('easyread-profile-id', preferredProfileId);
+
+            const displayLabel = profileLabels[preferredProfileId] || 'Custom Profile';
+            
+            // Update settings item subtitle
+            const currentProfileLabel = document.getElementById('currentProfileLabel');
+            if (currentProfileLabel) currentProfileLabel.textContent = displayLabel;
+
+            // Update badge in profile identity card
+            const activeProfileHeaderBadge = document.getElementById('activeProfileHeaderBadge');
+            if (activeProfileHeaderBadge) activeProfileHeaderBadge.textContent = `🎓 ${displayLabel}`;
+
+            // Mark active item inside the dialog options
+            document.querySelectorAll('#profileDialog .dialog-option-btn').forEach(btn => {
+                const id = btn.getAttribute('data-profile-id');
+                btn.classList.toggle('active', id === preferredProfileId);
+            });
+        }
+
+        applyProfile(preferredProfileId);
+
+        function selectProfile(profileId, profileName) {
+            applyProfile(profileId);
+            closeDialog('profileDialog');
+        }
+
+        // --- 3. Dynamic Login State Management ---
+        let isLoggedIn = true;
+        let authMode = 'login';
+
+        function updateAuthUI() {
+            const avatar = document.getElementById('avatarIcon');
+            const name = document.getElementById('profileName');
+            const email = document.getElementById('profileEmail');
+            const rankRow = document.getElementById('profileRankRow');
+            const signInBtn = document.getElementById('profileSignInBtn');
+            const authLabel = document.getElementById('authLabel');
+            const authSub = document.getElementById('authSub');
+            const authIcon = document.getElementById('authIcon');
+            const userCreditsValue = document.getElementById('userCreditsValue');
+
+            if (isLoggedIn) {
+                avatar.textContent = "ER";
+                name.textContent = "EasyReader";
+                email.textContent = "user@email.com";
+                rankRow.style.display = "flex";
+                if (signInBtn) signInBtn.style.display = "none";
+                userCreditsValue.textContent = "38.5 ⚡";
+                
+                authLabel.textContent = "Log Out";
+                authLabel.style.color = "#ff3b30";
+                authSub.textContent = "Sign out of your account";
+                authIcon.innerHTML = `<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />`;
+            } else {
+                avatar.textContent = "G";
+                name.textContent = "Guest User";
+                email.textContent = "Sign in to sync your library";
+                rankRow.style.display = "none";
+                if (signInBtn) signInBtn.style.display = "inline-flex";
+                userCreditsValue.textContent = "0.0 ⚡";
+                
+                authLabel.textContent = "Log In / Sign Up";
+                authLabel.style.color = "var(--accent-color)";
+                authSub.textContent = "Access your history & bookmarks";
+                authIcon.innerHTML = `<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><polyline points="10 17 15 12 10 7" /><line x1="15" y1="12" x2="3" y2="12" />`;
+            }
+        }
+
+        function handleAuthAction() {
+            if (isLoggedIn) {
+                isLoggedIn = false;
+                updateAuthUI();
+            } else {
+                openDialog('loginDialog');
+            }
+        }
+
+        function toggleAuthMode() {
+            const title = document.getElementById('authTitle');
+            const submitBtn = document.getElementById('authSubmitBtn');
+            const toggleLink = document.getElementById('authToggleLink');
+            
+            if (authMode === 'login') {
+                authMode = 'signup';
+                title.textContent = 'Sign Up';
+                submitBtn.textContent = 'Create Account';
+                toggleLink.textContent = 'Already have an account? Sign In';
+            } else {
+                authMode = 'login';
+                title.textContent = 'Sign In';
+                submitBtn.textContent = 'Continue';
+                toggleLink.textContent = "Don't have an account? Sign Up";
+            }
+        }
+
+        function executeAuth(event) {
+            event.preventDefault();
+            const emailInput = document.getElementById('authEmail').value;
+            
+            isLoggedIn = true;
+            updateAuthUI();
+            
+            document.getElementById('profileEmail').textContent = emailInput;
+            document.getElementById('profileName').textContent = emailInput.split('@')[0];
+            document.getElementById('avatarIcon').textContent = emailInput.slice(0, 2).toUpperCase();
+
+            closeDialog('loginDialog');
+            document.getElementById('authForm').reset();
+        }
+
+        // --- 4. Dialog Visibility Controls ---
+        function openDialog(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function closeDialog(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        document.querySelectorAll('.dialog-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeDialog(this.id);
+                }
+            });
+        });
+
+        // --- 5. Tab Switching Logic ---
+        const tabs = document.querySelectorAll('.tab-btn');
+        const contents = {
+            'tab-history': document.getElementById('tab-history'),
+            'tab-bookmarks': document.getElementById('tab-bookmarks'),
+            'tab-settings': document.getElementById('tab-settings')
+        };
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                tabs.forEach(t => t.classList.remove('active'));
+                Object.values(contents).forEach(c => c.classList.remove('active'));
+
+                this.classList.add('active');
+                const targetId = this.getAttribute('data-tab');
+                if(contents[targetId]) {
+                    contents[targetId].classList.add('active');
+                }
+            });
+        });
+
+        // --- 6. Toggle Switch Logic (Auto-Summary) ---
+        const autoToggle = document.getElementById('autoRegSwitch');
+        const autoRow = document.getElementById('autoRegToggle');
+        let isAutoEnabled = false;
+
+        autoRow.addEventListener('click', () => {
+            isAutoEnabled = !isAutoEnabled;
+            autoToggle.classList.toggle('active', isAutoEnabled);
+        });
+
+        // --- 7. Expandable List Logic ---
+        function setupToggle(btnId, listId) {
+            const btn = document.getElementById(btnId);
+            const list = document.getElementById(listId);
+            let expanded = false;
+
+            btn.addEventListener('click', () => {
+                expanded = !expanded;
+                list.classList.toggle('expanded', expanded);
+                btn.textContent = expanded ? 'Show less' : 'See all';
+                btn.classList.toggle('expanded', expanded);
+            });
+        }
+
+        setupToggle('seeAllHistory', 'historyList');
+        setupToggle('seeAllBookmarks', 'bookmarksList');
+    </script>
+</body>
+</html>

@@ -1,701 +1,1180 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>EasyRead | Turn Complex Topics into Simple Stories</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>EasyRead</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Modern standard non-italic grotesque typeface (Plus Jakarta Sans) -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <style>
+        /* --- CSS Variables for Auto Light/Dark Theme --- */
+        :root {
+            /* Light Theme - Clean minimal off-white background */
+            --bg-color: #f6f7f9;
+            --bg-glow: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.9) 0%, transparent 70%);
+            --text-primary: #1c1c1e;
+            --text-secondary: #5c5c60;
+            --text-tertiary: #8e8e93;
+            --text-placeholder: #c7c7cc;
+            
+            /* High-end Grey Glass Elements */
+            --card-bg: rgba(242, 242, 247, 0.75); 
+            --card-bg-hover: rgba(230, 230, 235, 0.88);
+            --card-blur: blur(20px);
+            --glass-border: 1.5px solid rgba(0, 0, 0, 0.12); /* Standing out clearly in light mode */
+            --glass-border-subtle: 1px solid rgba(0, 0, 0, 0.08);
+            --glass-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            --glass-shadow-hover: 0 16px 40px rgba(0,0,0,0.09);
+            
+            --mode-bg: rgba(0, 0, 0, 0.04);
+            --mode-bg-hover: rgba(0, 0, 0, 0.08);
+            --accent-color: #f59847;
+            --accent-hover: #e08735;
+            --accent-light: rgba(245, 152, 71, 0.12);
+            --divider: rgba(0,0,0,0.08);
+            
+            --tag-bg: rgba(0, 0, 0, 0.05);
+            --tag-text: #4a4a50;
+            --icon-stroke: #1c1c1e;
+            
+            /* Typography */
+            --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
 
-<meta name="description" content="EasyRead transforms difficult articles into engaging stories anyone can understand. Explore science, technology, history, finance, sports, psychology, health, AI, and more—explained in simple language with real-life examples.">
+        /* Dark Theme - TRUE AMOLED BLACK */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #000000;
+                --bg-glow: radial-gradient(circle at 50% 0%, rgba(40, 40, 42, 0.3) 0%, transparent 60%);
+                --text-primary: #e8e8ea;
+                --text-secondary: #9a9a9e;
+                --text-tertiary: #6c6c70;
+                --text-placeholder: #5a5a5e;
+                
+                --card-bg: rgba(22, 22, 24, 0.75);
+                --card-bg-hover: rgba(32, 32, 36, 0.88);
+                --card-blur: blur(20px);
+                --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+                --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.04);
+                --glass-shadow: 0 8px 32px rgba(0,0,0,0.6);
+                --glass-shadow-hover: 0 12px 48px rgba(0,0,0,0.8);
+                
+                --mode-bg: rgba(255, 255, 255, 0.06);
+                --mode-bg-hover: rgba(255, 255, 255, 0.12);
+                --accent-color: #f59847;
+                --accent-hover: #e08735;
+                --accent-light: rgba(245, 152, 71, 0.15);
+                --divider: rgba(255,255,255,0.06);
+                
+                --tag-bg: rgba(255, 255, 255, 0.08);
+                --tag-text: #9a9a9e;
+                --icon-stroke: #e8e8ea;
+            }
+        }
 
-<meta name="keywords" content="EasyRead, simple explanations, explain like I'm five, easy articles, storytelling blog, AI summaries, science explained, technology explained, history explained, finance explained, educational blog, learn faster, easy learning, knowledge blog">
+        /* --- Manual Theme Switching Overrides --- */
+        [data-theme="light"] {
+            --bg-color: #f6f7f9 !important;
+            --bg-glow: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.9) 0%, transparent 70%) !important;
+            --text-primary: #1c1c1e !important;
+            --text-secondary: #5c5c60 !important;
+            --text-tertiary: #8e8e93 !important;
+            --text-placeholder: #c7c7cc !important;
+            --card-bg: rgba(242, 242, 247, 0.75) !important;
+            --card-bg-hover: rgba(230, 230, 235, 0.88) !important;
+            --glass-border: 1.5px solid rgba(0, 0, 0, 0.12) !important;
+            --glass-border-subtle: 1px solid rgba(0, 0, 0, 0.08) !important;
+            --glass-shadow: 0 10px 30px rgba(0,0,0,0.05) !important;
+            --glass-shadow-hover: 0 16px 40px rgba(0,0,0,0.09) !important;
+            --mode-bg: rgba(0, 0, 0, 0.04) !important;
+            --mode-bg-hover: rgba(0, 0, 0, 0.08) !important;
+            --accent-color: #f59847 !important;
+            --accent-hover: #e08735 !important;
+            --accent-light: rgba(245, 152, 71, 0.12) !important;
+            --divider: rgba(0,0,0,0.08) !important;
+            --tag-bg: rgba(0, 0, 0, 0.05) !important;
+            --tag-text: #4a4a50 !important;
+            --icon-stroke: #1c1c1e !important;
+        }
+        
+        [data-theme="dark"] {
+            --bg-color: #000000 !important;
+            --bg-glow: radial-gradient(circle at 50% 0%, rgba(40, 40, 42, 0.3) 0%, transparent 60%) !important;
+            --text-primary: #e8e8ea !important;
+            --text-secondary: #9a9a9e !important;
+            --text-tertiary: #6c6c70 !important;
+            --text-placeholder: #5a5a5e !important;
+            --card-bg: rgba(22, 22, 24, 0.75) !important;
+            --card-bg-hover: rgba(32, 32, 36, 0.88) !important;
+            --glass-border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            --glass-border-subtle: 2px solid rgba(255, 255, 255, 0.04) !important;
+            --glass-shadow: 0 8px 32px rgba(0,0,0,0.6) !important;
+            --glass-shadow-hover: 0 12px 48px rgba(0,0,0,0.8) !important;
+            --mode-bg: rgba(255, 255, 255, 0.06) !important;
+            --mode-bg-hover: rgba(255, 255, 255, 0.12) !important;
+            --accent-color: #f59847 !important;
+            --accent-hover: #e08735 !important;
+            --accent-light: rgba(245, 152, 71, 0.15) !important;
+            --divider: rgba(255,255,255,0.06) !important;
+            --tag-bg: rgba(255, 255, 255, 0.08) !important;
+            --tag-text: #9a9a9e !important;
+            --icon-stroke: #e8e8ea !important;
+        }
 
-<meta name="author" content="EasyRead">
-<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+        /* --- Reset & Base --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        *:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 2px; }
+        
+        body {
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-body);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background: var(--bg-color);
+            transition: background 0.4s ease;
+        }
 
-<meta name="theme-color" content="#4b3b9e">
-<meta name="application-name" content="EasyRead">
-<meta name="apple-mobile-web-app-title" content="EasyRead">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+        /* ========================================= */
+        /* SPLASH SCREEN                             */
+        /* ========================================= */
+        #splashScreen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: radial-gradient(ellipse at 50% 40%, #1a1a1e 0%, #0a0a0c 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), 
+                        visibility 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+                        transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+        
+        #splashScreen.hidden {
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(1.05);
+            pointer-events: none;
+        }
 
-<meta name="googlebot" content="index,follow">
-<meta name="bingbot" content="index,follow">
+        .splash-particles {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.04);
+            animation: floatParticle 20s infinite linear;
+        }
+        
+        .particle:nth-child(1) { width: 80px; height: 80px; top: 10%; left: 10%; animation-delay: 0s; }
+        .particle:nth-child(2) { width: 120px; height: 120px; top: 60%; right: 5%; animation-delay: -5s; }
+        .particle:nth-child(3) { width: 60px; height: 60px; bottom: 20%; left: 20%; animation-delay: -10s; }
+        .particle:nth-child(4) { width: 100px; height: 100px; top: 30%; right: 20%; animation-delay: -15s; }
+        .particle:nth-child(5) { width: 40px; height: 40px; bottom: 40%; left: 40%; animation-delay: -7s; }
+        
+        @keyframes floatParticle {
+            0% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+            25% { transform: translate(30px, -50px) scale(1.2); opacity: 0.6; }
+            50% { transform: translate(-20px, -100px) scale(0.8); opacity: 0.3; }
+            75% { transform: translate(40px, -50px) scale(1.1); opacity: 0.5; }
+            100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+        }
 
-<meta name="google-adsense-account" content="ca-pub-8952114436232718">
+        .splash-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            animation: splashFadeIn 1.2s ease forwards;
+            opacity: 0;
+        }
+        
+        @keyframes splashFadeIn {
+            0% { opacity: 0; transform: translateY(30px) scale(0.95); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
 
-<link rel="canonical" href="https://easyread.example/">
+        .splash-logo {
+            font-family: var(--font-display);
+            font-size: 5rem;
+            font-weight: 800;
+            letter-spacing: -2px;
+            background: linear-gradient(135deg, #f59847 0%, #ffd700 50%, #f59847 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmerLogo 3s ease-in-out infinite;
+            margin-bottom: 0.5rem;
+            line-height: 1;
+        }
+        
+        @keyframes shimmerLogo {
+            0% { background-position: 0% center; }
+            50% { background-position: 100% center; }
+            100% { background-position: 0% center; }
+        }
 
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="EasyRead">
-<meta property="og:title" content="EasyRead | Knowledge That Reads Like a Story">
-<meta property="og:description" content="Complicated topics become enjoyable stories. Learn science, AI, history, psychology, business, sports, and more through simple storytelling.">
-<meta property="og:url" content="https://easyread.example/">
-<meta property="og:image" content="https://easyread.example/images/og-image.jpg">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:locale" content="en_US">
+        .splash-subtitle {
+            font-family: var(--font-body);
+            font-size: 1.1rem;
+            font-weight: 300;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 2rem;
+        }
 
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="EasyRead | Knowledge That Reads Like a Story">
-<meta name="twitter:description" content="Discover complex ideas explained through stories, analogies, and easy language.">
-<meta name="twitter:image" content="https://easyread.example/images/og-image.jpg">
+        .splash-loader-track {
+            width: 200px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+            margin: 0 auto;
+        }
 
-<link rel="icon" href="/favicon.ico">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="manifest" href="/site.webmanifest">
+        .splash-loader-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #f59847, #ffd700);
+            border-radius: 4px;
+            animation: loadBar 2.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
 
-<meta name="format-detection" content="telephone=no">
+        @keyframes loadBar {
+            0% { width: 0%; }
+            80% { width: 85%; }
+            100% { width: 100%; }
+        }
 
-<!-- Preconnect -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preconnect" href="https://images.unsplash.com" crossorigin>
+        .splash-loader-text {
+            font-family: var(--font-body);
+            font-size: 0.75rem;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.3);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            animation: pulseText 1.5s ease-in-out infinite;
+            margin-top: 1rem;
+        }
 
-<!-- SEO -->
-<meta name="rating" content="General">
-<meta name="language" content="English">
-<meta name="revisit-after" content="7 days">
-<script type="application/ld+json">
-{
-  "@context":"https://schema.org",
-  "@graph":[
-    {
-      "@type":"Organization",
-      "name":"EasyRead",
-      "url":"https://easyread.example",
-      "logo":"https://easyread.example/logo.png",
-      "sameAs":[]
-    },
-    {
-      "@type":"WebSite",
-      "url":"https://easyread.example",
-      "name":"EasyRead",
-      "description":"EasyRead makes complicated topics easy through storytelling.",
-      "potentialAction":{
-        "@type":"SearchAction",
-        "target":"https://easyread.example/search?q={search_term_string}",
-        "query-input":"required name=search_term_string"
-      }
-    },
-    {
-      "@type":"WebPage",
-      "name":"EasyRead Home",
-      "url":"https://easyread.example",
-      "description":"Knowledge explained through stories and analogies."
-    }
-  ]
-}
-</script>
-<script type="application/ld+json">
-{
- "@context":"https://schema.org",
- "@type":"FAQPage",
- "mainEntity":[
- {
- "@type":"Question",
- "name":"What is EasyRead?",
- "acceptedAnswer":{
- "@type":"Answer",
- "text":"EasyRead transforms difficult articles into simple, engaging stories that anyone can understand."
- }
- },
- {
- "@type":"Question",
- "name":"Is EasyRead free?",
- "acceptedAnswer":{
- "@type":"Answer",
- "text":"Yes. EasyRead provides free educational content in an easy-to-read storytelling format."
- }
- },
- {
- "@type":"Question",
- "name":"What topics are covered?",
- "acceptedAnswer":{
- "@type":"Answer",
- "text":"EasyRead covers science, AI, technology, history, psychology, finance, sports, health, business, and more."
- }
- },
- {
- "@type":"Question",
- "name":"Who is EasyRead for?",
- "acceptedAnswer":{
- "@type":"Answer",
- "text":"EasyRead is for students, professionals, and curious readers who enjoy learning through simple explanations."
- }
- }
- ]
-}
-</script>
+        @keyframes pulseText {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.8; }
+        }
 
-  <!-- Google Font & Font Awesome 6 (free icons) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+        /* ========================================= */
+        /* APP SHELL                                  */
+        /* ========================================= */
+        .app-shell {
+            max-width: 480px;
+            width: 100%;
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            padding-bottom: 90px;
+            
+            background-color: var(--bg-color);
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E"),
+                          var(--bg-glow); 
+            background-repeat: no-repeat, no-repeat;
+            background-size: auto, 100% 100%;
+            background-position: center, center;
+            
+            transition: background-color 0.4s ease, color 0.4s ease;
+            color: var(--text-primary);
+        }
 
-    body {
-      background: #f6f0e9; /* warm cream */
-      font-family: 'Quicksand', sans-serif;
-      color: #1f2a36;
-      line-height: 1.6;
-      padding: 2rem 1rem;
-    }
+        .app-container {
+            max-width: 480px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 5rem 1.25rem 2rem 1.25rem;
+        }
 
-    .container {
-      max-width: 1320px;
-      margin: 0 auto;
-      background: rgba(255, 252, 248, 0.85);
-      backdrop-filter: blur(2px);
-      border-radius: 48px 48px 32px 32px;
-      box-shadow: 0 30px 50px -30px rgba(0,0,0,0.08), 0 8px 28px rgba(0,0,0,0.02);
-      padding: 2.8rem 2.5rem 2rem;
-      background: #fdfaf6;
-    }
+        /* --- Brand Section --- */
+        .brand-section { 
+            text-align: center; 
+            margin-bottom: 2.2rem;
+            animation: fadeUp 0.6s ease forwards;
+            opacity: 0;
+        }
+        
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-    h1, h2, h3 {
-      font-weight: 600;
-      letter-spacing: -0.01em;
-      color: #1f2a36;
-    }
+        .brand-title {
+            font-family: var(--font-display);
+            font-size: 3.4rem;
+            font-weight: 800;
+            letter-spacing: -2px;
+            margin-bottom: 0.25rem;
+            line-height: 1.1;
+        }
+        
+        .brand-title .dark { color: var(--text-primary); }
+        .brand-title .orange { 
+            background: linear-gradient(135deg, var(--accent-color), #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
 
-    h1 {
-      font-size: 3.2rem;
-      line-height: 1.2;
-    }
+        .tagline {
+            font-family: var(--font-body);
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-tertiary);
+            letter-spacing: 0.5px;
+        }
 
-    h2 {
-      font-size: 2.4rem;
-      margin-bottom: 0.75rem;
-    }
+        /* --- Glass Card Components --- */
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: var(--card-blur);
+            -webkit-backdrop-filter: var(--card-blur);
+            border: var(--glass-border);
+            border-radius: 24px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--glass-shadow);
+        }
 
-    .subhead {
-      font-size: 1.3rem;
-      color: #3f4d5c;
-      font-weight: 400;
-      max-width: 700px;
-    }
+        .glass-card:hover {
+            background: var(--card-bg-hover);
+            box-shadow: var(--glass-shadow-hover);
+            transform: translateY(-2px);
+        }
 
-    .text-amber { color: #b86b3c; }
-    .text-deepblue { color: #1f2a36; }
+        /* --- LOGIN NOTICE BANNER --- */
+        .login-notice-banner {
+            width: 100%;
+            padding: 16px 20px;
+            display: none; /* Managed dynamically via JavaScript */
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 1.8rem;
+            animation: fadeUp 0.6s ease 0.1s forwards;
+            border-radius: 20px;
+        }
+        
+        .notice-icon {
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .notice-content {
+            flex: 1;
+            text-align: left;
+        }
+        
+        .notice-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+        
+        .notice-desc {
+            font-size: 11px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+        
+        .notice-btn {
+            background: var(--accent-color);
+            color: #fff;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 10px var(--accent-glow);
+            white-space: nowrap;
+        }
+        
+        .notice-btn:active {
+            transform: scale(0.95);
+        }
 
-    /* ---- buttons ---- */
-    .btn-primary {
-      display: inline-block;
-      background: #b86b3c;
-      color: #fdfaf6;
-      padding: 0.9rem 2.6rem;
-      border-radius: 60px;
-      font-weight: 600;
-      font-size: 1.15rem;
-      border: none;
-      box-shadow: 0 10px 20px -10px rgba(184, 107, 60, 0.2);
-      transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
-      text-decoration: none;
-      cursor: pointer;
-      font-family: 'Quicksand', sans-serif;
-    }
+        /* --- Unified Premium Input Box (Grey Glass) --- */
+        .input-combo-wrapper { 
+            width: 100%; 
+            margin-bottom: 2rem;
+            animation: fadeUp 0.6s ease 0.15s forwards;
+            opacity: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
 
-    .btn-primary:hover {
-      background: #a45a30;
-      transform: translateY(-3px);
-      box-shadow: 0 16px 28px -12px rgba(184, 107, 60, 0.3);
-    }
+        .input-container-inner {
+            padding: 1.75rem 1.5rem 0.5rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
 
-    .btn-secondary {
-      display: inline-block;
-      background: transparent;
-      color: #3f4d5c;
-      padding: 0.7rem 2rem;
-      border-radius: 60px;
-      font-weight: 600;
-      border: 2px solid #dccfc2;
-      transition: 0.15s ease;
-      text-decoration: none;
-      font-family: 'Quicksand', sans-serif;
-    }
+        .card-textarea {
+            width: 100%;
+            border: none;
+            outline: none;
+            resize: none;
+            font-family: var(--font-body);
+            font-size: 1.15rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            background: transparent;
+            min-height: 110px;
+            line-height: 1.6;
+            padding: 0;
+        }
+        
+        .card-textarea::placeholder { 
+            color: var(--text-placeholder); 
+            font-weight: 500;
+        }
 
-    .btn-secondary:hover {
-      background: #e8d9cd;
-      border-color: #b86b3c;
-      transform: scale(0.97);
-    }
+        .send-btn-wrapper { 
+            display: flex; 
+            justify-content: flex-end; 
+            margin-top: 0.5rem; 
+        }
 
-    /* ---- cards & surfaces ---- */
-    .card-soft {
-      background: #ffffffec;
-      border-radius: 32px;
-      padding: 2rem 2.2rem;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.02), 0 2px 8px rgba(0,0,0,0.02);
-      border: 1px solid #ece0d5;
-      transition: 0.2s ease;
-    }
+        .send-btn {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+            border-radius: 14px;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 14px rgba(245, 152, 71, 0.3);
+        }
+        
+        .send-btn:hover { 
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 6px 18px rgba(245, 152, 71, 0.4);
+        }
+        
+        .send-btn:active { transform: scale(0.95); }
+        
+        .send-btn svg {
+            width: 18px;
+            height: 18px;
+            stroke: #ffffff;
+            stroke-width: 2.5;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
 
-    .card-soft:hover {
-      border-color: #dccfc2;
-      background: #fffcf8;
-    }
+        .input-divider {
+            height: 1px;
+            background: var(--divider);
+            margin: 0 1.5rem;
+        }
 
-    /* ---- image & icon replacements (no emojis) ---- */
-    .img-rounded {
-      border-radius: 28px;
-      object-fit: cover;
-      width: 100%;
-      height: auto;
-      display: block;
-    }
+        .mode-selector-inner {
+            padding: 14px 1.5rem;
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
 
-    .icon-lg {
-      font-size: 2.8rem;
-      color: #b86b3c;
-      opacity: 0.85;
-      transition: 0.2s;
-    }
+        .mode-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0.6rem 1.1rem;
+            border-radius: 40px;
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: var(--glass-border-subtle);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background-color: var(--mode-bg);
+            color: var(--text-secondary);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+        
+        .mode-pill:hover {
+            background-color: var(--mode-bg-hover);
+            transform: translateY(-1px);
+        }
+        
+        .mode-pill svg { 
+            width: 15px; 
+            height: 15px; 
+            fill: currentColor; 
+            flex-shrink: 0; 
+        }
+        
+        .mode-pill.active { 
+            background-color: var(--accent-color) !important; 
+            color: #ffffff !important; 
+            border-color: var(--accent-color) !important;
+        }
 
-    .icon-md {
-      font-size: 1.8rem;
-      color: #3f4d5c;
-    }
+        /* --- Category Pills (Grey Glass) --- */
+        .categories-section { 
+            width: 100%; 
+            margin-bottom: 1.8rem;
+            animation: fadeUp 0.6s ease 0.2s forwards;
+            opacity: 0;
+        }
+        
+        .categories-label {
+            font-family: var(--font-body);
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--text-tertiary);
+            margin-bottom: 0.8rem;
+            padding-left: 0.2rem;
+        }
+        
+        .categories-scroll { 
+            display: flex; 
+            gap: 8px; 
+            overflow-x: auto; 
+            padding: 2px 0 6px 0; 
+            scroll-snap-type: x mandatory; 
+            -webkit-overflow-scrolling: touch; 
+            scrollbar-width: none; 
+        }
+        
+        .categories-scroll::-webkit-scrollbar { display: none; }
+        
+        .category-pill {
+            flex: 0 0 auto;
+            scroll-snap-align: start;
+            border-radius: 40px;
+            padding: 0.6rem 1.3rem;
+            font-family: var(--font-body);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+            /* Grey Glass aesthetics */
+            background: var(--card-bg);
+            border: var(--glass-border-subtle);
+            color: var(--text-secondary);
+            backdrop-filter: var(--card-blur);
+            -webkit-backdrop-filter: var(--card-blur);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+        
+        .category-pill:hover {
+            transform: translateY(-2px);
+            background: var(--card-bg-hover);
+            border-color: var(--accent-color);
+            color: var(--text-primary);
+        }
+        
+        .category-pill:active {
+            transform: scale(0.95);
+        }
 
-    .icon-badge {
-      background: #f2ede6;
-      border-radius: 60px;
-      padding: 0.5rem 1.4rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-weight: 500;
-    }
+        /* --- Listing Feed Card --- */
+        .listing-container { 
+            width: 100%; 
+            margin-top: 0.5rem; 
+            margin-bottom: 2rem;
+            animation: fadeUp 0.6s ease 0.25s forwards;
+            opacity: 0;
+        }
+        
+        .listing-card {
+            border: var(--glass-border);
+        }
 
-    /* ---- demo / animation friendly ---- */
-    .demo-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1.2rem;
-      align-items: center;
-      justify-content: center;
-    }
+        .listing-header { 
+            display: flex; 
+            align-items: center; 
+            gap: 14px; 
+            margin-bottom: 1.2rem; 
+        }
+        
+        .listing-avatar {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e83e8c, #c2185b);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-body);
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #ffffff;
+            position: relative;
+            flex-shrink: 0;
+        }
+        
+        .listing-avatar .online-dot {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 13px;
+            height: 13px;
+            background: #28a745;
+            border-radius: 50%;
+            border: 2px solid var(--card-bg);
+        }
+        
+        .listing-meta { flex: 1; min-width: 0; }
+        
+        .listing-name {
+            font-family: var(--font-body);
+            font-weight: 700;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-primary);
+        }
+        
+        .listing-name .verified { 
+            color: var(--accent-color); 
+            font-size: 0.9rem; 
+        }
+        
+        .listing-time { 
+            font-family: var(--font-body);
+            color: var(--text-tertiary); 
+            font-size: 0.8rem; 
+            margin-top: 2px; 
+            font-weight: 500;
+        }
+        
+        .listing-menu { 
+            color: var(--text-tertiary); 
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+        
+        .listing-menu:hover {
+            background: var(--mode-bg);
+        }
 
-    .demo-step {
-      flex: 1 1 140px;
-      min-width: 120px;
-      text-align: center;
-      background: #f8f2ea;
-      border-radius: 48px;
-      padding: 1.8rem 0.8rem;
-      border: 2px dashed #dccfc2;
-      transition: 0.2s;
-    }
+        .listing-body {
+            font-family: var(--font-body);
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: var(--text-secondary);
+            margin-bottom: 1.2rem;
+        }
+        
+        .listing-body .highlight { 
+            color: var(--accent-color); 
+            font-weight: 600; 
+        }
 
-    .demo-step:hover {
-      border-color: #b86b3c;
-      background: #fdfaf5;
-      transform: scale(1.02);
-    }
+        .listing-tags { 
+            display: flex; 
+            gap: 8px; 
+            flex-wrap: wrap; 
+            margin-bottom: 1.2rem; 
+        }
+        
+        .listing-tag {
+            background: var(--tag-bg);
+            color: var(--tag-text);
+            padding: 0.35rem 0.9rem;
+            border-radius: 40px;
+            font-family: var(--font-body);
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: var(--glass-border-subtle);
+        }
 
-    .demo-arrow {
-      font-size: 2.2rem;
-      color: #b86b3c;
-      opacity: 0.6;
-      animation: floatArrow 2s infinite ease-in-out;
-    }
+        .listing-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.2rem;
+            padding-bottom: 1.2rem;
+            border-bottom: 1px solid var(--divider);
+        }
+        
+        .listing-avatars { 
+            display: flex; 
+            align-items: center; 
+        }
+        
+        .listing-avatars .mini-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-body);
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #fff;
+            margin-right: -8px;
+            border: 2px solid var(--card-bg);
+        }
+        
+        .mini-avatar.a1 { background: #e83e8c; }
+        .mini-avatar.a2 { background: #0d6efd; }
+        .mini-avatar.a3 { background: #20c997; }
+        
+        .listing-views { 
+            color: var(--text-tertiary); 
+            font-family: var(--font-body);
+            font-size: 0.85rem; 
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
+        }
+        
+        .listing-views strong { 
+            color: var(--text-primary); 
+            font-weight: 600; 
+        }
+        
+        .listing-views svg { 
+            width: 16px; 
+            height: 16px; 
+            fill: var(--text-tertiary); 
+        }
 
-    @keyframes floatArrow {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(6px); }
-    }
+        .listing-actions { 
+            display: flex; 
+            justify-content: flex-end; 
+            align-items: center; 
+            gap: 10px; 
+        }
+        
+        .listing-action-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-tertiary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            padding: 6px 12px;
+            border-radius: 12px;
+        }
+        
+        .listing-action-btn:hover { 
+            background: var(--mode-bg); 
+            color: var(--text-primary); 
+        }
+        
+        .listing-action-btn svg { 
+            width: 18px; 
+            height: 18px; 
+            fill: currentColor; 
+        }
+        
+        .listing-action-btn.open-btn { 
+            color: var(--accent-color); 
+        }
+        
+        .listing-action-btn.open-btn:hover { 
+            background: rgba(245, 152, 71, 0.08); 
+        }
 
-    .magic-card {
-      background: #fdfaf5;
-      border-radius: 32px;
-      padding: 2rem 2rem;
-      border-left: 8px solid #b86b3c;
-      box-shadow: 0 16px 32px -16px rgba(0,0,0,0.04);
-      max-width: 380px;
-      transition: 0.2s;
-    }
+        /* --- Bottom Navigation --- */
+        .bottom-nav {
+            position: fixed;
+            bottom: 20px;
+            bottom: calc(20px + env(safe-area-inset-bottom));
+            left: 50%;
+            transform: translateX(-50%);
+            max-width: 480px;
+            width: calc(100% - 28px);
+            
+            background: var(--card-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: var(--glass-border);
+            border-radius: 24px;
+            padding: 6px 8px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: var(--glass-shadow);
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
 
-    .magic-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 20px 36px -18px rgba(0,0,0,0.08);
-    }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 8px 12px;
+            border-radius: 16px;
+            border: none;
+            background: transparent;
+            color: var(--text-tertiary);
+            font-family: var(--font-body);
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-width: 56px;
+            flex: 1;
+            position: relative;
+        }
+        
+        .nav-item:active { transform: scale(0.92); }
 
-    /* style selector (modern) */
-    .style-selector {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.8rem;
-      margin: 1.5rem 0;
-    }
+        .nav-item.active {
+            color: var(--accent-color);
+            background: var(--accent-light);
+        }
 
-    .style-card {
-      background: #f2ede6;
-      border-radius: 40px;
-      padding: 0.7rem 1.8rem;
-      border: 2px solid transparent;
-      transition: 0.15s;
-      font-weight: 500;
-      color: #1f2a36;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.6rem;
-    }
+        .nav-icon { 
+            width: 22px; 
+            height: 22px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
+        
+        .nav-icon svg { 
+            width: 22px; 
+            height: 22px; 
+            stroke: currentColor; 
+            fill: none; 
+            stroke-width: 2; 
+            stroke-linecap: round; 
+            stroke-linejoin: round; 
+        }
+        
+        .nav-label { 
+            font-size: 9px; 
+            letter-spacing: 0.3px; 
+            opacity: 0.8; 
+            font-weight: 600;
+        }
+        
+        .nav-item.active .nav-label { opacity: 1; }
 
-    .style-card:hover {
-      background: #e8d9cd;
-      border-color: #b86b3c;
-      transform: translateY(-2px);
-    }
+        /* --- Iframe Tabs --- */
+        .tab-iframe {
+            display: none;
+            width: 100%;
+            flex: 1;
+            min-height: 80vh;
+            border: none;
+            background: transparent;
+        }
+        .tab-iframe.active { display: block; }
+        .home-content-wrapper { 
+            display: flex; 
+            flex-direction: column; 
+            width: 100%; 
+            flex: 1; 
+        }
+        .home-content-wrapper.hidden { display: none; }
 
-    /* blog shelf */
-    .blog-shelf {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 2rem;
-      justify-content: center;
-      margin: 2rem 0;
-    }
-
-    .blog-card {
-      background: #fcf8f2;
-      border-radius: 28px;
-      padding: 1.8rem 1.5rem;
-      width: 200px;
-      flex: 1 1 170px;
-      border: 1px solid #ede3d8;
-      box-shadow: 0 8px 16px -10px rgba(0,0,0,0.02);
-      transition: 0.2s ease;
-      text-align: center;
-    }
-
-    .blog-card:hover {
-      transform: translateY(-6px);
-      border-color: #dccfc2;
-      box-shadow: 0 16px 24px -14px rgba(0,0,0,0.04);
-    }
-
-    .blog-card .icon-lg {
-      font-size: 2.4rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .testimonial-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 2rem;
-      margin: 2rem 0;
-    }
-
-    .testimonial-item {
-      background: #f8f2ea;
-      border-radius: 40px;
-      padding: 2rem 2rem;
-      flex: 1 1 200px;
-      border: 1px solid #ede3d8;
-      font-style: italic;
-      transition: 0.15s;
-    }
-
-    .testimonial-item:hover {
-      background: #fdfaf5;
-      border-color: #b86b3c;
-    }
-
-    .footer-cta {
-      background: #f2ede6;
-      border-radius: 60px;
-      padding: 3rem 2.5rem;
-      text-align: center;
-      margin-top: 2.5rem;
-    }
-
-    .input-demo {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: center;
-      gap: 1rem;
-      margin: 1.8rem 0 0.8rem;
-    }
-
-    .input-demo input {
-      flex: 1 1 300px;
-      padding: 1rem 1.8rem;
-      border-radius: 60px;
-      border: 2px solid #dccfc2;
-      background: white;
-      font-size: 1rem;
-      font-family: 'Quicksand', sans-serif;
-      outline: none;
-      transition: 0.1s ease;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-    }
-
-    .input-demo input:focus {
-      border-color: #b86b3c;
-      box-shadow: 0 0 0 4px #f2ded7;
-    }
-
-    .footer-note {
-      margin-top: 2.5rem;
-      font-size: 0.95rem;
-      color: #5b6f7e;
-      text-align: center;
-      border-top: 1px solid #ede3d8;
-      padding-top: 2.2rem;
-    }
-
-    /* split visual */
-    .split-demo {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1.2rem;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .split-left, .split-right {
-      flex: 1 1 160px;
-      border-radius: 48px;
-      padding: 1.5rem;
-      min-height: 180px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      transition: 0.2s;
-    }
-
-    .split-left {
-      background: #f0e6dc;
-      border: 2px dashed #c0b0a0;
-    }
-
-    .split-right {
-      background: #fdfaf5;
-      border: 2px solid #b86b3c;
-      box-shadow: 0 8px 0 #e8d9cd;
-    }
-
-    .split-left img, .split-right img {
-      border-radius: 24px;
-      max-width: 100%;
-      height: auto;
-      margin-bottom: 0.6rem;
-    }
-
-    .img-wrap {
-      border-radius: 32px;
-      overflow: hidden;
-    }
-
-    @media (max-width: 650px) {
-      .container { padding: 1.5rem; }
-      h1 { font-size: 2.3rem; }
-      .demo-grid { flex-direction: column; }
-    }
-
-    /* extra modern touches */
-    .pill-icon {
-      background: #e8d9cd;
-      border-radius: 40px;
-      padding: 0.4rem 1.2rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.9rem;
-      font-weight: 500;
-    }
-
-    .glow-soft {
-      box-shadow: 0 0 40px -12px rgba(184, 107, 60, 0.08);
-    }
-  </style>
+        /* --- Responsive --- */
+        @media (max-width: 420px) {
+            .app-container { padding: 4rem 0.75rem 2rem 0.75rem; }
+            .brand-title { font-size: 2.8rem; }
+            .tagline { font-size: 0.85rem; }
+            .card-textarea { font-size: 1.05rem; min-height: 100px; }
+            .mode-selector-inner { padding: 12px; flex-wrap: wrap; }
+            .mode-pill { font-size: 0.8rem; padding: 0.5rem 1rem; }
+            .listing-card { padding: 1.2rem; }
+            .listing-actions { justify-content: space-between; flex-wrap: wrap; }
+        }
+    </style>
 </head>
 <body>
-<div class="container">
-
-  <!-- HERO with actual images -->
-  <section style="margin-bottom: 3.5rem;">
-    <div style="display: flex; flex-wrap: wrap; gap: 2rem; align-items: center;">
-      <div style="flex: 2 1 320px;">
-        <span class="pill-icon"><i class="fas fa-feather-alt"></i> your friend who reads the hard stuff</span>
-        <h1 style="margin: 1rem 0 0.4rem;">Your friend who reads the complicated stuff so you don't have to.</h1>
-        <p class="subhead" style="margin: 0.8rem 0 1.8rem;">EasyRead takes articles, topics, or random curiosities and turns them into warm, story-filled explanations that feel like they were written just for you.</p>
-        <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
-          <button class="btn-primary"><i class="fas fa-paper-plane" style="margin-right: 0.5rem;"></i> Try It — Give Me Something Hard</button>
-          <a href="#" class="btn-secondary"><i class="fas fa-compass"></i> explore the blog</a>
+    <!-- Splash Screen -->
+    <div id="splashScreen">
+        <div class="splash-particles">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
         </div>
-        <div style="margin-top: 2rem; display: flex; gap: 0.8rem; flex-wrap: wrap;">
-          <span class="pill-icon"><i class="fas fa-lamp"></i> warm lamp · cozy desk</span>
-          <span class="pill-icon"><i class="fas fa-pencil-alt"></i> hand-drawn notes</span>
+        <div class="splash-content">
+            <div class="splash-logo">EasyRead</div>
+            <div class="splash-subtitle">Knowledge, Simplified</div>
+            <div class="splash-loader-track">
+                <div class="splash-loader-bar"></div>
+            </div>
+            <div class="splash-loader-text">Loading your experience...</div>
         </div>
-      </div>
-      <div style="flex: 1 1 200px; min-width: 150px;">
-        <!-- split-screen visual: messy vs clear (with images) -->
-        <div class="split-demo">
-          <div class="split-left">
-            <img src="https://images.unsplash.com/photo-1544717297-fa95b6ee9643?w=200&h=150&fit=crop&auto=format" alt="messy papers" style="border-radius: 24px; width: 100%; height: auto;" />
-            <span style="font-weight: 500; color: #5b4a3a; margin-top: 0.3rem;"><i class="fas fa-circle-exclamation"></i> dense · confusing</span>
-          </div>
-          <div style="font-size: 2.2rem; color: #b86b3c; animation: floatArrow 2s infinite;">→</div>
-          <div class="split-right">
-            <img src="https://images.unsplash.com/photo-1519682337058-a94d519337bc?w=200&h=150&fit=crop&auto=format" alt="clear card" style="border-radius: 24px; width: 100%; height: auto;" />
-            <span style="font-weight: 500; color: #1f2a36; margin-top: 0.3rem;"><i class="fas fa-lightbulb"></i> ah, now I get it</span>
-          </div>
-        </div>
-      </div>
     </div>
-  </section>
 
-  <!-- SECTION 2: Research Friend (on-demand) with more copy -->
-  <section style="margin: 4rem 0;">
-    <div style="display: flex; flex-wrap: wrap; gap: 2rem; align-items: flex-start;">
-      <div style="flex: 1.5 1 300px;">
-        <h2><i class="fas fa-magnifying-glass" style="color: #b86b3c; margin-right: 0.5rem;"></i> You bring the confusion. We bring the clarity.</h2>
-        <p style="font-size: 1.1rem; margin: 0.8rem 0 1.2rem; color: #3f4d5c;">Paste any article link, or just name a topic. Our research friend reads everything, connects the dots, and comes back with a story that makes sense to <strong>you</strong>. Analogies from your world. Examples you relate to. Zero jargon.</p>
-        <div style="display: flex; flex-wrap: wrap; gap: 0.6rem;">
-          <span class="pill-icon"><i class="fas fa-link"></i> works with links</span>
-          <span class="pill-icon"><i class="fas fa-brain"></i> adjusts to your level</span>
-          <span class="pill-icon"><i class="fas fa-pizza-slice"></i> memorable analogies</span>
+    <div class="app-shell">
+        <!-- HOME CONTENT -->
+        <div class="home-content-wrapper" id="homeWrapper">
+            <div class="app-container">
+                <div class="brand-section">
+                    <h1 class="brand-title"><span class="dark">Easy</span><span class="orange">Read</span></h1>
+                    <p class="tagline">Explained in a way only you understand</p>
+                </div>
+
+                <!-- Interactive Login Notice Banner -->
+                <div class="login-notice-banner glass-card" id="loginNotice">
+                    <div class="notice-icon">✨</div>
+                    <div class="notice-content">
+                        <h4 class="notice-title">Sign in to EasyRead</h4>
+                        <p class="notice-desc">Unlock unlimited deep dives, bookmarks, and sync reading history.</p>
+                    </div>
+                    <button class="notice-btn" onclick="triggerProfileLogin()">Sign In</button>
+                </div>
+
+                <!-- Unified Premium Input & Mode Box (Grey Glass) -->
+                <div class="input-combo-wrapper glass-card">
+                    <div class="input-container-inner">
+                        <textarea class="card-textarea" placeholder="What are we understanding today..." rows="4"></textarea>
+                        <div class="send-btn-wrapper">
+                            <button class="send-btn" aria-label="Send">
+                                <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="input-divider"></div>
+                    <div class="mode-selector-inner">
+                        <button class="mode-pill paste" id="btnPaste" onclick="setMode('paste')">
+                            <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                            Paste note
+                        </button>
+                        <button class="mode-pill website" id="btnWebsite" onclick="setMode('website')">
+                            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                            Read website
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Explore categories (Styled in Grey Glass) -->
+                <div class="categories-section">
+                    <div class="categories-label">Explore categories</div>
+                    <div class="categories-scroll">
+                        <button class="category-pill">Finance</button>
+                        <button class="category-pill">Stock Exchange</button>
+                        <button class="category-pill">Investing</button>
+                        <button class="category-pill">Economy</button>
+                        <button class="category-pill">Crypto</button>
+                        <button class="category-pill">Bonds</button>
+                        <button class="category-pill">Commodities</button>
+                    </div>
+                </div>
+
+                <!-- Home Listing Card -->
+                <div class="listing-container">
+                    <div class="listing-card glass-card">
+                        <div class="listing-header">
+                            <div class="listing-avatar">CT<div class="online-dot"></div></div>
+                            <div class="listing-meta">
+                                <div class="listing-name">Campus Tech Hub <span class="verified">✓</span></div>
+                                <div class="listing-time">2 hours ago</div>
+                            </div>
+                            <div class="listing-menu">•••</div>
+                        </div>
+                        <div class="listing-body">🚀 <span class="highlight">#Hackathon2024</span> registration is NOW OPEN! Form your teams of 3-5 and get ready to build something amazing. <span class="highlight">@StudentGovt</span> is sponsoring prizes worth ₦500k!</div>
+                        <div class="listing-tags"><span class="listing-tag">Tech</span><span class="listing-tag">Hackathon</span><span class="listing-tag">Prizes</span></div>
+                        <div class="listing-stats">
+                            <div class="listing-avatars"><div class="mini-avatar a1">JE</div><div class="mini-avatar a2">AK</div><div class="mini-avatar a3">MK</div></div>
+                            <div class="listing-views"><svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg><strong>143</strong> views</div>
+                        </div>
+                        <div class="listing-actions">
+                            <button class="listing-action-btn open-btn"><svg viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg> Open</button>
+                            <button class="listing-action-btn"><svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg> Share</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div style="margin-top: 1.5rem; background: #f8f2ea; border-radius: 32px; padding: 1.2rem 1.8rem;">
-          <i class="fas fa-quote-left" style="color: #b86b3c; opacity: 0.4;"></i>
-          <p style="font-style: italic; margin: 0.4rem 0;">“I used to dread reading dense articles. Now I look forward to seeing what story EasyRead will tell me.”</p>
-        </div>
-      </div>
-      <div style="flex: 1.2 1 260px;">
-        <div class="demo-grid">
-          <div class="demo-step">
-            <i class="fas fa-file-lines icon-lg"></i>
-            <div style="font-weight: 500;">paste any link<br>or topic</div>
-          </div>
-          <span class="demo-arrow"><i class="fas fa-arrow-right"></i></span>
-          <div class="demo-step" style="background: #f2ded7; border: 2px solid #b86b3c;">
-            <i class="fas fa-robot icon-lg" style="color: #b86b3c;"></i>
-            <div>“Ghibli machine”</div>
-          </div>
-          <span class="demo-arrow"><i class="fas fa-arrow-right"></i></span>
-          <div class="demo-step" style="background: #fdfaf5; border: 2px solid #b86b3c;">
-            <i class="fas fa-book-open icon-lg"></i>
-            <div>story card</div>
-          </div>
-        </div>
-        <!-- example output card -->
-        <div class="magic-card" style="margin: 2rem auto 0; max-width: 380px;">
-          <div style="display: flex; align-items: center; gap: 0.8rem;">
-            <i class="fas fa-lemon icon-lg" style="font-size: 2.2rem;"></i>
-            <span style="font-weight: 700; font-size: 1.3rem;">The Digital Lemonade Stand</span>
-          </div>
-          <p style="margin: 0.6rem 0; font-size: 1.05rem;"><em>“Imagine every lemonade stand in the world sharing one giant recipe book that nobody owns...”</em></p>
-          <a href="#" style="color: #b86b3c; font-weight: 600; text-decoration: underline 2px dotted #dccfc2;">Read Full Story <i class="fas fa-arrow-right"></i></a>
-        </div>
-      </div>
+
+        <!-- IFRAME TABS -->
+        <iframe class="tab-iframe" id="blogFrame" src="blog.html" loading="lazy"></iframe>
+        <iframe class="tab-iframe" id="profileFrame" src="profile.html" loading="lazy"></iframe>
+
+        <!-- BOTTOM NAVIGATION -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-tab="home" onclick="switchTab('home')">
+                <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+                <span class="nav-label">Home</span>
+            </button>
+            <button class="nav-item" data-tab="blog" onclick="switchTab('blog')">
+                <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span>
+                <span class="nav-label">Blog</span>
+            </button>
+            <button class="nav-item" data-tab="profile" onclick="switchTab('profile')">
+                <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+                <span class="nav-label">Profile</span>
+            </button>
+        </nav>
+
     </div>
-  </section>
 
-  <!-- SECTION 3: The Blog That Knows You (more copy) -->
-  <section style="margin: 4rem 0;">
-    <h2><i class="fas fa-rss" style="color: #b86b3c; margin-right: 0.5rem;"></i> A blog that does the homework for you.</h2>
-    <div style="display: flex; flex-wrap: wrap; gap: 2.5rem;">
-      <div style="flex: 1 1 260px;">
-        <p style="font-size: 1.1rem; background: #f8f2ea; padding: 1.8rem; border-radius: 32px;">
-          <i class="fas fa-feather" style="color: #b86b3c;"></i> Most blogs: someone writes, you hope it's good. <br><br>
-          <strong>EasyRead blog:</strong> quietly researches fascinating corners of football, music, movies, science — whatever genres you're into — and leaves beautifully simple articles waiting for you. Like a friend who reads 50 things and tells you the 3 that matter.
-        </p>
-        <div style="display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 1rem;">
-          <span class="pill-icon"><i class="fas fa-clock"></i> always fresh</span>
-          <span class="pill-icon"><i class="fas fa-heart"></i> your genres</span>
-          <span class="pill-icon"><i class="fas fa-bookmark"></i> ready when you are</span>
-        </div>
-      </div>
-      <div style="flex: 2 1 320px;">
-        <div class="blog-shelf">
-          <div class="blog-card">
-            <i class="fas fa-futbol icon-lg"></i>
-            <strong>Why Football Formations Changed</strong>
-            <div style="font-size: 0.9rem; color: #5b6f7e;">The Pizza Slice Theory</div>
-          </div>
-          <div class="blog-card">
-            <i class="fas fa-film icon-lg"></i>
-            <strong>Movie Soundtracks</strong>
-            <div style="font-size: 0.9rem; color: #5b6f7e;">How composers control your tears</div>
-          </div>
-          <div class="blog-card">
-            <i class="fas fa-atom icon-lg"></i>
-            <strong>Quantum Computing</strong>
-            <div style="font-size: 0.9rem; color: #5b6f7e;">A coin that's heads AND tails</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+    <script>
+        // --- 1. Theme Configuration Setup (Synced with localStorage/Profile) ---
+        let currentThemeSetting = localStorage.getItem('easyread-theme') || 'auto';
 
-  <!-- SECTION 4: Taught the way YOU learn (more context) -->
-  <section style="margin: 4rem 0;">
-    <div style="display: flex; flex-wrap: wrap; gap: 2.5rem;">
-      <div style="flex: 1.5 1 280px;">
-        <h2><i class="fas fa-chalkboard-user" style="color: #b86b3c; margin-right: 0.5rem;"></i> Finally, explanations that speak your language.</h2>
-        <p style="font-size: 1.1rem; margin: 0.5rem 0 1.2rem;">Everyone learns differently. Some need sports analogies. Others need cooking metaphors. Some want the historical backstory. Others want the bullet-point version. Most content is written for a generic “average reader” — so it connects with no one deeply.</p>
-        <p style="font-weight: 500; background: #f2ede6; padding: 1rem 1.5rem; border-radius: 40px;"><i class="fas fa-gem" style="color: #b86b3c;"></i> EasyRead learns how <strong>YOU</strong> understand things. Prefer football comparisons? Every complex topic becomes a match analysis. Think in cooking terms? Quantum physics becomes a recipe.</p>
-        <div class="style-selector">
-          <span class="style-card"><i class="fas fa-futbol"></i> Explain with sports</span>
-          <span class="style-card"><i class="fas fa-utensils"></i> Explain with cooking</span>
-          <span class="style-card"><i class="fas fa-film"></i> Explain with movies</span>
-          <span class="style-card"><i class="fas fa-leaf"></i> Explain with nature</span>
-          <span class="style-card"><i class="fas fa-face-smile-wink"></i> Make it funny</span>
-        </div>
-        <p style="font-weight: 600; color: #b86b3c; font-size: 1.1rem;">The explanations don't just become simpler. They become YOURS.</p>
-      </div>
-      <div style="flex: 1 1 180px; background: #f2ede6; border-radius: 48px; padding: 1.8rem; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-        <img src="https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=200&h=150&fit=crop&auto=format" alt="cooking metaphor" style="border-radius: 32px; width: 100%; height: auto;" />
-        <span style="font-weight: 600; text-align: center; margin-top: 0.8rem;">“quantum physics<br>as a recipe”</span>
-      </div>
-    </div>
-  </section>
+        function applyTheme(theme) {
+            currentThemeSetting = theme;
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else if (theme === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+        }
 
-  <!-- SECTION 5: Testimonials (emotional proof) -->
-  <section style="margin: 4rem 0;">
-    <h2><i class="fas fa-heart" style="color: #b86b3c; margin-right: 0.5rem;"></i> What people are saying</h2>
-    <div class="testimonial-grid">
-      <div class="testimonial-item"><i class="fas fa-quote-left" style="color: #b86b3c; opacity: 0.5;"></i> “I finally understand blockchain. My friend tried explaining it for 2 years. EasyRead did it with a story about a neighborhood potluck.”</div>
-      <div class="testimonial-item"><i class="fas fa-quote-left" style="color: #b86b3c; opacity: 0.5;"></i> “Sent my mom the article on how WiFi works. She called me excited instead of confused. That's never happened before.”</div>
-      <div class="testimonial-item"><i class="fas fa-quote-left" style="color: #b86b3c; opacity: 0.5;"></i> “The blog is dangerous. I went to read one article and surfaced three hours later knowing about music theory, black holes, and4rem 0;">
-    <h2><i class="fas fa-heart" style="color: #b86b3c; margin-right: 0.5rem;"></i> What people are saying</h2>
-    <div class="testimonial-grid">
-      <div class="testimonial-item"><i class="fas fa-quote-left" style="color: #b86b3c; opacity: 0.5;"></i> “I finally understand blockchain. My friend tried explaining it for 2 years. EasyRead did it with a story about a neighborhood potluck.”</div>
-      <div class="testimonial-item"><i class="fas fa-quote-left" style="color: #b86b3c; opacity: 0.5;"></i> “Sent my mom the article on how WiFi works. She called me excited instead of confused. That's never happened before.”</div>
-      <div class="testimonial-item"><i class="fas fa-quote-left" style="color: #b86b3c; opacity: 0.5;"></i> “The blog is dangerous. I went to read one article and surfaced three hours later knowing about music theory, black holes, and why footballers dive.”</div>
-    </div>
-  </section>
+        // Apply theme immediately
+        applyTheme(currentThemeSetting);
 
-  <!-- FOOTER / CTA -->
-  <div class="footer-cta">
-    <h3 style="font-size: 2rem; margin-bottom: 0.5rem;">Got something you've always wanted to understand but were too afraid to ask?</h3>
-    <p style="font-size: 1.1rem; color: #3f4d5c;">Drop it here. We'll turn it into a story you'll actually remember.</p>
-    <div class="input-demo">
-      <input type="text" placeholder="Quantum physics? The offside rule? Why we dream?" value="How does cryptocurrency actually work?" />
-      <button class="btn-primary" style="padding: 0.9rem 2.2rem;"><i class="fas fa-wand-magic-sparkles"></i> Make It Make Sense</button>
-    </div>
-    <div style="margin-top: 1.5rem;">
-      <a href="#" class="btn-secondary"><i class="fas fa-compass"></i> Or explore the blog — we've already explained some cool stuff.</a>
-    </div>
-  </div>
+        // System preference change listener
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+            if (localStorage.getItem('easyread-theme') === 'auto' || !localStorage.getItem('easyread-theme')) {
+                applyTheme('auto');
+            }
+        });
 
-  <!-- tiny footer note -->
-  <div class="footer-note">
-    <i class="fas fa-feather-alt" style="color: #b86b3c;"></i> EasyRead — Your friend who reads the hard stuff.
-    <div style="margin-top: 0.5rem; font-size: 0.85rem; color: #9aabbb;">✻ no robots · just warmth ✻</div>
-  </div>
+        // --- 2. Shared Login State Sync ---
+        function updateLoginNotice() {
+            // Checks if a user is logged in (shared with profile page)
+            const isLoggedIn = localStorage.getItem('easyread-logged-in') === 'true';
+            const noticeBanner = document.getElementById('loginNotice');
+            if (noticeBanner) {
+                noticeBanner.style.display = isLoggedIn ? 'none' : 'flex';
+            }
+        }
 
-</div> <!-- end container -->
+        function triggerProfileLogin() {
+            // Switch navigation tab to profile
+            switchTab('profile');
+            // Give iframe layout a brief moment to render, then postMessage to prompt dialog
+            setTimeout(() => {
+                const profileFrame = document.getElementById('profileFrame');
+                if (profileFrame && profileFrame.contentWindow) {
+                    profileFrame.contentWindow.postMessage('triggerLogin', '*');
+                }
+            }, 150);
+        }
+
+        // Fast state synchronization loop for cross-tab or nested-iframe localStorage modifications
+        setInterval(() => {
+            const storedTheme = localStorage.getItem('easyread-theme') || 'auto';
+            if (storedTheme !== currentThemeSetting) {
+                applyTheme(storedTheme);
+            }
+            updateLoginNotice();
+        }, 600);
+
+        // --- 3. Splash Screen Logic ---
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                document.getElementById('splashScreen').classList.add('hidden');
+            }, 2400);
+        });
+
+        // --- 4. Content Selector Logic ---
+        function setMode(mode) {
+            const pasteBtn = document.getElementById('btnPaste');
+            const websiteBtn = document.getElementById('btnWebsite');
+            pasteBtn.classList.remove('active'); 
+            websiteBtn.classList.remove('active');
+            const textarea = document.querySelector('.card-textarea');
+            
+            if (mode === 'paste') { 
+                pasteBtn.classList.add('active'); 
+                textarea.placeholder = "Paste your long note here..."; 
+            } else if (mode === 'website') { 
+                websiteBtn.classList.add('active'); 
+                textarea.placeholder = "Paste the article URL here..."; 
+            }
+        }
+        
+        // --- 5. Navigation & PostMessage System Tab Switches ---
+        function switchTab(tab) {
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            const activeNav = document.querySelector(`[data-tab="${tab}"]`);
+            if (activeNav) activeNav.classList.add('active');
+            
+            const homeWrapper = document.getElementById('homeWrapper');
+            const blogFrame = document.getElementById('blogFrame');
+            const profileFrame = document.getElementById('profileFrame');
+            
+            homeWrapper.classList.add('hidden');
+            blogFrame.classList.remove('active');
+            profileFrame.classList.remove('active');
+            
+            if (tab === 'home') homeWrapper.classList.remove('hidden');
+            else if (tab === 'blog') blogFrame.classList.add('active');
+            else if (tab === 'profile') profileFrame.classList.add('active');
+        }
+
+        // Listens to cross-frame requests (e.g. Back commands or status changes)
+        window.addEventListener('message', (event) => {
+            if (event.data) {
+                if (event.data.type === 'switchTab') {
+                    switchTab(event.data.tab);
+                } else if (event.data.type === 'themeChanged') {
+                    applyTheme(event.data.theme);
+                } else if (event.data.type === 'authChanged') {
+                    updateLoginNotice();
+                }
+            }
+        });
+        
+        document.addEventListener('DOMContentLoaded', function() { 
+            switchTab('home'); 
+            setMode('paste');
+            updateLoginNotice();
+        });
+    </script>
 </body>
 </html>
