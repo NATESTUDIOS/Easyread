@@ -15,7 +15,6 @@
     <style>
         /* --- CSS Variables for Auto Light/Dark Theme --- */
         :root {
-            /* Light Theme Defaults */
             --bg-color: #f5f5f7;
             --bg-glow: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.8) 0%, transparent 70%);
             --text-main: #1c1c1e;
@@ -32,11 +31,9 @@
             --accent-color: #f59847;
             --accent-dark: #b8860b;
             --accent-glow: rgba(245, 152, 71, 0.2);
-            --theme-primary: #f59847;
             --divider: rgba(0,0,0,0.08);
         }
 
-        /* Dark Theme (Auto-detected) - TRUE AMOLED BLACK */
         @media (prefers-color-scheme: dark) {
             :root {
                 --bg-color: #000000;
@@ -52,48 +49,45 @@
                 --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.04);
                 --glass-shadow: 0 8px 32px rgba(0,0,0,0.6);
                 
-                --accent-color: #c49a45;
+                --accent-color: #f59847;
                 --accent-dark: #b8860b;
-                --accent-glow: rgba(196, 154, 69, 0.2);
-                --theme-primary: #c49a45;
+                --accent-glow: rgba(245, 152, 71, 0.2);
                 --divider: rgba(255,255,255,0.06);
             }
         }
 
-        /* --- Manual Theme Switching Overrides --- */
         [data-theme="light"] {
-            --bg-color: #f5f5f7;
-            --bg-glow: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.8) 0%, transparent 70%);
-            --text-main: #1c1c1e;
-            --text-secondary: #6c6c70;
-            --text-muted: #9a9a9e;
-            --text-tertiary: rgba(0,0,0,0.3);
-            --card-bg: rgba(255, 255, 255, 0.85);
-            --glass-border: 1.5px solid rgba(0, 0, 0, 0.12);
-            --glass-border-subtle: 1px solid rgba(0, 0, 0, 0.08);
-            --glass-shadow: 0 10px 30px rgba(0,0,0,0.08);
-            --accent-color: #f59847;
-            --accent-glow: rgba(245, 152, 71, 0.2);
-            --divider: rgba(0,0,0,0.08);
+            --bg-color: #f5f5f7 !important;
+            --bg-glow: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.8) 0%, transparent 70%) !important;
+            --text-main: #1c1c1e !important;
+            --text-secondary: #6c6c70 !important;
+            --text-muted: #9a9a9e !important;
+            --text-tertiary: rgba(0,0,0,0.3) !important;
+            --card-bg: rgba(255, 255, 255, 0.85) !important;
+            --glass-border: 1.5px solid rgba(0, 0, 0, 0.12) !important;
+            --glass-border-subtle: 1px solid rgba(0, 0, 0, 0.08) !important;
+            --glass-shadow: 0 10px 30px rgba(0,0,0,0.08) !important;
+            --accent-color: #f59847 !important;
+            --accent-glow: rgba(245, 152, 71, 0.2) !important;
+            --divider: rgba(0,0,0,0.08) !important;
         }
+
         [data-theme="dark"] {
-            --bg-color: #000000;
-            --bg-glow: radial-gradient(circle at 50% 0%, rgba(40, 40, 42, 0.4) 0%, transparent 60%);
-            --text-main: #e8e8ea;
-            --text-secondary: #9a9a9e;
-            --text-muted: #6c6c70;
-            --text-tertiary: rgba(255,255,255,0.3);
-            --card-bg: rgba(18, 18, 18, 0.85);
-            --glass-border: 1px solid rgba(255, 255, 255, 0.08);
-            --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.04);
-            --glass-shadow: 0 8px 32px rgba(0,0,0,0.6);
-            --accent-color: #c49a45;
-            --accent-glow: rgba(196, 154, 69, 0.2);
-            --theme-primary: #c49a45;
+            --bg-color: #000000 !important;
+            --bg-glow: radial-gradient(circle at 50% 0%, rgba(40, 40, 42, 0.4) 0%, transparent 60%) !important;
+            --text-main: #e8e8ea !important;
+            --text-secondary: #9a9a9e !important;
+            --text-muted: #6c6c70 !important;
+            --text-tertiary: rgba(255,255,255,0.3) !important;
+            --card-bg: rgba(18, 18, 18, 0.85) !important;
+            --glass-border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.04) !important;
+            --glass-shadow: 0 8px 32px rgba(0,0,0,0.6) !important;
+            --accent-color: #f59847 !important;
+            --accent-glow: rgba(245, 152, 71, 0.2) !important;
             --divider: rgba(255,255,255,0.06);
         }
 
-        /* --- Reset & Base Styles --- */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         *:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 2px; }
         
@@ -104,7 +98,6 @@
             background-repeat: no-repeat, no-repeat;
             background-size: auto, 100% 100%;
             background-position: center, center;
-            
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             min-height: 100vh;
             display: flex;
@@ -125,7 +118,6 @@
             align-items: center;
         }
 
-        /* --- Header --- */
         .header {
             width: 100%;
             padding: 1.2rem 1.5rem 0.8rem 1.5rem;
@@ -141,11 +133,12 @@
             display: flex; align-items: center; justify-content: center;
             cursor: pointer;
             color: var(--text-main);
+            background: none;
+            border: none;
         }
         .header .back-btn svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; }
         .header-title { font-size: 1.2rem; font-weight: 700; }
 
-        /* --- Main Content Area --- */
         .content-area {
             width: 100%;
             padding: 0 1.5rem 1.5rem 1.5rem;
@@ -154,9 +147,7 @@
             gap: 1.5rem;
         }
 
-        /* ========================================= */
-        /* SECTION 1: IDENTITY & STATS (Always Visible) */
-        /* ========================================= */
+        /* --- IDENTITY & STATS CARD --- */
         .shareable-card {
             border: var(--glass-border);
             border-radius: 24px;
@@ -164,18 +155,8 @@
             position: relative;
             overflow: hidden;
             box-shadow: var(--glass-shadow);
-        }
-        
-        [data-theme="light"] .shareable-card,
-        .shareable-card {
-            background: linear-gradient(135deg, var(--card-bg), rgba(255, 255, 255, 0.4));
-        }
-        
-        [data-theme="dark"] .shareable-card,
-        @media (prefers-color-scheme: dark) {
-            .shareable-card {
-                background: linear-gradient(135deg, var(--card-bg), rgba(40, 30, 20, 0.9));
-            }
+            background: var(--card-bg);
+            backdrop-filter: var(--card-blur);
         }
 
         .shareable-card::before {
@@ -221,7 +202,7 @@
         }
         .profile-info { flex: 1; min-width: 0; }
         .profile-name { font-size: 18px; font-weight: 700; margin-bottom: 2px; }
-        .profile-email { font-size: 12px; color: var(--text-secondary); }
+        .profile-email { font-size: 12px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         
         .profile-rank-row {
             display: flex; align-items: center; gap: 8px;
@@ -285,15 +266,12 @@
         .stat-value { font-size: 18px; font-weight: 800; color: var(--accent-color); }
         .stat-label { font-size: 10px; color: var(--text-tertiary); font-weight: 600; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
 
-        /* ========================================= */
-        /* TAB NAVIGATION */
-        /* ========================================= */
+        /* --- TAB NAVIGATION --- */
         .tab-nav {
             width: 100%;
             display: flex;
             background: var(--card-bg);
             backdrop-filter: var(--card-blur);
-            -webkit-backdrop-filter: var(--card-blur);
             border: var(--glass-border-subtle);
             border-radius: 40px;
             padding: 4px;
@@ -320,9 +298,6 @@
         }
         .tab-btn:hover:not(.active) { color: var(--text-main); }
 
-        /* ========================================= */
-        /* TAB CONTENT CONTAINERS */
-        /* ========================================= */
         .tab-content {
             display: none;
             flex-direction: column;
@@ -330,9 +305,6 @@
         }
         .tab-content.active { display: flex; }
 
-        /* ========================================= */
-        /* SECTION 2: HISTORY & COLLECTIONS          */
-        /* ========================================= */
         .section-header {
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 12px;
@@ -344,13 +316,13 @@
             transition: opacity 0.2s;
         }
         .section-header .see-all:active { opacity: 0.6; }
-        .section-header .see-all.expanded { color: var(--text-secondary); }
 
-        /* --- Expandable Lists --- */
-        .mini-list {
+        /* --- LISTS --- */
+        .mini-list, .saved-list {
             display: flex; flex-direction: column; gap: 10px;
         }
         .mini-list:not(.expanded) .mini-card:nth-child(n+4) { display: none; }
+        .saved-list:not(.expanded) .saved-row:nth-child(n+4) { display: none; }
 
         .mini-card {
             background: var(--card-bg);
@@ -377,21 +349,6 @@
         .mini-info { flex: 1; min-width: 0; }
         .mini-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .mini-meta { font-size: 12px; color: var(--text-secondary); }
-        
-        .status-pill {
-            font-size: 11px; font-weight: 600;
-            padding: 4px 10px; border-radius: 20px; flex-shrink: 0;
-        }
-        .status-completed { background: rgba(52, 199, 89, 0.12); color: #34c759; }
-        .status-reading { background: rgba(255, 149, 0, 0.12); color: #ff9500; }
-
-        /* ========================================= */
-        /* BOOKMARKS TAB CONTENT */
-        /* ========================================= */
-        .saved-list {
-            display: flex; flex-direction: column; gap: 10px;
-        }
-        .saved-list:not(.expanded) .saved-row:nth-child(n+4) { display: none; }
 
         .saved-row {
             display: flex; align-items: center; gap: 12px;
@@ -401,25 +358,33 @@
         .saved-row:last-child { border-bottom: none; }
         
         .saved-dot {
-            width: 32px; height: 32px;
+            width: 36px; height: 36px;
             border-radius: 10px;
             display: flex; align-items: center; justify-content: center;
-            color: #fff;
-            font-size: 13px; font-weight: 700;
+            color: #fff; flex-shrink: 0;
         }
         .saved-dot svg {
-            width: 16px; height: 16px;
+            width: 18px; height: 18px;
             stroke: currentColor; fill: none; stroke-width: 2.2;
         }
 
         .saved-info { flex: 1; min-width: 0; }
-        .saved-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .saved-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .saved-meta { font-size: 12px; color: var(--text-secondary); }
         .saved-arrow { color: var(--text-tertiary); font-size: 18px; }
 
-        /* ========================================= */
-        /* SECTION 3: CONTROL & SETTINGS             */
-        /* ========================================= */
+        .empty-placeholder {
+            text-align: center;
+            padding: 2.5rem 1rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            background: var(--card-bg);
+            border-radius: 16px;
+            border: var(--glass-border-subtle);
+        }
+
+        /* --- SETTINGS --- */
         .settings-list {
             background: var(--card-bg);
             backdrop-filter: var(--card-blur);
@@ -430,10 +395,11 @@
         .settings-item {
             display: flex; align-items: center; gap: 14px;
             padding: 16px 18px; border-bottom: var(--glass-border-subtle);
-            cursor: pointer; transition: opacity 0.2s;
+            cursor: pointer; transition: background 0.2s;
         }
         .settings-item:last-child { border-bottom: none; }
-        .settings-item:active { opacity: 0.6; }
+        .settings-item:hover { background: rgba(0,0,0,0.02); }
+        .settings-item:active { opacity: 0.7; }
         
         .settings-icon {
             width: 40px; height: 40px;
@@ -444,56 +410,21 @@
         .settings-icon svg { width: 20px; height: 20px; stroke: var(--text-secondary); fill: none; stroke-width: 2; }
         
         .settings-info { flex: 1; }
-        .settings-label { font-size: 15px; font-weight: 500; }
+        .settings-label { font-size: 15px; font-weight: 600; }
         .settings-sub { font-size: 12px; color: var(--text-secondary); }
         .settings-arrow { color: var(--text-tertiary); font-size: 18px; }
 
-        /* --- Toggle Switches --- */
-        .toggle-container {
-            background: var(--card-bg);
-            backdrop-filter: var(--card-blur);
-            border: var(--glass-border-subtle);
-            border-radius: 16px; overflow: hidden;
-            margin-top: 1rem;
-            box-shadow: var(--glass-shadow);
-        }
-        .toggle-row {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 16px 18px; border-bottom: var(--glass-border-subtle);
-            cursor: pointer;
-        }
-        .toggle-row:last-child { border-bottom: none; }
-        .toggle-label { font-size: 15px; font-weight: 500; }
-        .toggle {
-            width: 48px; height: 28px; border-radius: 14px;
-            background: rgba(255, 255, 255, 0.1);
-            position: relative; transition: background 0.3s;
-        }
-        .toggle.active { background: var(--accent-color); }
-        .toggle::after {
-            content: ""; position: absolute; top: 3px; left: 3px;
-            width: 22px; height: 22px; border-radius: 50%;
-            background: #fff; transition: transform 0.3s;
-        }
-        .toggle.active::after { transform: translateX(20px); }
-
-        /* ========================================= */
-        /* DIALOG / MODAL SYSTEM (STYLISH BLUR) */
-        /* ========================================= */
+        /* --- DIALOGS --- */
         .dialog-overlay {
             position: fixed;
             top: 0; left: 0;
             width: 100vw; height: 100vh;
-            background: rgba(0, 0, 0, 0.25);
-            backdrop-filter: blur(25px) saturate(180%);
-            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(20px);
             display: flex; align-items: center; justify-content: center;
             z-index: 1000;
             opacity: 0; pointer-events: none;
-            transition: opacity 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
-        [data-theme="dark"] .dialog-overlay {
-            background: rgba(0, 0, 0, 0.55);
+            transition: opacity 0.25s ease;
         }
         .dialog-overlay.active {
             opacity: 1;
@@ -502,28 +433,24 @@
         .glass-dialog {
             background: var(--card-bg);
             backdrop-filter: var(--card-blur);
-            -webkit-backdrop-filter: var(--card-blur);
             border: var(--glass-border);
             border-radius: 28px;
-            padding: 28px;
+            padding: 26px;
             width: 90%;
             max-width: 380px;
-            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.15);
-            transform: scale(0.9) translateY(10px);
-            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
+            transform: scale(0.95);
+            transition: transform 0.25s ease;
             text-align: center;
         }
-        [data-theme="dark"] .glass-dialog {
-            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6);
-        }
         .dialog-overlay.active .glass-dialog {
-            transform: scale(1) translateY(0);
+            transform: scale(1);
         }
         .dialog-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
         .dialog-title {
             font-size: 18px;
@@ -533,28 +460,19 @@
         .dialog-close {
             background: none;
             border: none;
-            font-size: 24px;
+            font-size: 20px;
             color: var(--text-secondary);
             cursor: pointer;
-            line-height: 1;
             padding: 4px;
         }
 
-        /* Dialog options lists */
         .dialog-options {
             display: flex;
             flex-direction: column;
             gap: 10px;
-            max-height: 300px;
+            max-height: 320px;
             overflow-y: auto;
             padding-right: 4px;
-        }
-        .dialog-options::-webkit-scrollbar {
-            width: 4px;
-        }
-        .dialog-options::-webkit-scrollbar-thumb {
-            background: var(--divider);
-            border-radius: 4px;
         }
 
         .dialog-option-btn {
@@ -562,8 +480,8 @@
             flex-direction: column;
             align-items: flex-start;
             width: 100%;
-            padding: 14px 18px;
-            background: rgba(255, 255, 255, 0.05);
+            padding: 14px 16px;
+            background: rgba(0, 0, 0, 0.03);
             border: var(--glass-border-subtle);
             border-radius: 14px;
             color: var(--text-main);
@@ -573,7 +491,7 @@
             text-align: left;
         }
         .dialog-option-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.06);
         }
         .dialog-option-btn.active {
             background: var(--accent-color);
@@ -581,25 +499,22 @@
             border-color: var(--accent-color);
         }
         .dialog-option-btn .option-title {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 700;
             display: flex;
             align-items: center;
             gap: 8px;
         }
-        .dialog-option-btn .option-title svg {
-            width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2.2;
-        }
         .dialog-option-btn .option-sub {
             font-size: 11px;
-            opacity: 0.8;
+            opacity: 0.85;
             margin-top: 4px;
             line-height: 1.4;
         }
 
-        /* Auth form styling */
+        /* --- AUTH FORMS --- */
         .form-group {
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             text-align: left;
         }
         .form-label {
@@ -613,123 +528,78 @@
         }
         .form-input {
             width: 100%;
-            padding: 12px 16px;
+            padding: 12px 14px;
             border-radius: 12px;
-            background: rgba(255, 255, 255, 0.06);
+            background: rgba(0, 0, 0, 0.04);
             border: var(--glass-border-subtle);
             color: var(--text-main);
             font-family: inherit;
             font-size: 14px;
-            transition: all 0.2s;
         }
         .form-input:focus {
             outline: none;
             border-color: var(--accent-color);
-            background: rgba(255, 255, 255, 0.1);
         }
         .auth-submit-btn {
             width: 100%;
-            padding: 14px;
+            padding: 13px;
             border-radius: 14px;
             background: var(--accent-color);
             border: none;
             color: white;
             font-family: inherit;
-            font-size: 15px;
-            font-weight: 600;
+            font-size: 14px;
+            font-weight: 700;
             cursor: pointer;
             margin-top: 10px;
             box-shadow: 0 4px 12px rgba(245, 152, 71, 0.25);
             transition: all 0.2s;
         }
-        .auth-submit-btn:active {
-            transform: scale(0.98);
+        .auth-submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
         .auth-toggle-link {
             text-align: center;
             font-size: 13px;
             color: var(--accent-color);
-            margin-top: 16px;
+            margin-top: 14px;
             cursor: pointer;
-            font-weight: 500;
+            font-weight: 600;
         }
-        .auth-toggle-link:hover {
-            text-decoration: underline;
+        .auth-error-msg {
+            color: #ff3b30;
+            font-size: 12px;
+            margin-top: 10px;
+            display: none;
+            text-align: center;
         }
 
-        /* Shimmer Loading Elements Setup */
+        /* --- SHIMMER LOADER --- */
         .shimmer-element {
             position: relative;
             overflow: hidden;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(0, 0, 0, 0.05);
             border-radius: 4px;
         }
-        [data-theme="light"] .shimmer-element {
-            background: rgba(0, 0, 0, 0.04);
+        @media (prefers-color-scheme: dark) {
+            .shimmer-element { background: rgba(255, 255, 255, 0.06); }
         }
         .shimmer-element::after {
-            position: absolute;
-            top: 0; right: 0; bottom: 0; left: 0;
+            position: absolute; top: 0; right: 0; bottom: 0; left: 0;
             transform: translateX(-100%);
-            background-image: linear-gradient(
-                90deg,
-                rgba(255, 255, 255, 0) 0%,
-                rgba(255, 255, 255, 0.08) 20%,
-                rgba(255, 255, 255, 0.15) 60%,
-                rgba(255, 255, 255, 0) 100%
-            );
+            background-image: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0) 100%);
             animation: shimmerSwipe 1.5s infinite;
             content: '';
         }
-        [data-theme="light"] .shimmer-element::after {
-            background-image: linear-gradient(
-                90deg,
-                rgba(255, 255, 255, 0) 0%,
-                rgba(0, 0, 0, 0.02) 20%,
-                rgba(0, 0, 0, 0.05) 60%,
-                rgba(255, 255, 255, 0) 100%
-            );
-        }
-        @keyframes shimmerSwipe {
-            100% { transform: translateX(100%); }
-        }
+        @keyframes shimmerSwipe { 100% { transform: translateX(100%); } }
 
-        .shimmer-card-wrapper {
-            pointer-events: none;
-        }
-        .shimmer-element.circle {
-            width: 44px; height: 44px;
-            border-radius: 12px;
-        }
-        .shimmer-element.line-title {
-            width: 70%; height: 14px;
-            margin-bottom: 8px;
-        }
-        .shimmer-element.line-meta {
-            width: 45%; height: 11px;
-        }
-        .shimmer-element.line-pill {
-            width: 46px; height: 20px;
-            border-radius: 20px;
-        }
-        .shimmer-element.line-arrow {
-            width: 12px; height: 18px;
-        }
-        .shimmer-row-wrapper {
-            pointer-events: none;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 14px 0;
-        }
-
-        /* --- Responsive --- */
         @media (max-width: 420px) {
             .header { padding: 1rem 1rem 0.5rem 1rem; }
             .content-area { padding: 0 1rem 1rem 1rem; }
-            .profile-avatar { width: 48px; height: 48px; font-size: 22px; }
+            .profile-avatar { width: 52px; height: 52px; font-size: 20px; }
             .stat-box { padding: 10px 8px; }
-            .stat-value { font-size: 18px; }
+            .stat-value { font-size: 16px; }
         }
     </style>
 </head>
@@ -739,59 +609,53 @@
         
         <!-- Header -->
         <header class="header">
-            <div class="back-btn" onclick="window.parent.postMessage({ type: 'switchTab', tab: 'home' }, '*');">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-            </div>
-            <div class="header-title">Profile</div>
+            <button class="back-btn" onclick="navigateHome()" title="Back to home">
+                <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            </button>
+            <div class="header-title">Profile & Settings</div>
         </header>
 
         <main class="content-area">
             
-            <!-- SECTION 1: IDENTITY & STATS (Always Visible) -->
+            <!-- IDENTITY & STATS -->
             <section>
                 <div class="shareable-card">
                     <button class="card-share-btn" aria-label="Share profile" onclick="shareProfile()">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="18" cy="5" r="3" />
-                            <circle cx="6" cy="12" r="3" />
-                            <circle cx="18" cy="19" r="3" />
-                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-                        </svg>
+                        <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg>
                     </button>
                     <div class="card-top-row">
-                        <div class="profile-avatar" id="avatarIcon">ER</div>
+                        <div class="profile-avatar" id="avatarIcon">G</div>
                         <div class="profile-info">
-                            <div class="profile-name" id="profileName">EasyReader</div>
-                            <div class="profile-email" id="profileEmail">user@email.com</div>
-                            <div class="profile-rank-row" id="profileRankRow">
+                            <div class="profile-name" id="profileName">Guest User</div>
+                            <div class="profile-email" id="profileEmail">Sign in to save history & bookmarks</div>
+                            <div class="profile-rank-row" id="profileRankRow" style="display: none;">
                                 <span class="profile-badge" id="activeProfileHeaderBadge">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-                                    <span id="headerBadgeText">Everyday Analogy</span>
+                                    <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                                    <span id="headerBadgeText">Default</span>
                                 </span>
                             </div>
-                            <button class="profile-signin-btn" id="profileSignInBtn" style="display: none;" onclick="openDialog('loginDialog')">Sign In</button>
+                            <button class="profile-signin-btn" id="profileSignInBtn" onclick="openDialog('loginDialog')">Sign In</button>
                         </div>
                     </div>
                     <div class="profile-stats">
                         <div class="stat-box">
                             <div class="stat-box-inner">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-                                <div class="stat-value" id="userCreditsValue">38.5</div>
+                                <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                                <div class="stat-value" id="userCreditsValue">0.0</div>
                             </div>
                             <div class="stat-label">Credits</div>
                         </div>
                         <div class="stat-box">
                             <div class="stat-box-inner">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
-                                <div class="stat-value" id="readStatsValue">47</div>
+                                <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                                <div class="stat-value" id="readStatsValue">0</div>
                             </div>
                             <div class="stat-label">Read</div>
                         </div>
                         <div class="stat-box">
                             <div class="stat-box-inner">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
-                                <div class="stat-value" id="bookmarkStatsValue">14</div>
+                                <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+                                <div class="stat-value" id="bookmarkStatsValue">0</div>
                             </div>
                             <div class="stat-label">Bookmarks</div>
                         </div>
@@ -799,96 +663,63 @@
                 </div>
             </section>
 
-            <!-- ========================================= -->
-            <!-- TAB NAVIGATION                             -->
-            <!-- ========================================= -->
+            <!-- TAB NAVIGATION -->
             <div class="tab-nav">
                 <button class="tab-btn active" data-tab="tab-history">History</button>
                 <button class="tab-btn" data-tab="tab-bookmarks">Bookmarks</button>
                 <button class="tab-btn" data-tab="tab-settings">Settings</button>
             </div>
 
-            <!-- ========================================= -->
-            <!-- TAB: HISTORY (Reading History Only)       -->
-            <!-- ========================================= -->
+            <!-- TAB: HISTORY -->
             <div class="tab-content active" id="tab-history">
                 <div class="section-header">
                     <h3>Reading History</h3>
-                    <span class="see-all" id="seeAllHistory">See all</span>
+                    <span class="see-all" id="seeAllHistory" style="display: none;">See all</span>
                 </div>
-                <div class="mini-list" id="historyList">
-                    <!-- Loaded dynamically via API -->
-                </div>
+                <div class="mini-list" id="historyList"></div>
             </div>
 
-            <!-- ========================================= -->
-            <!-- TAB: BOOKMARKS                             -->
-            <!-- ========================================= -->
+            <!-- TAB: BOOKMARKS -->
             <div class="tab-content" id="tab-bookmarks">
                 <div class="section-header">
                     <h3>Saved Articles</h3>
-                    <span class="see-all" id="seeAllBookmarks">See all</span>
+                    <span class="see-all" id="seeAllBookmarks" style="display: none;">See all</span>
                 </div>
-                <div class="saved-list" id="bookmarksList">
-                    <!-- Loaded dynamically via API -->
-                </div>
+                <div class="saved-list" id="bookmarksList"></div>
             </div>
 
-            <!-- ========================================= -->
-            <!-- TAB: SETTINGS (Control & Settings)         -->
-            <!-- ========================================= -->
+            <!-- TAB: SETTINGS -->
             <div class="tab-content" id="tab-settings">
-                
                 <div class="settings-list">
-                    <div class="settings-item" onclick="openDialog('loginDialog')">
+                    <div class="settings-item" id="authSettingItem" onclick="handleAuthAction()">
                         <div class="settings-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                            <svg id="authIcon" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><polyline points="10 17 15 12 10 7" /><line x1="15" y1="12" x2="3" y2="12" /></svg>
                         </div>
                         <div class="settings-info">
-                            <div class="settings-label">Edit Profile</div>
-                            <div class="settings-sub">Name, email, and authentication</div>
+                            <div class="settings-label" id="authLabel">Sign In / Sign Up</div>
+                            <div class="settings-sub" id="authSub">Access your library & credits</div>
                         </div>
                         <div class="settings-arrow">›</div>
                     </div>
-                    <!-- AI/Empowering Learning Profile Setting -->
-                    <div class="settings-item" id="aiProfileSelectorBtn" onclick="openDialog('profileDialog')">
+                    <div class="settings-item" onclick="openDialog('profileDialog')">
                         <div class="settings-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+                            <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
                         </div>
                         <div class="settings-info">
-                            <div class="settings-label">Comprehension Persona</div>
-                            <div class="settings-sub" id="currentProfileLabel">Everyday Analogy</div>
+                            <div class="settings-label">Active Persona</div>
+                            <div class="settings-sub" id="currentProfileLabel">Everyday Life</div>
                         </div>
                         <div class="settings-arrow">›</div>
                     </div>
-                    <!-- Unified Theme Setting Item -->
-                    <div class="settings-item" id="themeSelectorBtn" onclick="openDialog('themeDialog')">
+                    <div class="settings-item" onclick="openDialog('themeDialog')">
                         <div class="settings-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/><circle cx="12" cy="12" r="4"/></svg>
+                            <svg viewBox="0 0 24 24"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/><circle cx="12" cy="12" r="4"/></svg>
                         </div>
                         <div class="settings-info">
                             <div class="settings-label">Theme Preference</div>
-                            <div class="settings-sub" id="currentThemeLabel">Auto (System)</div>
+                            <div class="settings-sub" id="currentThemeLabel">System (Auto)</div>
                         </div>
                         <div class="settings-arrow">›</div>
-                    </div>
-                    <!-- Adaptive Auth Button -->
-                    <div class="settings-item" id="authSettingItem" onclick="handleAuthAction()">
-                        <div class="settings-icon">
-                            <svg id="authIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
-                        </div>
-                        <div class="settings-info">
-                            <div class="settings-label" id="authLabel" style="color: #ff3b30">Log Out</div>
-                            <div class="settings-sub" id="authSub">Sign out of your account</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Match Pipeline background options -->
-                <div class="toggle-container">
-                    <div class="toggle-row" id="autoRegToggle">
-                        <span class="toggle-label">Auto-Generate Explanations</span>
-                        <div class="toggle" id="autoRegSwitch"></div>
                     </div>
                 </div>
             </div>
@@ -896,24 +727,18 @@
         </main>
     </div>
 
-    <!-- ========================================= -->
-    <!-- DIALOGS & OVERLAYS                         -->
-    <!-- ========================================= -->
-
-    <!-- Learning Profile Selector Dialog (Mapped to database profile_id options, non-judgmental) -->
+    <!-- Learning Profile Dialog -->
     <div class="dialog-overlay" id="profileDialog">
         <div class="glass-dialog">
             <div class="dialog-header">
                 <h3 class="dialog-title">Select Perspective</h3>
                 <button class="dialog-close" onclick="closeDialog('profileDialog')">&times;</button>
             </div>
-            <div class="dialog-options" id="profileOptionsContainer">
-                <!-- Loaded dynamically or via modern empowering static fallbacks -->
-            </div>
+            <div class="dialog-options" id="profileOptionsContainer"></div>
         </div>
     </div>
 
-    <!-- Theme Selection Dialog -->
+    <!-- Theme Dialog -->
     <div class="dialog-overlay" id="themeDialog">
         <div class="glass-dialog">
             <div class="dialog-header">
@@ -924,17 +749,17 @@
                 <button class="dialog-option-btn" data-theme-val="light" onclick="selectTheme('light')">
                     <span class="option-title">Light Mode</span>
                 </button>
-                <button class="theme-option-btn dialog-option-btn" data-theme-val="dark" onclick="selectTheme('dark')">
+                <button class="dialog-option-btn" data-theme-val="dark" onclick="selectTheme('dark')">
                     <span class="option-title">Dark Mode</span>
                 </button>
-                <button class="theme-option-btn dialog-option-btn" data-theme-val="auto" onclick="selectTheme('auto')">
-                    <span class="option-title">System Preference</span>
+                <button class="dialog-option-btn" data-theme-val="auto" onclick="selectTheme('auto')">
+                    <span class="option-title">System (Auto)</span>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Login/Sign Up Glass Dialog -->
+    <!-- Login/Sign Up Dialog -->
     <div class="dialog-overlay" id="loginDialog">
         <div class="glass-dialog">
             <div class="dialog-header">
@@ -950,6 +775,7 @@
                     <label class="form-label" for="authPassword">Password</label>
                     <input class="form-input" type="password" id="authPassword" required placeholder="••••••••">
                 </div>
+                <div class="auth-error-msg" id="authErrorMsg"></div>
                 <button class="auth-submit-btn" type="submit" id="authSubmitBtn">Continue</button>
             </form>
             <div class="auth-toggle-link" id="authToggleLink" onclick="toggleAuthMode()">
@@ -958,31 +784,10 @@
         </div>
     </div>
 
-    <!-- Network Offline Reusable Dialog -->
-    <div class="dialog-overlay" id="errorDialog">
-        <div class="glass-dialog">
-            <div class="dialog-header">
-                <h3 class="dialog-title">Connection Offline</h3>
-                <button class="dialog-close" onclick="closeDialog('errorDialog')">&times;</button>
-            </div>
-            <div style="padding: 10px 0; text-align: center;">
-                <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(255, 59, 48, 0.1); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px; color: #ff3b30;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 28px; height: 28px;"><line x1="1" y1="1" x2="23" y2="23"></line><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.5"></path><path d="M5 12.5a10.94 10.94 0 0 1 5.17-2.39"></path><path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
-                </div>
-                <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 20px;" id="errorDialogMessage">
-                    Unable to connect to the EasyRead gateway. Check your internet connection or try again.
-                </p>
-                <button class="auth-submit-btn" style="background: var(--accent-color); margin-top: 0;" onclick="retryLastAction()">Retry Connection</button>
-            </div>
-        </div>
-    </div>
-
     <script>
-        // --- API Global Configuration ---
-        const API_BASE_URL = 'https://easytoread.vercel.app/api';
-        let lastFailedAction = null;
+        // API Base URL (Relative path works in all environments)
+        const API_BASE_URL = '/api';
 
-        // High-end color gradients for non-image lists
         const gradientPalettes = [
             'linear-gradient(135deg, #f59847, #ffb067)',
             'linear-gradient(135deg, #20c997, #198754)',
@@ -991,73 +796,29 @@
             'linear-gradient(135deg, #6f42c1, #522c97)'
         ];
 
-        function getRandomGradient() {
-            return gradientPalettes[Math.floor(Math.random() * gradientPalettes.length)];
+        function getRandomGradient(idx = 0) {
+            return gradientPalettes[idx % gradientPalettes.length];
         }
 
-        // Standard dynamic vector icons mapped by index
-        const dynamicIcons = {
-            trend: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 11 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>`,
-            dollar: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>`,
-            computer: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>`,
-            globe: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>`,
-            book: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>`,
-            briefcase: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>`,
-            analytics: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>`
-        };
-
-        const listIcons = [dynamicIcons.trend, dynamicIcons.dollar, dynamicIcons.computer, dynamicIcons.globe, dynamicIcons.analytics];
-
-        // --- 1. Shimmer Load Templates ---
-        function getHistoryShimmer() {
-            let html = '';
-            for (let i = 0; i < 3; i++) {
-                html += `
-                    <div class="mini-card shimmer-card-wrapper">
-                        <div class="mini-icon shimmer-element circle"></div>
-                        <div class="mini-info">
-                            <div class="shimmer-element line-title"></div>
-                            <div class="shimmer-element line-meta"></div>
-                        </div>
-                        <div class="shimmer-element line-pill"></div>
-                    </div>
-                `;
-            }
-            return html;
+        function escapeHtml(text) {
+            if (!text) return '';
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
         }
 
-        function getBookmarksShimmer() {
-            let html = '';
-            for (let i = 0; i < 3; i++) {
-                html += `
-                    <div class="saved-row shimmer-row-wrapper" style="border-bottom: var(--glass-border-subtle);">
-                        <div class="saved-dot shimmer-element circle"></div>
-                        <div class="saved-info">
-                            <div class="shimmer-element line-title" style="width: 60%;"></div>
-                            <div class="shimmer-element line-meta" style="width: 40%;"></div>
-                        </div>
-                        <div class="shimmer-element line-arrow"></div>
-                    </div>
-                `;
-            }
-            return html;
-        }
-
-        // --- 2. Offline Overlay Operations ---
-        function showErrorDialog(message, retryCallback) {
-            document.getElementById('errorDialogMessage').textContent = message;
-            lastFailedAction = retryCallback;
-            openDialog('errorDialog');
-        }
-
-        function retryLastAction() {
-            closeDialog('errorDialog');
-            if (lastFailedAction && typeof lastFailedAction === 'function') {
-                lastFailedAction();
+        function navigateHome() {
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: 'switchTab', tab: 'home' }, '*');
+            } else {
+                window.location.href = '/';
             }
         }
 
-        // --- 3. Load Persistent Theme Setup ---
+        // --- Theme System ---
         let currentThemeSetting = localStorage.getItem('easyread-theme') || 'auto';
 
         function applyTheme(theme) {
@@ -1072,134 +833,73 @@
                 document.documentElement.removeAttribute('data-theme');
             }
 
-            const labelMap = {
-                'light': 'Light Mode',
-                'dark': 'Dark Mode',
-                'auto': 'Auto (System)'
-            };
-            const currentThemeLabel = document.getElementById('currentThemeLabel');
-            if (currentThemeLabel) currentThemeLabel.textContent = labelMap[theme];
+            const labelMap = { 'light': 'Light Mode', 'dark': 'Dark Mode', 'auto': 'System (Auto)' };
+            const label = document.getElementById('currentThemeLabel');
+            if (label) label.textContent = labelMap[theme] || 'System (Auto)';
 
             document.querySelectorAll('#themeDialog .dialog-option-btn').forEach(btn => {
-                const val = btn.getAttribute('data-theme-val');
-                btn.classList.toggle('active', val === theme);
+                btn.classList.toggle('active', btn.getAttribute('data-theme-val') === theme);
             });
         }
-
-        applyTheme(currentThemeSetting);
 
         function selectTheme(theme) {
             applyTheme(theme);
             closeDialog('themeDialog');
-            // Broadcast theme change to parent frame
-            window.parent.postMessage({ type: 'themeChanged', theme: theme }, '*');
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: 'themeChanged', theme: theme }, '*');
+            }
         }
 
-        // --- 4. Learning Profile (Persona) Dynamic List Management ---
+        applyTheme(currentThemeSetting);
+
+        // --- Learning Persona / Profiles ---
         let preferredProfileId = localStorage.getItem('easyread-profile-id') || '1';
-        
-        const cognitiveProfileDetails = {
-            '1': {
-                name: 'Everyday Analogy',
-                icon: dynamicIcons.book,
-                sub: 'Translates specialized concepts into standard, non-technical vocabulary.'
-            },
-            '2': {
-                name: 'Strategic Synthesis',
-                icon: dynamicIcons.briefcase,
-                sub: 'Focuses on strategic takeaways, business KPIs, and corporate summaries.'
-            },
-            '3': {
-                name: 'Technical Analytics',
-                icon: dynamicIcons.computer,
-                sub: 'Retains mathematical structures, advanced algorithms, and source mechanics.'
-            },
-            '4': {
-                name: 'Foundational Overview',
-                icon: dynamicIcons.globe,
-                sub: 'Clear, balanced general newsroom style covering overarching concepts.'
-            }
-        };
+        let availableProfiles = [];
 
         async function loadProfilePerspectives() {
             const container = document.getElementById('profileOptionsContainer');
-            container.innerHTML = `
-                <div class="dialog-option-btn shimmer-card-wrapper" style="border-bottom: var(--glass-border-subtle); padding: 14px 18px; width: 100%;">
-                    <span class="option-title shimmer-element" style="width: 50%; height: 16px; margin-bottom: 8px;"></span>
-                    <span class="option-sub shimmer-element" style="width: 80%; height: 12px;"></span>
-                </div>
-                <div class="dialog-option-btn shimmer-card-wrapper" style="padding: 14px 18px; width: 100%;">
-                    <span class="option-title shimmer-element" style="width: 40%; height: 16px; margin-bottom: 8px;"></span>
-                    <span class="option-sub shimmer-element" style="width: 70%; height: 12px;"></span>
-                </div>
-            `;
-
-            // Wait 1.2s to showcase shimmer loading state
-            await new Promise(resolve => setTimeout(resolve, 1200));
-
-            if (!navigator.onLine) {
-                renderStaticProfiles();
-                showErrorDialog('Unable to sync profiles. You appear to be offline.', loadProfilePerspectives);
-                return;
-            }
-
             try {
-                // Fetch dynamic profiles list from API endpoint
-                const response = await fetch(`${API_BASE_URL}/profiles`);
-                if (!response.ok) throw new Error();
-                const profiles = await response.json();
-                
+                const res = await fetch(`${API_BASE_URL}/profiles`);
+                if (!res.ok) throw new Error();
+                const profiles = await res.json();
+                availableProfiles = Array.isArray(profiles) ? profiles : [];
+
                 container.innerHTML = '';
-                profiles.forEach(p => {
-                    const mappedDetails = cognitiveProfileDetails[p.profile_id] || {
-                        name: p.name,
-                        icon: dynamicIcons.book,
-                        sub: p.description || 'Custom reading focus'
-                    };
-                    
+                availableProfiles.forEach(p => {
+                    const isSelected = p.profile_id.toString() === preferredProfileId.toString();
                     container.innerHTML += `
-                        <button class="dialog-option-btn" data-profile-id="${p.profile_id}" onclick="selectProfile(${p.profile_id}, '${mappedDetails.name}')">
-                            <span class="option-title">${mappedDetails.icon} ${mappedDetails.name}</span>
-                            <span class="option-sub">${mappedDetails.sub}</span>
+                        <button class="dialog-option-btn ${isSelected ? 'active' : ''}" data-profile-id="${p.profile_id}" onclick="selectProfile(${p.profile_id}, '${escapeHtml(p.name)}')">
+                            <span class="option-title">${escapeHtml(p.name)}</span>
+                            <span class="option-sub">${escapeHtml(p.description || 'Tailored explanation perspective')}</span>
                         </button>
                     `;
                 });
-            } catch (err) {
-                renderStaticProfiles();
-                showErrorDialog('Connection failed while loading custom reading profiles.', loadProfilePerspectives);
-            }
-            applyProfile(preferredProfileId);
-        }
 
-        function renderStaticProfiles() {
-            const container = document.getElementById('profileOptionsContainer');
-            container.innerHTML = '';
-            Object.keys(cognitiveProfileDetails).forEach(id => {
-                const p = cognitiveProfileDetails[id];
-                container.innerHTML += `
-                    <button class="dialog-option-btn" data-profile-id="${id}" onclick="selectProfile(${id}, '${p.name}')">
-                        <span class="option-title">${p.icon} ${p.name}</span>
-                        <span class="option-sub">${p.sub}</span>
+                applyProfile(preferredProfileId);
+            } catch (err) {
+                container.innerHTML = `
+                    <button class="dialog-option-btn active" data-profile-id="1" onclick="selectProfile(1, 'Everyday Life')">
+                        <span class="option-title">Everyday Life</span>
+                        <span class="option-sub">Clear real-world analogies</span>
                     </button>
                 `;
-            });
+            }
         }
 
         function applyProfile(profileId) {
             preferredProfileId = profileId.toString();
             localStorage.setItem('easyread-profile-id', preferredProfileId);
 
-            const details = cognitiveProfileDetails[preferredProfileId] || { name: 'Everyday Analogy' };
+            const active = availableProfiles.find(p => p.profile_id.toString() === preferredProfileId) || { name: 'Everyday Life' };
             
             const currentProfileLabel = document.getElementById('currentProfileLabel');
-            if (currentProfileLabel) currentProfileLabel.textContent = details.name;
+            if (currentProfileLabel) currentProfileLabel.textContent = active.name;
 
             const headerBadgeText = document.getElementById('headerBadgeText');
-            if (headerBadgeText) headerBadgeText.textContent = details.name;
+            if (headerBadgeText) headerBadgeText.textContent = active.name;
 
             document.querySelectorAll('#profileDialog .dialog-option-btn').forEach(btn => {
-                const id = btn.getAttribute('data-profile-id');
-                btn.classList.toggle('active', id === preferredProfileId);
+                btn.classList.toggle('active', btn.getAttribute('data-profile-id') === preferredProfileId);
             });
         }
 
@@ -1208,7 +908,7 @@
             closeDialog('profileDialog');
         }
 
-        // --- 5. Dynamic Authentication and State Persistence ---
+        // --- Auth State Management ---
         let isLoggedIn = localStorage.getItem('easyread-logged-in') === 'true';
         let authMode = 'login';
 
@@ -1224,15 +924,14 @@
             const userCreditsValue = document.getElementById('userCreditsValue');
 
             if (isLoggedIn) {
-                const storedEmail = localStorage.getItem('easyread-email') || 'user@email.com';
+                const storedEmail = localStorage.getItem('easyread-email') || 'User';
                 avatar.textContent = storedEmail.slice(0, 2).toUpperCase();
-                avatar.style.background = getRandomGradient();
                 name.textContent = storedEmail.split('@')[0];
                 email.textContent = storedEmail;
                 rankRow.style.display = "flex";
                 if (signInBtn) signInBtn.style.display = "none";
                 
-                const credits = parseFloat(localStorage.getItem('easyread-credits')) || 38.5;
+                const credits = parseFloat(localStorage.getItem('easyread-credits')) || 0;
                 userCreditsValue.textContent = credits.toFixed(1);
                 
                 authLabel.textContent = "Log Out";
@@ -1240,20 +939,18 @@
                 authSub.textContent = "Sign out of your account";
                 authIcon.innerHTML = `<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />`;
                 
-                fetchReadingHistory();
-                fetchBookmarks();
+                fetchUserData();
             } else {
                 avatar.textContent = "G";
-                avatar.style.background = 'linear-gradient(135deg, var(--text-muted), var(--text-secondary))';
                 name.textContent = "Guest User";
-                email.textContent = "Sign in to sync your library";
+                email.textContent = "Sign in to save history & bookmarks";
                 rankRow.style.display = "none";
                 if (signInBtn) signInBtn.style.display = "inline-flex";
                 userCreditsValue.textContent = "0.0";
                 
-                authLabel.textContent = "Log In / Sign Up";
-                authLabel.style.color = "var(--accent-color)";
-                authSub.textContent = "Access your history & bookmarks";
+                authLabel.textContent = "Sign In / Sign Up";
+                authLabel.style.color = "var(--text-main)";
+                authSub.textContent = "Access your library & credits";
                 authIcon.innerHTML = `<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><polyline points="10 17 15 12 10 7" /><line x1="15" y1="12" x2="3" y2="12" />`;
                 
                 renderHistory([]);
@@ -1263,16 +960,17 @@
 
         function handleAuthAction() {
             if (isLoggedIn) {
-                isLoggedIn = false;
                 localStorage.setItem('easyread-logged-in', 'false');
                 localStorage.removeItem('easyread_user_id');
                 localStorage.removeItem('easyread_session_token');
                 localStorage.removeItem('easyread-email');
                 localStorage.setItem('easyread-credits', '0.0');
+                isLoggedIn = false;
                 
                 updateAuthUI();
-                
-                window.parent.postMessage({ type: 'authChanged' }, '*');
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({ type: 'authChanged' }, '*');
+                }
             } else {
                 openDialog('loginDialog');
             }
@@ -1282,6 +980,8 @@
             const title = document.getElementById('authTitle');
             const submitBtn = document.getElementById('authSubmitBtn');
             const toggleLink = document.getElementById('authToggleLink');
+            const errorMsg = document.getElementById('authErrorMsg');
+            if (errorMsg) errorMsg.style.display = 'none';
             
             if (authMode === 'login') {
                 authMode = 'signup';
@@ -1298,119 +998,142 @@
 
         async function executeAuth(event) {
             event.preventDefault();
-            const emailInput = document.getElementById('authEmail').value;
+            const emailInput = document.getElementById('authEmail').value.trim();
             const passwordInput = document.getElementById('authPassword').value;
+            const submitBtn = document.getElementById('authSubmitBtn');
+            const errorMsg = document.getElementById('authErrorMsg');
             
-            const endpoint = authMode === 'signup' ? 'signup' : 'login';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing...';
+            errorMsg.style.display = 'none';
 
-            if (!navigator.onLine) {
-                showErrorDialog('Unable to authenticate. You appear to be offline.', () => executeAuth(event));
-                return;
-            }
-            
             try {
-                const response = await fetch(`${API_BASE_URL}/account?action=${endpoint}`, {
+                const response = await fetch(`${API_BASE_URL}/account?action=${authMode}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: emailInput, password: passwordInput })
                 });
 
-                if (!response.ok) throw new Error();
-
                 const data = await response.json();
 
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'Authentication failed. Please check your credentials.');
+                }
+
                 isLoggedIn = true;
                 localStorage.setItem('easyread-logged-in', 'true');
-                localStorage.setItem('easyread_user_id', data.user_id);
-                localStorage.setItem('easyread_session_token', data.session_token);
+                localStorage.setItem('easyread_user_id', data.user_id || data.user?.user_id);
+                localStorage.setItem('easyread_session_token', data.session_token || '');
                 localStorage.setItem('easyread-email', emailInput);
-                localStorage.setItem('easyread-credits', data.credits || '38.5');
+                localStorage.setItem('easyread-credits', (data.credits || data.user?.credits || 50).toString());
 
                 updateAuthUI();
                 closeDialog('loginDialog');
                 document.getElementById('authForm').reset();
                 
-                window.parent.postMessage({ type: 'authChanged' }, '*');
-
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({ type: 'authChanged' }, '*');
+                }
             } catch (err) {
-                // Mock execution on API Connection failure
-                isLoggedIn = true;
-                localStorage.setItem('easyread-logged-in', 'true');
-                localStorage.setItem('easyread_user_id', 'mock_user_uuid_1234');
-                localStorage.setItem('easyread-email', emailInput);
-                localStorage.setItem('easyread-credits', '38.5');
-                
-                updateAuthUI();
-                closeDialog('loginDialog');
-                document.getElementById('authForm').reset();
-                window.parent.postMessage({ type: 'authChanged' }, '*');
-                
-                showErrorDialog('Unable to reach auth gateways. Signed in locally (offline).', null);
+                errorMsg.textContent = err.message;
+                errorMsg.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = authMode === 'signup' ? 'Create Account' : 'Continue';
             }
         }
 
-        // --- 6. Loading Dynamic Bookmarks from API with Shimmers ---
-        async function fetchBookmarks() {
-            const list = document.getElementById('bookmarksList');
-            list.innerHTML = getBookmarksShimmer(); // show shimmers
-
+        // --- Fetch User Data (History, Bookmarks, Credits) ---
+        async function fetchUserData() {
             const userId = localStorage.getItem('easyread_user_id');
-            if (!userId) {
-                renderBookmarks([]);
-                return;
-            }
-
-            // Wait 1.2s to showcase shimmer loading state
-            await new Promise(resolve => setTimeout(resolve, 1200));
-
-            if (!navigator.onLine) {
-                // Load cached offline representations
-                renderBookmarks([
-                    { title: 'Quantum Computing Explained (Offline Cache)', added: 'Added Jan 2024' },
-                    { title: 'Understanding Inflation (Offline Cache)', added: 'Added Dec 2023' }
-                ]);
-                showErrorDialog('Unable to sync bookmarks. You appear to be offline.', fetchBookmarks);
-                return;
-            }
+            const sessionToken = localStorage.getItem('easyread_session_token');
+            if (!userId) return;
 
             try {
-                const response = await fetch(`${API_BASE_URL}/articles?action=list&user_id=${userId}`);
-                if (!response.ok) throw new Error();
-                const data = await response.json();
+                const response = await fetch(`${API_BASE_URL}/account?action=profile&user_id=${encodeURIComponent(userId)}`, {
+                    headers: {
+                        'x-user-id': userId,
+                        'x-session-token': sessionToken || ''
+                    }
+                });
                 
-                renderBookmarks(data.articles || []);
+                if (!response.ok) return;
+                const data = await response.json();
+
+                if (data.user?.credits !== undefined) {
+                    localStorage.setItem('easyread-credits', data.user.credits);
+                    document.getElementById('userCreditsValue').textContent = parseFloat(data.user.credits).toFixed(1);
+                }
+
+                renderHistory(data.history || []);
+                renderBookmarks(data.bookmarks || []);
             } catch (err) {
-                // Fallback representation
-                renderBookmarks([
-                    { title: 'The Psychology of Money', added: 'Added Nov 2023' },
-                    { title: 'Quantum Computing Explained', added: 'Added Jan 2024' },
-                    { title: 'Understanding Inflation', added: 'Added Dec 2023' }
-                ]);
-                showErrorDialog('Connection failed while loading saved bookmarks.', fetchBookmarks);
+                console.error('Failed to sync profile data:', err);
             }
+        }
+
+        function renderHistory(history) {
+            const list = document.getElementById('historyList');
+            const seeAll = document.getElementById('seeAllHistory');
+            document.getElementById('readStatsValue').textContent = history.length;
+            
+            if (history.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-placeholder">
+                        ${isLoggedIn ? 'No articles read yet. Explore the feed to get started!' : 'Sign in to track your reading history and earn bonus credits.'}
+                    </div>
+                `;
+                if (seeAll) seeAll.style.display = 'none';
+                return;
+            }
+
+            if (seeAll) seeAll.style.display = history.length > 3 ? 'block' : 'none';
+
+            list.innerHTML = '';
+            history.forEach(item => {
+                const date = item.viewed_at || item.date ? new Date(item.viewed_at || item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Recently';
+                list.innerHTML += `
+                    <div class="mini-card" onclick="openArticle('${item.slug || ''}', ${item.article_id || ''})">
+                        <div class="mini-icon">
+                            <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                        </div>
+                        <div class="mini-info">
+                            <div class="mini-name">${escapeHtml(item.title || item.canonical_title || 'Article')}</div>
+                            <div class="mini-meta">${date}</div>
+                        </div>
+                    </div>
+                `;
+            });
         }
 
         function renderBookmarks(bookmarks) {
             const list = document.getElementById('bookmarksList');
+            const seeAll = document.getElementById('seeAllBookmarks');
             document.getElementById('bookmarkStatsValue').textContent = bookmarks.length;
             
             if (bookmarks.length === 0) {
                 list.innerHTML = `
-                    <div style="text-align: center; color: var(--text-secondary); padding: 2rem 0; font-size: 0.9rem;">
-                        No bookmarked articles saved yet.
+                    <div class="empty-placeholder">
+                        ${isLoggedIn ? 'No bookmarks saved yet. Bookmark articles to read later.' : 'Sign in to access your saved bookmarks across devices.'}
                     </div>
                 `;
+                if (seeAll) seeAll.style.display = 'none';
                 return;
             }
 
+            if (seeAll) seeAll.style.display = bookmarks.length > 3 ? 'block' : 'none';
+
             list.innerHTML = '';
-            bookmarks.forEach(item => {
+            bookmarks.forEach((item, idx) => {
+                const date = item.created_at ? new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Saved';
                 list.innerHTML += `
-                    <div class="saved-row" onclick="window.parent.postMessage({ type: 'switchTab', tab: 'blog' }, '*');">
-                        <div class="saved-dot" style="background: ${getRandomGradient()}">${dynamicIcons.book}</div>
+                    <div class="saved-row" onclick="openArticle('${item.slug || ''}', ${item.article_id || ''})">
+                        <div class="saved-dot" style="background: ${getRandomGradient(idx)}">
+                            <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+                        </div>
                         <div class="saved-info">
-                            <div class="saved-name">${item.title}</div>
-                            <div class="saved-meta">${item.added || 'Saved'}</div>
+                            <div class="saved-name">${escapeHtml(item.title || item.canonical_title || 'Saved Article')}</div>
+                            <div class="saved-meta">${date}</div>
                         </div>
                         <div class="saved-arrow">›</div>
                     </div>
@@ -1418,95 +1141,32 @@
             });
         }
 
-        // --- 7. Fetch Reading History with Shimmers ---
-        async function fetchReadingHistory() {
-            const list = document.getElementById('historyList');
-            list.innerHTML = getHistoryShimmer(); // show shimmers
-
-            const userId = localStorage.getItem('easyread_user_id');
-            if (!userId) {
-                renderHistory([]);
-                return;
-            }
-
-            // Wait 1.2s to showcase shimmer loading state
-            await new Promise(resolve => setTimeout(resolve, 1200));
-
-            if (!navigator.onLine) {
-                // Load cached offline representations
-                renderHistory([
-                    { title: 'The Art of the Exchange (Offline Cache)', time: 'Yesterday · 5 min read', progress: '75%' },
-                    { title: 'Understanding Inflation (Offline Cache)', time: '2 days ago · 3 min read', progress: '100%' }
-                ]);
-                showErrorDialog('Unable to sync reading log. You appear to be offline.', fetchReadingHistory);
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/account?action=profile&user_id=${userId}`);
-                if (!response.ok) throw new Error();
-                const data = await response.json();
-                
-                renderHistory(data.history || []);
-            } catch (err) {
-                // Fallback representation
-                renderHistory([
-                    { title: 'The Art of the Exchange', time: '2 hours ago · 5 min read', progress: '75%' },
-                    { title: 'Understanding Inflation', time: 'Yesterday · 3 min read', progress: '100%' },
-                    { title: 'Foundations of Global Trade', time: '2 days ago · 8 min read', progress: '45%' }
-                ]);
-                showErrorDialog('Connection failed while loading your reading history.', fetchReadingHistory);
+        function openArticle(slug, id) {
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: 'openArticle', slug: slug, article_id: id }, '*');
+            } else {
+                window.location.href = slug ? `/view?slug=${encodeURIComponent(slug)}` : `/view?id=${encodeURIComponent(id)}`;
             }
         }
 
-        function renderHistory(history) {
-            const list = document.getElementById('historyList');
-            document.getElementById('readStatsValue').textContent = history.length;
-            
-            if (history.length === 0) {
-                list.innerHTML = `
-                    <div style="text-align: center; color: var(--text-secondary); padding: 2rem 0; font-size: 0.9rem;">
-                        Your reading log is currently empty.
-                    </div>
-                `;
-                return;
-            }
-
-            list.innerHTML = '';
-            history.forEach((item, index) => {
-                const icon = listIcons[index % listIcons.length];
-                const pillClass = item.progress === '100%' ? 'status-completed' : 'status-reading';
-                list.innerHTML += `
-                    <div class="mini-card" onclick="window.parent.postMessage({ type: 'switchTab', tab: 'blog' }, '*');">
-                        <div class="mini-icon">${icon}</div>
-                        <div class="mini-info">
-                            <div class="mini-name">${item.title}</div>
-                            <div class="mini-meta">${item.time}</div>
-                        </div>
-                        <span class="status-pill ${pillClass}">${item.progress}</span>
-                    </div>
-                `;
-            });
-        }
-
-        // --- 8. Dialog Controls ---
+        // --- Dialog Handling ---
         function openDialog(id) {
-            document.getElementById(id).classList.add('active');
+            const el = document.getElementById(id);
+            if (el) el.classList.add('active');
         }
 
         function closeDialog(id) {
-            document.getElementById(id).classList.remove('active');
+            const el = document.getElementById(id);
+            if (el) el.classList.remove('active');
         }
 
         document.querySelectorAll('.dialog-overlay').forEach(overlay => {
             overlay.addEventListener('click', function(e) {
-                if (e.target === this) {
-                    closeDialog(this.id);
-                }
+                if (e.target === this) closeDialog(this.id);
             });
         });
 
-        // --- 9. Tab Switches ---
+        // --- Tab Switching ---
         const tabs = document.querySelectorAll('.tab-btn');
         const contents = {
             'tab-history': document.getElementById('tab-history'),
@@ -1520,58 +1180,39 @@
                 Object.values(contents).forEach(c => c.classList.remove('active'));
 
                 this.classList.add('active');
-                const targetId = this.getAttribute('data-tab');
-                if(contents[targetId]) {
-                    contents[targetId].classList.add('active');
-                }
+                const target = this.getAttribute('data-tab');
+                if (contents[target]) contents[target].classList.add('active');
             });
         });
 
-        // --- 10. Toggle Switches ---
-        const autoToggle = document.getElementById('autoRegSwitch');
-        const autoRow = document.getElementById('autoRegToggle');
-        let isAutoEnabled = false;
-
-        autoRow.addEventListener('click', () => {
-            isAutoEnabled = !isAutoEnabled;
-            autoToggle.classList.toggle('active', isAutoEnabled);
-        });
-
-        // --- 11. Expandable Lists ---
+        // --- List Expand Toggles ---
         function setupToggle(btnId, listId) {
             const btn = document.getElementById(btnId);
             const list = document.getElementById(listId);
             let expanded = false;
 
+            if (!btn || !list) return;
+
             btn.addEventListener('click', () => {
                 expanded = !expanded;
                 list.classList.toggle('expanded', expanded);
                 btn.textContent = expanded ? 'Show less' : 'See all';
-                btn.classList.toggle('expanded', expanded);
             });
         }
 
         setupToggle('seeAllHistory', 'historyList');
         setupToggle('seeAllBookmarks', 'bookmarksList');
 
-        // Share Profile Trigger
         function shareProfile() {
             if (navigator.share) {
                 navigator.share({
-                    title: 'My EasyRead Profile',
-                    text: 'Simplified knowledge mapped directly to my personal reading focus.'
+                    title: 'EasyRead Profile',
+                    text: 'Explore tailored knowledge and simplified concepts on EasyRead.'
                 }).catch(() => {});
             }
         }
 
-        // Listen for messaging triggers from the App Shell parent frame
-        window.addEventListener('message', (event) => {
-            if (event.data === 'triggerLogin') {
-                openDialog('loginDialog');
-            }
-        });
-
-        // Synchronize on startup
+        // Initialize Page
         document.addEventListener('DOMContentLoaded', () => {
             updateAuthUI();
             loadProfilePerspectives();
