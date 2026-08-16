@@ -1,5 +1,5 @@
 // api/articles.js
-// EasyRead Article Management - Database operations only
+// EasyRead Article Management - Database operations, Bookmarks, and Reading History
 
 import { 
   supabase,
@@ -33,7 +33,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, x-api-key, x-user-id, x-admin-key'
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, x-api-key, x-user-id, x-session-token, x-admin-key'
   );
 
   if (req.method === 'OPTIONS') {
@@ -62,7 +62,7 @@ export default async function handler(req, res) {
         res.status(405).json({ error: 'Method not allowed' });
     }
   } catch (error) {
-    console.error('API Error:', error);
+    console.error('Articles API Error:', error);
     res.status(500).json({ error: error.message });
   }
 }
@@ -77,9 +77,20 @@ async function handleGet(req, res, action) {
     page = 1, 
     limit = 20, 
     category, 
-    search,
-    user_id
+    search
   } = req.query;
+
+  const user_id = req.headers['x-user-id'] || req.query.user_id;
+
+  // Get user bookmarks with full article data and stats
+  if (action === 'bookmarks') {
+    return await getBookmarksForUser(req, res, user_id);
+  }
+
+  // Get user reading history
+  if (action === 'history') {
+    return await getReadingHistory(req, res, user_id);
+  }
 
   // Get article by ID
   if (action === 'get' && id) {
@@ -101,7 +112,7 @@ async function handleGet(req, res, action) {
     return await getArticleVersions(req, res, id);
   }
 
-  // Get similar articles (internal use only)
+  // Get similar articles
   if (action === 'similar' && id) {
     return await getSimilarArticles(req, res, id);
   }
@@ -121,17 +132,12 @@ async function handleGet(req, res, action) {
     return await getArticleRatings(req, res, id);
   }
 
-  // Get reading history (for user)
-  if (action === 'history' && user_id) {
-    return await getReadingHistory(req, res, user_id);
-  }
-
   // Get random articles
   if (action === 'random') {
     return await getRandomArticles(req, res);
   }
 
-  // Check if article exists (for duplicate check)
+  // Check if article exists
   if (action === 'check' && slug) {
     return await checkArticleExists(req, res, slug);
   }
@@ -143,9 +149,9 @@ async function handleGet(req, res, action) {
 // POST HANDLER
 // ============================================
 async function handlePost(req, res, action) {
-  const { user_id } = req.query;
+  const user_id = req.headers['x-user-id'] || req.query.user_id;
 
-  // Create article (from scraper or manual)
+  // Create article
   if (action === 'create') {
     return await createArticle(req, res);
   }
@@ -170,7 +176,7 @@ async function handlePost(req, res, action) {
     return await refreshArticle(req, res);
   }
 
-  // Track view (anonymous or authenticated)
+  // Track view / record history
   if (action === 'track-view') {
     return await trackView(req, res, user_id);
   }
@@ -182,7 +188,7 @@ async function handlePost(req, res, action) {
 // PUT HANDLER
 // ============================================
 async function handlePut(req, res, action) {
-  const { user_id } = req.query;
+  const user_id = req.headers['x-user-id'] || req.query.user_id;
 
   // Update article
   if (action === 'update') {
@@ -230,8 +236,162 @@ async function handleDelete(req, res, action) {
 }
 
 // ============================================
-// ===== IMPLEMENTATION FUNCTIONS =====
+// 🔖 GET USER BOOKMARKS (NEW DEDICATED ENDPOINT)
 // ============================================
+async function getBookmarksForUser(req, res, user_id) {
+  const { limit = 50, page = 1 } = req.query;
+
+  if (!user_id) {
+    return res.status(401).json({ error: 'Authentication required', bookmarks: [], total: 0 });
+  }
+
+  try {
+    const from = (parseInt(page) - 1) * parseInt(limit);
+    const to = from + parseInt(limit) - 1;
+
+    const { data: bookmarks, error, count } = await supabase
+      .from('bookmarks')
+      .select(`
+        bookmark_id,
+        article_id,
+        created_at,
+        articles:article_id (
+          article_id,
+          canonical_title,
+          slug,
+          summary,
+          base_content,
+          source_domain,
+          categories,
+          view_count,
+          created_at
+        )
+      `, { count: 'exact' })
+      .eq('user_id', user_id)
+      .order('created_at', { ascending: false })
+      .range(from, to);
+
+    if (error) throw error;
+
+    // Fetch rating averages and explanation statistics for bookmarked articles
+    const articleIds = (bookmarks || []).map(b => b.article_id).filter(Boolean);
+    let viewsMap = {};
+
+    if (articleIds.length > 0) {
+      const { data: viewsData } = await supabase
+        .from('explanation_views')
+        .select('article_id, rating_avg, rating_count, view_count')
+        .in('article_id', articleIds);
+
+      (viewsData || []).forEach(v => {
+        if (!viewsMap[v.article_id]) {
+          viewsMap[v.article_id] = { 
+            rating_avg: v.rating_avg || 0, 
+            rating_count: v.rating_count || 0, 
+            total_views: v.view_count || 0 
+          };
+        } else {
+          if ((v.rating_count || 0) > viewsMap[v.article_id].rating_count) {
+            viewsMap[v.article_id].rating_avg = v.rating_avg || viewsMap[v.article_id].rating_avg;
+          }
+          viewsMap[v.article_id].rating_count += (v.rating_count || 0);
+          viewsMap[v.article_id].total_views += (v.view_count || 0);
+        }
+      });
+    }
+
+    const formattedBookmarks = (bookmarks || []).map(b => {
+      const art = b.articles || {};
+      const stats = viewsMap[b.article_id] || { rating_avg: 0, rating_count: 0 };
+      return {
+        bookmark_id: b.bookmark_id,
+        article_id: b.article_id,
+        created_at: b.created_at,
+        articles: {
+          ...art,
+          reading_time: calculateReadingTime(art.base_content),
+          rating_avg: stats.rating_avg,
+          rating_count: stats.rating_count
+        }
+      };
+    });
+
+    res.json({
+      success: true,
+      bookmarks: formattedBookmarks,
+      total: count || formattedBookmarks.length
+    });
+  } catch (error) {
+    console.error('Get user bookmarks error:', error);
+    res.status(500).json({ error: 'Failed to get bookmarks', bookmarks: [] });
+  }
+}
+
+// ============================================
+// 📖 GET READING HISTORY (NEW DEDICATED ENDPOINT)
+// ============================================
+async function getReadingHistory(req, res, user_id) {
+  const { limit = 50, page = 1 } = req.query;
+
+  if (!user_id) {
+    return res.status(401).json({ error: 'Authentication required', history: [], total: 0 });
+  }
+
+  try {
+    const from = (parseInt(page) - 1) * parseInt(limit);
+    const to = from + parseInt(limit) - 1;
+
+    const { data: history, error, count } = await supabase
+      .from('reading_history')
+      .select(`
+        history_id,
+        user_id,
+        article_id,
+        date,
+        viewed_at,
+        articles:article_id (
+          article_id,
+          canonical_title,
+          slug,
+          summary,
+          base_content,
+          source_domain,
+          categories,
+          view_count,
+          created_at
+        )
+      `, { count: 'exact' })
+      .eq('user_id', user_id)
+      .order('viewed_at', { ascending: false })
+      .range(from, to);
+
+    if (error) throw error;
+
+    const formattedHistory = (history || []).map(h => {
+      const art = h.articles || {};
+      return {
+        history_id: h.history_id,
+        user_id: h.user_id,
+        article_id: h.article_id,
+        date: h.date,
+        viewed_at: h.viewed_at,
+        articles: {
+          ...art,
+          reading_time: calculateReadingTime(art.base_content)
+        }
+      };
+    });
+
+    res.json({
+      success: true,
+      history: formattedHistory,
+      total: count || formattedHistory.length
+    });
+  } catch (error) {
+    console.error('Get reading history error:', error);
+    res.status(500).json({ error: 'Failed to get reading history', history: [] });
+  }
+}
 
 // ============================================
 // 📋 LIST ARTICLES
@@ -275,7 +435,7 @@ async function listArticles(req, res) {
 
     if (error) throw error;
 
-    const articles = data.map(article => ({
+    const articles = (data || []).map(article => ({
       ...article,
       reading_time: calculateReadingTime(article.base_content),
       word_count: article.word_count || article.base_content?.split(/\s+/).length || 0
@@ -300,7 +460,6 @@ async function listArticles(req, res) {
 // ============================================
 async function getArticleById(req, res, id, user_id) {
   try {
-    // Exclude embedding from the response
     const { data: article, error } = await supabase
       .from('articles')
       .select('article_id, canonical_title, slug, base_content, summary, source_url, source_domain, source_title, source_published_at, categories, content_hash, word_count, view_count, version, status, retrieved_at, created_at, updated_at, next_refresh_at')
@@ -314,10 +473,9 @@ async function getArticleById(req, res, id, user_id) {
       throw error;
     }
 
-    // Increment view count
+    // Increment view count and record read history
     await trackViewForArticle(id, user_id);
 
-    // Get explanations for this article (just the view metadata)
     const { data: explanations, error: expError } = await supabase
       .from('explanation_views')
       .select('view_id, profile_id, title, summary, view_count, rating_avg, rating_count, generated_at')
@@ -345,7 +503,6 @@ async function getArticleById(req, res, id, user_id) {
 // ============================================
 async function getArticleBySlug(req, res, slug, user_id) {
   try {
-    // Exclude embedding from the response
     const { data: article, error } = await supabase
       .from('articles')
       .select('article_id, canonical_title, slug, base_content, summary, source_url, source_domain, source_title, source_published_at, categories, content_hash, word_count, view_count, version, status, retrieved_at, created_at, updated_at, next_refresh_at')
@@ -359,10 +516,9 @@ async function getArticleBySlug(req, res, slug, user_id) {
       throw error;
     }
 
-    // Increment view count
+    // Increment view count and record read history
     await trackViewForArticle(article.article_id, user_id);
 
-    // Get explanations for this article
     const { data: explanations, error: expError } = await supabase
       .from('explanation_views')
       .select('view_id, profile_id, title, summary, view_count, rating_avg, rating_count, generated_at')
@@ -406,7 +562,6 @@ async function createArticle(req, res) {
   }
 
   try {
-    // Validate content length
     const wordCount = content.split(/\s+/).length;
     
     if (wordCount < MIN_WORD_COUNT) {
@@ -415,10 +570,7 @@ async function createArticle(req, res) {
       });
     }
 
-    // Generate content hash
     const contentHash = generateContentHash(content);
-
-    // Check for duplicate
     const existing = await getByColumn('articles', 'content_hash', contentHash);
     if (existing.length > 0) {
       return res.status(409).json({
@@ -429,10 +581,7 @@ async function createArticle(req, res) {
       });
     }
 
-    // Generate slug
     const slug = title ? generateSlug(title) : `article-${Date.now()}`;
-
-    // Check if slug exists (add suffix if needed)
     let finalSlug = slug;
     let slugExists = await getByColumn('articles', 'slug', slug);
     let counter = 1;
@@ -442,16 +591,10 @@ async function createArticle(req, res) {
       counter++;
     }
 
-    // Process categories - ensure max 5
-    let processedCategories = [];
-    if (categories && categories.length > 0) {
-      processedCategories = categories.slice(0, MAX_CATEGORIES_PER_ARTICLE);
-    } else {
-      // If no categories provided, set as 'General'
-      processedCategories = ['General'];
-    }
+    let processedCategories = (categories && categories.length > 0)
+      ? categories.slice(0, MAX_CATEGORIES_PER_ARTICLE)
+      : ['General'];
 
-    // Create article
     const article = await insert('articles', {
       canonical_title: title || 'Untitled Article',
       slug: finalSlug,
@@ -470,7 +613,6 @@ async function createArticle(req, res) {
       next_refresh_at: new Date(Date.now() + REFRESH_INTERVAL_DAYS * 24 * 60 * 60 * 1000).toISOString()
     });
 
-    // Create processing job
     const job = await insert('processing_jobs', {
       url: url || null,
       article_id: article.article_id,
@@ -553,7 +695,7 @@ async function searchArticles(req, res, search) {
       page: parseInt(page),
       limit: parseInt(limit),
       total: count || 0,
-      articles: data.map(a => ({
+      articles: (data || []).map(a => ({
         ...a,
         reading_time: calculateReadingTime(a.base_content)
       }))
@@ -565,13 +707,12 @@ async function searchArticles(req, res, search) {
 }
 
 // ============================================
-// 🔍 GET SIMILAR ARTICLES (Internal use only)
+// 🔍 GET SIMILAR ARTICLES
 // ============================================
 async function getSimilarArticles(req, res, id) {
   const { limit = 5, threshold = SIMILARITY_THRESHOLD } = req.query;
 
   try {
-    // Get the article's embedding
     const { data: article, error } = await supabase
       .from('articles')
       .select('article_id, embedding')
@@ -605,7 +746,7 @@ async function getSimilarArticles(req, res, id) {
 
     if (articlesError) throw articlesError;
 
-    const similarWithScores = articles.map(a => ({
+    const similarWithScores = (articles || []).map(a => ({
       ...a,
       similarity: similar.find(s => s.article_id === a.article_id)?.similarity || 0,
       reading_time: calculateReadingTime(a.base_content)
@@ -637,7 +778,6 @@ async function rateArticle(req, res, user_id) {
   }
 
   try {
-    // Check if user already rated
     const existing = await supabase
       .from('ratings')
       .select('rating_id, rating')
@@ -653,7 +793,6 @@ async function rateArticle(req, res, user_id) {
       });
     }
 
-    // Insert rating
     const ratingRecord = await insert('ratings', {
       user_id: user_id || null,
       view_id: parseInt(view_id),
@@ -661,7 +800,6 @@ async function rateArticle(req, res, user_id) {
       feedback: feedback || null
     });
 
-    // Update explanation view average rating
     const { data: viewData, error: viewError } = await supabase
       .from('explanation_views')
       .select('rating_avg, rating_count')
@@ -678,7 +816,6 @@ async function rateArticle(req, res, user_id) {
       rating_count: newCount
     });
 
-    // Add credit bonus for rating
     if (user_id) {
       const users = await getByColumn('users', 'user_id', user_id);
       if (users.length > 0) {
@@ -773,7 +910,7 @@ async function getArticlesByCategory(req, res, category) {
       page: parseInt(page),
       limit: parseInt(limit),
       total: count || 0,
-      articles: articles.map(a => ({
+      articles: (articles || []).map(a => ({
         ...a,
         reading_time: calculateReadingTime(a.base_content)
       }))
@@ -798,7 +935,7 @@ async function getArticleRatings(req, res, id) {
 
     if (viewsError) throw viewsError;
 
-    const viewIds = views.map(v => v.view_id);
+    const viewIds = (views || []).map(v => v.view_id);
 
     if (viewIds.length === 0) {
       return res.json({
@@ -824,7 +961,7 @@ async function getArticleRatings(req, res, id) {
 
     if (error) throw error;
 
-    const ratingValues = ratings.map(r => r.rating);
+    const ratingValues = (ratings || []).map(r => r.rating);
     const average = ratingValues.length > 0 
       ? Math.round((ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length) * 100) / 100
       : null;
@@ -865,7 +1002,7 @@ async function getRandomArticles(req, res) {
 
     if (error) throw error;
 
-    const shuffled = articles.sort(() => 0.5 - Math.random());
+    const shuffled = (articles || []).sort(() => 0.5 - Math.random());
     const selected = shuffled.slice(0, parseInt(limit));
 
     res.json({
@@ -966,7 +1103,7 @@ async function toggleBookmark(req, res, user_id) {
       .select('bookmark_id')
       .eq('user_id', user_id)
       .eq('article_id', parseInt(article_id))
-      .single();
+      .maybeSingle();
 
     if (existing.data) {
       await supabase
@@ -982,7 +1119,8 @@ async function toggleBookmark(req, res, user_id) {
     } else {
       const bookmark = await insert('bookmarks', {
         user_id,
-        article_id: parseInt(article_id)
+        article_id: parseInt(article_id),
+        created_at: new Date().toISOString()
       });
 
       res.status(201).json({
@@ -994,46 +1132,6 @@ async function toggleBookmark(req, res, user_id) {
   } catch (error) {
     console.error('Toggle bookmark error:', error);
     res.status(500).json({ error: 'Failed to toggle bookmark' });
-  }
-}
-
-// ============================================
-// 📖 GET READING HISTORY
-// ============================================
-async function getReadingHistory(req, res, user_id) {
-  const { limit = 50 } = req.query;
-
-  try {
-    const { data: history, error } = await supabase
-      .from('reading_history')
-      .select(`
-        history_id,
-        user_id,
-        article_id,
-        date,
-        viewed_at,
-        articles:article_id (
-          canonical_title,
-          slug,
-          summary,
-          categories,
-          source_domain
-        )
-      `)
-      .eq('user_id', user_id)
-      .order('viewed_at', { ascending: false })
-      .limit(parseInt(limit));
-
-    if (error) throw error;
-
-    res.json({
-      success: true,
-      history: history || [],
-      total: history?.length || 0
-    });
-  } catch (error) {
-    console.error('Get reading history error:', error);
-    res.status(500).json({ error: 'Failed to get reading history' });
   }
 }
 
@@ -1068,7 +1166,6 @@ async function submitContext(req, res) {
       });
     }
 
-    // Check if content already exists
     let contentToCheck = text;
     if (url) {
       contentToCheck = `Content from ${url}`;
@@ -1086,7 +1183,6 @@ async function submitContext(req, res) {
       });
     }
 
-    // Queue for processing
     const job = await insert('processing_jobs', {
       url: url || null,
       status: 'pending',
@@ -1131,12 +1227,10 @@ async function refreshArticle(req, res) {
       return res.status(404).json({ error: 'Article not found' });
     }
 
-    // Update next refresh date
     await update('articles', article_id, {
       next_refresh_at: new Date(Date.now() + REFRESH_INTERVAL_DAYS * 24 * 60 * 60 * 1000).toISOString()
     });
 
-    // Create a processing job for refresh
     const job = await insert('processing_jobs', {
       url: article.source_url || null,
       article_id: article.article_id,
@@ -1198,7 +1292,6 @@ async function updateArticle(req, res) {
       return res.status(404).json({ error: 'Article not found' });
     }
 
-    // Create version record
     await insert('article_versions', {
       article_id: parseInt(article_id),
       content: content || updated.base_content,
@@ -1240,7 +1333,6 @@ async function updateArticleStatus(req, res) {
       return res.status(404).json({ error: 'Article not found' });
     }
 
-    // Update job if exists
     const jobs = await getByColumn('processing_jobs', 'article_id', article_id);
     if (jobs.length > 0) {
       const job = jobs[0];
@@ -1282,23 +1374,9 @@ async function deleteArticle(req, res) {
   }
 
   try {
-    // Delete associated data first
-    await supabase
-      .from('explanation_views')
-      .delete()
-      .eq('article_id', article_id);
-
-    await supabase
-      .from('deep_dives')
-      .delete()
-      .eq('article_id', article_id);
-
-    await supabase
-      .from('processing_jobs')
-      .delete()
-      .eq('article_id', article_id);
-
-    // Delete article
+    await supabase.from('explanation_views').delete().eq('article_id', article_id);
+    await supabase.from('deep_dives').delete().eq('article_id', article_id);
+    await supabase.from('processing_jobs').delete().eq('article_id', article_id);
     await deleteRecord('articles', article_id);
 
     res.json({
@@ -1354,7 +1432,7 @@ async function updateReadingProgress(req, res, user_id) {
       .select('progress_id, progress')
       .eq('user_id', user_id)
       .eq('article_id', article_id)
-      .single();
+      .maybeSingle();
 
     if (existing.data) {
       await update('reading_progress', existing.data.progress_id, {
@@ -1385,7 +1463,6 @@ async function updateReadingProgress(req, res, user_id) {
 // ===== HELPER FUNCTIONS =====
 // ============================================
 
-// Generate slug from title
 function generateSlug(title) {
   return title
     .toLowerCase()
@@ -1394,19 +1471,16 @@ function generateSlug(title) {
     .substring(0, 100);
 }
 
-// Generate content hash
 function generateContentHash(content) {
   return crypto.createHash('sha256').update(content).digest('hex');
 }
 
-// Calculate reading time
 function calculateReadingTime(content, wordsPerMinute = 200) {
-  if (!content) return 0;
+  if (!content) return 1;
   const words = content.split(/\s+/).length;
   return Math.max(1, Math.ceil(words / wordsPerMinute));
 }
 
-// Validate URL
 function isValidUrl(string) {
   try {
     new URL(string);
@@ -1416,7 +1490,6 @@ function isValidUrl(string) {
   }
 }
 
-// Check for malicious content
 function containsMaliciousContent(text) {
   const maliciousPatterns = [
     /<script/i,
@@ -1430,7 +1503,7 @@ function containsMaliciousContent(text) {
   return maliciousPatterns.some(pattern => pattern.test(text));
 }
 
-// Track view for article
+// Track view for article and create/update reading history
 async function trackViewForArticle(article_id, user_id) {
   try {
     const article = await getById('articles', article_id);
@@ -1447,9 +1520,9 @@ async function trackViewForArticle(article_id, user_id) {
         .from('reading_history')
         .select('history_id')
         .eq('user_id', user_id)
-        .eq('article_id', article_id)
+        .eq('article_id', parseInt(article_id))
         .eq('date', today)
-        .single();
+        .maybeSingle();
 
       if (!existing.data) {
         await insert('reading_history', {
@@ -1458,6 +1531,11 @@ async function trackViewForArticle(article_id, user_id) {
           date: today,
           viewed_at: new Date().toISOString()
         });
+      } else {
+        await supabase
+          .from('reading_history')
+          .update({ viewed_at: new Date().toISOString() })
+          .eq('history_id', existing.data.history_id);
       }
 
       const usageRecords = await getByColumn('usage', 'user_id', user_id);
@@ -1504,20 +1582,10 @@ async function trackView(req, res, user_id) {
   }
 }
 
-// ============================================
-// 📦 EXPORTS
-// ============================================
 export const config = {
   api: {
     bodyParser: {
       sizeLimit: '10mb',
     },
   },
-};
-
-export const constants = {
-  MAX_CATEGORIES_PER_ARTICLE,
-  MIN_WORD_COUNT,
-  REFRESH_INTERVAL_DAYS,
-  SIMILARITY_THRESHOLD
 };
