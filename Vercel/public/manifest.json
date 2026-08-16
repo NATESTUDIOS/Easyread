@@ -1,0 +1,129 @@
+{
+  "name": "EasyRead",
+  "short_name": "EasyRead",
+  "start_url": "/?mode=pwa",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "categories": ["education", "productivity", "books", "reference"],
+  "description": "Knowledge, Simplified — explained in a way only you understand.",
+  "lang": "en",
+  "dir": "ltr",
+  "id": "/?mode=pwa",
+  "scope": "/",
+  "prefer_related_applications": false,
+
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-152.png",
+      "sizes": "152x152",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-120.png",
+      "sizes": "120x120",
+      "type": "image/png"
+    }
+  ],
+
+  "screenshots": [
+    {
+      "src": "/images/screenshots/home-dark.png",
+      "type": "image/png",
+      "sizes": "540x720",
+      "form_factor": "narrow",
+      "label": "Home - Dark mode"
+    },
+    {
+      "src": "/images/screenshots/feed-dark.png",
+      "type": "image/png",
+      "sizes": "540x720",
+      "form_factor": "narrow",
+      "label": "Feed - Dark mode"
+    },
+    {
+      "src": "/images/screenshots/profile-dark.png",
+      "type": "image/png",
+      "sizes": "540x720",
+      "form_factor": "narrow",
+      "label": "Profile - Dark mode"
+    }
+  ],
+
+  "shortcuts": [
+    {
+      "name": "Home",
+      "short_name": "Home",
+      "description": "Go to the main feed",
+      "url": "/",
+      "icons": [{ "src": "/icons/shortcut-home.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Blog",
+      "short_name": "Blog",
+      "description": "Read the latest articles",
+      "url": "/blog.html",
+      "icons": [{ "src": "/icons/shortcut-blog.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Profile",
+      "short_name": "Profile",
+      "description": "View your profile and credits",
+      "url": "/profile.html",
+      "icons": [{ "src": "/icons/shortcut-profile.png", "sizes": "96x96" }]
+    }
+  ],
+
+  "share_target": {
+    "action": "/?utm_medium=PWA&utm_source=share-target",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "name",
+      "text": "description",
+      "url": "link",
+      "files": [
+        {
+          "name": "file",
+          "accept": ["image/*", "text/plain"]
+        }
+      ]
+    }
+  },
+
+  "related_applications": [],
+  "protocol_handlers": [
+    {
+      "protocol": "web+easyread",
+      "url": "/?q=%s"
+    }
+  ],
+
+  "handle_links": "preferred",
+  "launch_handler": {
+    "client_mode": ["navigate-existing", "auto"]
+  },
+  "display_override": ["standalone", "minimal-ui"]
+}
