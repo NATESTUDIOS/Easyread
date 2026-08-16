@@ -1,40 +1,53 @@
 // EasyRead Service Worker
-const APP_VERSION = '2';
+const APP_VERSION = '1';
 const CACHE_NAME = `easyread-v${APP_VERSION}`;
+
+// ── Only cache files that are guaranteed to exist locally ──
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/blog.html',
   '/profile.html',
-  '/article',
-  '/api',
   '/?mode=pwa',
+  '/manifest.json',
   
-  // Icons (if you have them)
+  // Icons (cached safely in try/catch block)
   '/icons/icon-192.png',
   '/icons/icon-512.png',
   '/icons/icon-180.png',
   '/icons/icon-152.png',
   '/icons/icon-120.png',
   '/icons/icon-144.png',
+  '/icons/favicon-32.png',
+  '/icons/favicon-16.png',
+  '/favicon.ico'
 ];
 
-// ── Install: Cache static assets ──
+// ── Install: Cache static assets safely without failing if one icon is missing ──
 self.addEventListener('install', (event) => {
   console.log(`[SW] EasyRead v${APP_VERSION} installing...`);
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log(`[SW] Caching ${STATIC_ASSETS.length} static assets`);
-      return cache.addAll(STATIC_ASSETS).catch(err => {
-        console.warn('[SW] Some assets failed to cache:', err);
+    caches.open(CACHE_NAME).then(async (cache) => {
+      console.log(`[SW] Caching static assets`);
+      // Cache assets individually so 1 missing icon doesn't abort installation
+      const cachePromises = STATIC_ASSETS.map(async (asset) => {
+        try {
+          const response = await fetch(asset);
+          if (response.ok) {
+            await cache.put(asset, response);
+          }
+        } catch (err) {
+          console.warn(`[SW] Skipping asset ${asset}:`, err.message);
+        }
       });
+      return Promise.all(cachePromises);
     }).then(() => {
       return self.skipWaiting();
     })
   );
 });
 
-// ── Activate: Clean up old caches ──
+// ── Activate: Clean up old version caches ──
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -42,18 +55,18 @@ self.addEventListener('activate', (event) => {
         cacheNames
           .filter((name) => name.startsWith('easyread-') && name !== CACHE_NAME)
           .map((name) => {
-            console.log(`[SW] Deleting old cache: ${name}`);
+            console.log(`[SW] Purging outdated cache: ${name}`);
             return caches.delete(name);
           })
       );
     }).then(() => {
-      console.log(`[SW] EasyRead v${APP_VERSION} activated`);
+      console.log(`[SW] EasyRead v${APP_VERSION} active and claiming clients 🚀`);
       return self.clients.claim();
     })
   );
 });
 
-// ── Message handler ──
+// ── Client Message Handling ──
 self.addEventListener('message', (event) => {
   if (event.data === 'skipWaiting') {
     self.skipWaiting();
@@ -62,7 +75,9 @@ self.addEventListener('message', (event) => {
     const urls = event.data.urls || [];
     caches.open(CACHE_NAME).then(cache => {
       urls.forEach(url => {
-        cache.add(url).catch(() => {});
+        fetch(url).then(res => {
+          if (res.ok) cache.put(url, res);
+        }).catch(() => {});
       });
     });
   }
@@ -78,64 +93,66 @@ self.addEventListener('message', (event) => {
   }
 });
 
-// ── Fetch Strategy ──
+// ── Fetch Routing ──
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Only handle GET requests
+  // 1. Only intercept GET requests
   if (request.method !== 'GET') return;
 
-  // Skip non-http(s) requests
+  // 2. Ignore non-http protocols (e.g. chrome-extension://)
   if (!url.protocol.startsWith('http')) return;
 
-  // Skip analytics
+  // 3. Skip external analytics or trackers
   if (url.pathname.includes('/analytics') || 
       url.pathname.includes('/gtag') || 
       url.pathname.includes('/collect')) {
     return;
   }
 
-  // Skip external domains (except Google Fonts)
-  if (url.origin !== self.location.origin) {
-    if (url.hostname === 'fonts.googleapis.com' || 
-        url.hostname === 'fonts.gstatic.com') {
-      event.respondWith(cacheFirst(request));
+  // 4. Handle Google Fonts (Cache-First)
+  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
+    event.respondWith(cacheFirst(request));
+    return;
+  }
+
+  // 5. Handle API Requests
+  if (url.pathname.includes('/api/')) {
+    // Read-only GET list APIs -> Network First with cache fallback
+    if (url.search.includes('action=list')) {
+      event.respondWith(apiNetworkFirst(request));
       return;
     }
+    // Generation, auth, or mutation endpoints -> Network Only
+    event.respondWith(networkOnly(request));
     return;
   }
 
-  // HTML pages: Network-first with offline fallback
+  // 6. Navigation requests (HTML pages) -> Network First with Page Cache Fallback
   if (request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html')) {
-    event.respondWith(networkFirst(request));
+    event.respondWith(htmlNetworkFirst(request));
     return;
   }
 
-  // Static assets: Cache-first
+  // 7. Static Assets (JS, CSS, Images, Fonts) -> Cache First
   if (url.pathname.match(/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff2|woff|ttf|json)$/)) {
     event.respondWith(cacheFirst(request));
     return;
   }
 
-  // API calls: Network-first, no caching
-  if (url.pathname.includes('/api/')) {
-    event.respondWith(networkOnly(request));
-    return;
-  }
-
-  // Everything else: Network-first with cache fallback
+  // Default fallback
   event.respondWith(networkFirst(request));
 });
 
-// ── Cache-first strategy ──
+// ── Cache-First Strategy ──
 async function cacheFirst(request) {
   const cached = await caches.match(request);
   if (cached) return cached;
 
   try {
     const response = await fetch(request);
-    if (response.ok) {
+    if (response && response.ok) {
       const cache = await caches.open(CACHE_NAME);
       cache.put(request, response.clone());
     }
@@ -143,7 +160,7 @@ async function cacheFirst(request) {
   } catch (error) {
     if (request.destination === 'image') {
       return new Response(
-        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"></svg>',
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><rect width="24" height="24" fill="#1c1c1e"/></svg>',
         { headers: { 'Content-Type': 'image/svg+xml' } }
       );
     }
@@ -151,41 +168,70 @@ async function cacheFirst(request) {
   }
 }
 
-// ── Network-first strategy ──
-async function networkFirst(request) {
-  const timeoutPromise = new Promise((_, reject) => {
-    setTimeout(() => reject(new Error('timeout')), 8000);
-  });
-
+// ── HTML Network-First Strategy ──
+async function htmlNetworkFirst(request) {
   try {
-    const response = await Promise.race([fetch(request), timeoutPromise]);
+    const response = await fetch(request);
     if (response && response.ok) {
       const cache = await caches.open(CACHE_NAME);
       cache.put(request, response.clone());
     }
     return response;
   } catch (error) {
-    console.log('[SW] Network failed, trying cache:', request.url);
     const cached = await caches.match(request);
     if (cached) return cached;
-
-    if (request.mode === 'navigate') {
-      return caches.match('/');
-    }
+    // Fallback to home page if navigating offline
+    const rootCached = await caches.match('/');
+    if (rootCached) return rootCached;
     throw error;
   }
 }
 
-// ── Network-only strategy ──
+// ── API Network-First Strategy (for list feeds) ──
+async function apiNetworkFirst(request) {
+  try {
+    const response = await fetch(request);
+    if (response && response.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (err) {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    return new Response(
+      JSON.stringify({ error: 'Offline', offline: true, articles: [], categories: [] }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+}
+
+// ── Network-First Strategy ──
+async function networkFirst(request) {
+  try {
+    const response = await fetch(request);
+    if (response && response.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    throw error;
+  }
+}
+
+// ── Network-Only Strategy ──
 async function networkOnly(request) {
   try {
     return await fetch(request);
   } catch (error) {
     return new Response(
       JSON.stringify({
-        error: 'You are offline',
+        error: 'Network unavailable',
         offline: true,
-        message: 'This feature requires an internet connection'
+        message: 'This feature requires an active internet connection.'
       }),
       { status: 503, headers: { 'Content-Type': 'application/json' } }
     );
@@ -199,14 +245,13 @@ self.addEventListener('push', (event) => {
   try {
     const data = event.data.json();
     const options = {
-      body: data.body || 'New content on EasyRead',
+      body: data.body || 'New simplified content is ready on EasyRead',
       icon: '/icons/icon-192.png',
       badge: '/icons/icon-192.png',
-      tag: data.tag || 'easyread',
+      tag: data.tag || 'easyread-alert',
       data: { url: data.url || '/', type: data.type || 'general' },
-      vibrate: [200, 100, 200],
-      requireInteraction: data.requireInteraction || false,
-      actions: data.actions || [],
+      vibrate: [150, 80, 150],
+      requireInteraction: false
     };
 
     event.waitUntil(
@@ -227,9 +272,8 @@ self.addEventListener('push', (event) => {
 // ── Notification Click ──
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-
   const data = event.notification.data || {};
-  let urlToOpen = data.url || '/';
+  const targetUrl = data.url || '/';
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })
@@ -237,12 +281,12 @@ self.addEventListener('notificationclick', (event) => {
         for (const client of clientList) {
           if (client.url.includes(self.location.origin) && 'focus' in client) {
             client.focus();
-            client.postMessage({ type: 'navigate', url: urlToOpen, notificationData: data });
+            client.postMessage({ type: 'navigate', url: targetUrl });
             return;
           }
         }
         if (clients.openWindow) {
-          return clients.openWindow(urlToOpen);
+          return clients.openWindow(targetUrl);
         }
       })
   );
@@ -251,24 +295,10 @@ self.addEventListener('notificationclick', (event) => {
 // ── Background Sync ──
 self.addEventListener('sync', (event) => {
   if (event.tag === 'sync-feed') {
-    event.waitUntil(syncFeed());
+    event.waitUntil(
+      fetch('/api/article?action=list')
+        .then(res => res.ok ? caches.open(CACHE_NAME).then(cache => cache.put('/api/article?action=list', res)) : null)
+        .catch(() => {})
+    );
   }
 });
-
-async function syncFeed() {
-  try {
-    const cache = await caches.open(CACHE_NAME);
-    const response = await fetch('/api/article?action=list');
-    if (response.ok) {
-      await cache.put('/api/article?action=list', response.clone());
-      const clients = await self.clients.matchAll();
-      clients.forEach(client => {
-        client.postMessage({ type: 'feed-synced' });
-      });
-    }
-  } catch (err) {
-    console.log('[SW] Feed sync failed:', err);
-  }
-}
-
-console.log(`[SW] EasyRead v${APP_VERSION} ready 🚀`);
