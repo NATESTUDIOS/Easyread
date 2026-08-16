@@ -13,7 +13,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
-        /* --- CSS Variables for Auto Light/Dark Theme --- */
         :root {
             --bg-color: #f5f5f7;
             --bg-glow: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.8) 0%, transparent 70%);
@@ -84,7 +83,7 @@
             --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.04) !important;
             --glass-shadow: 0 8px 32px rgba(0,0,0,0.6) !important;
             --accent-color: #f59847 !important;
-            --accent-glow: rgba(245, 152, 71, 0.2) !important;
+            --accent-glow: rgba(245, 152, 71, 0.2);
             --divider: rgba(255,255,255,0.06);
         }
 
@@ -93,11 +92,9 @@
         
         body {
             background-color: var(--bg-color);
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E"),
-                          var(--bg-glow);
-            background-repeat: no-repeat, no-repeat;
-            background-size: auto, 100% 100%;
-            background-position: center, center;
+            background-image: var(--bg-glow);
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             min-height: 100vh;
             display: flex;
@@ -147,7 +144,7 @@
             gap: 1.5rem;
         }
 
-        /* --- IDENTITY & STATS CARD --- */
+        /* --- IDENTITY CARD --- */
         .shareable-card {
             border: var(--glass-border);
             border-radius: 24px;
@@ -215,6 +212,7 @@
             background: var(--accent-glow);
             border: 1px solid var(--accent-color);
             color: var(--accent-color);
+            cursor: pointer;
         }
         .profile-badge svg {
             width: 12px; height: 12px;
@@ -236,9 +234,7 @@
             transition: transform 0.2s, box-shadow 0.2s;
             box-shadow: 0 4px 10px var(--accent-glow);
         }
-        .profile-signin-btn:active {
-            transform: scale(0.95);
-        }
+        .profile-signin-btn:active { transform: scale(0.95); }
 
         .profile-stats {
             display: flex; gap: 16px;
@@ -249,20 +245,10 @@
             background: rgba(255, 255, 255, 0.03);
             border: var(--glass-border-subtle);
             border-radius: 14px; padding: 14px 12px; text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
-        .stat-box-inner {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .stat-box-inner svg {
-            width: 16px; height: 16px;
-            stroke: var(--accent-color); fill: none; stroke-width: 2.2;
-        }
+        .stat-box-inner { display: flex; align-items: center; gap: 4px; }
+        .stat-box-inner svg { width: 16px; height: 16px; stroke: var(--accent-color); fill: none; stroke-width: 2.2; }
         .stat-value { font-size: 18px; font-weight: 800; color: var(--accent-color); }
         .stat-label { font-size: 10px; color: var(--text-tertiary); font-weight: 600; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
 
@@ -341,14 +327,11 @@
             border: var(--glass-border-subtle);
             display: flex; align-items: center; justify-content: center; flex-shrink: 0;
         }
-        .mini-icon svg {
-            width: 20px; height: 20px;
-            stroke: var(--accent-color); fill: none; stroke-width: 2;
-        }
+        .mini-icon svg { width: 20px; height: 20px; stroke: var(--accent-color); fill: none; stroke-width: 2; }
 
         .mini-info { flex: 1; min-width: 0; }
         .mini-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .mini-meta { font-size: 12px; color: var(--text-secondary); }
+        .mini-meta { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
 
         .saved-row {
             display: flex; align-items: center; gap: 12px;
@@ -363,14 +346,11 @@
             display: flex; align-items: center; justify-content: center;
             color: #fff; flex-shrink: 0;
         }
-        .saved-dot svg {
-            width: 18px; height: 18px;
-            stroke: currentColor; fill: none; stroke-width: 2.2;
-        }
+        .saved-dot svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2.2; }
 
         .saved-info { flex: 1; min-width: 0; }
         .saved-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .saved-meta { font-size: 12px; color: var(--text-secondary); }
+        .saved-meta { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
         .saved-arrow { color: var(--text-tertiary); font-size: 18px; }
 
         .empty-placeholder {
@@ -426,10 +406,7 @@
             opacity: 0; pointer-events: none;
             transition: opacity 0.25s ease;
         }
-        .dialog-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
+        .dialog-overlay.active { opacity: 1; pointer-events: auto; }
         .glass-dialog {
             background: var(--card-bg);
             backdrop-filter: var(--card-blur);
@@ -443,28 +420,10 @@
             transition: transform 0.25s ease;
             text-align: center;
         }
-        .dialog-overlay.active .glass-dialog {
-            transform: scale(1);
-        }
-        .dialog-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 18px;
-        }
-        .dialog-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--text-main);
-        }
-        .dialog-close {
-            background: none;
-            border: none;
-            font-size: 20px;
-            color: var(--text-secondary);
-            cursor: pointer;
-            padding: 4px;
-        }
+        .dialog-overlay.active .glass-dialog { transform: scale(1); }
+        .dialog-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+        .dialog-title { font-size: 18px; font-weight: 700; color: var(--text-main); }
+        .dialog-close { background: none; border: none; font-size: 20px; color: var(--text-secondary); cursor: pointer; padding: 4px; }
 
         .dialog-options {
             display: flex;
@@ -490,9 +449,7 @@
             transition: all 0.2s;
             text-align: left;
         }
-        .dialog-option-btn:hover {
-            background: rgba(0, 0, 0, 0.06);
-        }
+        .dialog-option-btn:hover { background: rgba(0, 0, 0, 0.06); }
         .dialog-option-btn.active {
             background: var(--accent-color);
             color: #fff;
@@ -513,86 +470,27 @@
         }
 
         /* --- AUTH FORMS --- */
-        .form-group {
-            margin-bottom: 14px;
-            text-align: left;
-        }
-        .form-label {
-            display: block;
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--text-secondary);
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+        .form-group { margin-bottom: 14px; text-align: left; }
+        .form-label { display: block; font-size: 11px; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
         .form-input {
-            width: 100%;
-            padding: 12px 14px;
-            border-radius: 12px;
+            width: 100%; padding: 12px 14px; border-radius: 12px;
             background: rgba(0, 0, 0, 0.04);
             border: var(--glass-border-subtle);
             color: var(--text-main);
-            font-family: inherit;
-            font-size: 14px;
+            font-family: inherit; font-size: 14px;
         }
-        .form-input:focus {
-            outline: none;
-            border-color: var(--accent-color);
-        }
+        .form-input:focus { outline: none; border-color: var(--accent-color); }
         .auth-submit-btn {
-            width: 100%;
-            padding: 13px;
-            border-radius: 14px;
-            background: var(--accent-color);
-            border: none;
-            color: white;
-            font-family: inherit;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 10px;
+            width: 100%; padding: 13px; border-radius: 14px;
+            background: var(--accent-color); border: none; color: white;
+            font-family: inherit; font-size: 14px; font-weight: 700;
+            cursor: pointer; margin-top: 10px;
             box-shadow: 0 4px 12px rgba(245, 152, 71, 0.25);
             transition: all 0.2s;
         }
-        .auth-submit-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        .auth-toggle-link {
-            text-align: center;
-            font-size: 13px;
-            color: var(--accent-color);
-            margin-top: 14px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-        .auth-error-msg {
-            color: #ff3b30;
-            font-size: 12px;
-            margin-top: 10px;
-            display: none;
-            text-align: center;
-        }
-
-        /* --- SHIMMER LOADER --- */
-        .shimmer-element {
-            position: relative;
-            overflow: hidden;
-            background: rgba(0, 0, 0, 0.05);
-            border-radius: 4px;
-        }
-        @media (prefers-color-scheme: dark) {
-            .shimmer-element { background: rgba(255, 255, 255, 0.06); }
-        }
-        .shimmer-element::after {
-            position: absolute; top: 0; right: 0; bottom: 0; left: 0;
-            transform: translateX(-100%);
-            background-image: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0) 100%);
-            animation: shimmerSwipe 1.5s infinite;
-            content: '';
-        }
-        @keyframes shimmerSwipe { 100% { transform: translateX(100%); } }
+        .auth-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .auth-toggle-link { text-align: center; font-size: 13px; color: var(--accent-color); margin-top: 14px; cursor: pointer; font-weight: 600; }
+        .auth-error-msg { color: #ff3b30; font-size: 12px; margin-top: 10px; display: none; text-align: center; }
 
         @media (max-width: 420px) {
             .header { padding: 1rem 1rem 0.5rem 1rem; }
@@ -629,7 +527,7 @@
                             <div class="profile-name" id="profileName">Guest User</div>
                             <div class="profile-email" id="profileEmail">Sign in to save history & bookmarks</div>
                             <div class="profile-rank-row" id="profileRankRow" style="display: none;">
-                                <span class="profile-badge" id="activeProfileHeaderBadge">
+                                <span class="profile-badge" id="activeProfileHeaderBadge" onclick="openDialog('profileDialog')">
                                     <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
                                     <span id="headerBadgeText">Default</span>
                                 </span>
@@ -701,16 +599,18 @@
                         </div>
                         <div class="settings-arrow">›</div>
                     </div>
+                    <!-- Persona Selector Setting -->
                     <div class="settings-item" onclick="openDialog('profileDialog')">
                         <div class="settings-icon">
                             <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
                         </div>
                         <div class="settings-info">
-                            <div class="settings-label">Active Persona</div>
+                            <div class="settings-label">Explanation Perspective</div>
                             <div class="settings-sub" id="currentProfileLabel">Everyday Life</div>
                         </div>
                         <div class="settings-arrow">›</div>
                     </div>
+                    <!-- Theme Selector Setting -->
                     <div class="settings-item" onclick="openDialog('themeDialog')">
                         <div class="settings-icon">
                             <svg viewBox="0 0 24 24"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/><circle cx="12" cy="12" r="4"/></svg>
@@ -727,7 +627,7 @@
         </main>
     </div>
 
-    <!-- Learning Profile Dialog -->
+    <!-- Learning Perspective Dialog -->
     <div class="dialog-overlay" id="profileDialog">
         <div class="glass-dialog">
             <div class="dialog-header">
@@ -738,7 +638,7 @@
         </div>
     </div>
 
-    <!-- Theme Dialog -->
+    <!-- Theme Preference Dialog -->
     <div class="dialog-overlay" id="themeDialog">
         <div class="glass-dialog">
             <div class="dialog-header">
@@ -759,7 +659,7 @@
         </div>
     </div>
 
-    <!-- Login/Sign Up Dialog -->
+    <!-- Login / Sign Up Dialog -->
     <div class="dialog-overlay" id="loginDialog">
         <div class="glass-dialog">
             <div class="dialog-header">
@@ -785,7 +685,6 @@
     </div>
 
     <script>
-        // API Base URL (Relative path works in all environments)
         const API_BASE_URL = '/api';
 
         const gradientPalettes = [
@@ -852,7 +751,7 @@
 
         applyTheme(currentThemeSetting);
 
-        // --- Learning Persona / Profiles ---
+        // --- Perspectives / Profile Selector ---
         let preferredProfileId = localStorage.getItem('easyread-profile-id') || '1';
         let availableProfiles = [];
 
@@ -861,12 +760,12 @@
             try {
                 const res = await fetch(`${API_BASE_URL}/profiles`);
                 if (!res.ok) throw new Error();
-                const profiles = await res.json();
-                availableProfiles = Array.isArray(profiles) ? profiles : [];
+                const data = await res.json();
+                availableProfiles = Array.isArray(data) ? data : (data.profiles || []);
 
                 container.innerHTML = '';
                 availableProfiles.forEach(p => {
-                    const isSelected = p.profile_id.toString() === preferredProfileId.toString();
+                    const isSelected = String(p.profile_id) === String(preferredProfileId);
                     container.innerHTML += `
                         <button class="dialog-option-btn ${isSelected ? 'active' : ''}" data-profile-id="${p.profile_id}" onclick="selectProfile(${p.profile_id}, '${escapeHtml(p.name)}')">
                             <span class="option-title">${escapeHtml(p.name)}</span>
@@ -886,11 +785,11 @@
             }
         }
 
-        function applyProfile(profileId) {
-            preferredProfileId = profileId.toString();
+        async function applyProfile(profileId) {
+            preferredProfileId = String(profileId);
             localStorage.setItem('easyread-profile-id', preferredProfileId);
 
-            const active = availableProfiles.find(p => p.profile_id.toString() === preferredProfileId) || { name: 'Everyday Life' };
+            const active = availableProfiles.find(p => String(p.profile_id) === preferredProfileId) || { name: 'Everyday Life' };
             
             const currentProfileLabel = document.getElementById('currentProfileLabel');
             if (currentProfileLabel) currentProfileLabel.textContent = active.name;
@@ -901,6 +800,17 @@
             document.querySelectorAll('#profileDialog .dialog-option-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.getAttribute('data-profile-id') === preferredProfileId);
             });
+
+            // If user is logged in, sync preference to database
+            const userId = localStorage.getItem('easyread_user_id');
+            const sessionToken = localStorage.getItem('easyread_session_token');
+            if (userId) {
+                fetch(`${API_BASE_URL}/account?action=set-preference`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-user-id': userId, 'x-session-token': sessionToken || '' },
+                    body: JSON.stringify({ preference_type: 'profile', value: parseInt(profileId) })
+                }).catch(() => {});
+            }
         }
 
         function selectProfile(profileId, profileName) {
@@ -908,7 +818,7 @@
             closeDialog('profileDialog');
         }
 
-        // --- Auth State Management ---
+        // --- Authentication Handling ---
         let isLoggedIn = localStorage.getItem('easyread-logged-in') === 'true';
         let authMode = 'login';
 
@@ -1027,6 +937,10 @@
                 localStorage.setItem('easyread-email', emailInput);
                 localStorage.setItem('easyread-credits', (data.credits || data.user?.credits || 50).toString());
 
+                if (data.user?.preferred_profile_id) {
+                    applyProfile(data.user.preferred_profile_id);
+                }
+
                 updateAuthUI();
                 closeDialog('loginDialog');
                 document.getElementById('authForm').reset();
@@ -1043,30 +957,48 @@
             }
         }
 
-        // --- Fetch User Data (History, Bookmarks, Credits) ---
+        // --- Fetch User Data (Reading History, Bookmarks, Credits) ---
         async function fetchUserData() {
             const userId = localStorage.getItem('easyread_user_id');
             const sessionToken = localStorage.getItem('easyread_session_token');
             if (!userId) return;
 
             try {
-                const response = await fetch(`${API_BASE_URL}/account?action=profile&user_id=${encodeURIComponent(userId)}`, {
-                    headers: {
-                        'x-user-id': userId,
-                        'x-session-token': sessionToken || ''
-                    }
+                // Fetch profile metadata & credits
+                const profRes = await fetch(`${API_BASE_URL}/account?action=profile&user_id=${encodeURIComponent(userId)}`, {
+                    headers: { 'x-user-id': userId, 'x-session-token': sessionToken || '' }
                 });
                 
-                if (!response.ok) return;
-                const data = await response.json();
-
-                if (data.user?.credits !== undefined) {
-                    localStorage.setItem('easyread-credits', data.user.credits);
-                    document.getElementById('userCreditsValue').textContent = parseFloat(data.user.credits).toFixed(1);
+                if (profRes.ok) {
+                    const profData = await profRes.json();
+                    if (profData.credits !== undefined) {
+                        localStorage.setItem('easyread-credits', profData.credits);
+                        document.getElementById('userCreditsValue').textContent = parseFloat(profData.credits).toFixed(1);
+                    }
+                    if (profData.preferred_profile_id) {
+                        applyProfile(profData.preferred_profile_id);
+                    }
                 }
 
-                renderHistory(data.history || []);
-                renderBookmarks(data.bookmarks || []);
+                // Fetch real reading history
+                const histRes = await fetch(`${API_BASE_URL}/articles?action=history&user_id=${encodeURIComponent(userId)}`, {
+                    headers: { 'x-user-id': userId, 'x-session-token': sessionToken || '' }
+                });
+
+                if (histRes.ok) {
+                    const histData = await histRes.json();
+                    renderHistory(histData.history || []);
+                }
+
+                // Fetch real bookmarks
+                const bmRes = await fetch(`${API_BASE_URL}/view?action=bookmark-status`, {
+                    headers: { 'x-user-id': userId, 'x-session-token': sessionToken || '' }
+                });
+
+                if (bmRes.ok) {
+                    const bmData = await bmRes.json();
+                    renderBookmarks(bmData.bookmarks || []);
+                }
             } catch (err) {
                 console.error('Failed to sync profile data:', err);
             }
@@ -1091,15 +1023,18 @@
 
             list.innerHTML = '';
             history.forEach(item => {
+                const article = item.articles || item;
                 const date = item.viewed_at || item.date ? new Date(item.viewed_at || item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Recently';
+                const domain = article.source_domain || 'EasyRead';
+                
                 list.innerHTML += `
-                    <div class="mini-card" onclick="openArticle('${item.slug || ''}', ${item.article_id || ''})">
+                    <div class="mini-card" onclick="openArticle('${article.slug || ''}', ${item.article_id || ''})">
                         <div class="mini-icon">
                             <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
                         </div>
                         <div class="mini-info">
-                            <div class="mini-name">${escapeHtml(item.title || item.canonical_title || 'Article')}</div>
-                            <div class="mini-meta">${date}</div>
+                            <div class="mini-name">${escapeHtml(article.canonical_title || article.title || 'Article')}</div>
+                            <div class="mini-meta">${escapeHtml(domain)} · ${date}</div>
                         </div>
                     </div>
                 `;
@@ -1125,14 +1060,16 @@
 
             list.innerHTML = '';
             bookmarks.forEach((item, idx) => {
+                const article = item.articles || item;
                 const date = item.created_at ? new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Saved';
+                
                 list.innerHTML += `
-                    <div class="saved-row" onclick="openArticle('${item.slug || ''}', ${item.article_id || ''})">
+                    <div class="saved-row" onclick="openArticle('${article.slug || ''}', ${item.article_id || ''})">
                         <div class="saved-dot" style="background: ${getRandomGradient(idx)}">
                             <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
                         </div>
                         <div class="saved-info">
-                            <div class="saved-name">${escapeHtml(item.title || item.canonical_title || 'Saved Article')}</div>
+                            <div class="saved-name">${escapeHtml(article.canonical_title || article.title || 'Saved Article')}</div>
                             <div class="saved-meta">${date}</div>
                         </div>
                         <div class="saved-arrow">›</div>
@@ -1142,10 +1079,11 @@
         }
 
         function openArticle(slug, id) {
+            const targetIdentifier = slug || id;
             if (window.parent && window.parent !== window) {
                 window.parent.postMessage({ type: 'openArticle', slug: slug, article_id: id }, '*');
             } else {
-                window.location.href = slug ? `/view?slug=${encodeURIComponent(slug)}` : `/view?id=${encodeURIComponent(id)}`;
+                window.location.href = `/article/${encodeURIComponent(targetIdentifier)}`;
             }
         }
 
