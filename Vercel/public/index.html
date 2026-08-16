@@ -3,10 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <meta name="theme-color" content="#000000">
+
+    <!-- ─── PRIMARY META TAGS ─── -->
+    <title>EasyRead — Knowledge, Simplified</title>
+    <meta name="description" content="EasyRead explains complex topics in a way only you understand. Ask questions, paste notes, or read websites — get clear, tailored explanations.">
+    <meta name="keywords" content="explain, simplify, reading, knowledge, AI, learning, study, education">
+    <meta name="author" content="EasyRead">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://easytoread.vercel.app/">
+
+    <!-- ─── THEME COLOR ─── -->
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)">
+
+    <!-- ─── APPLE / IOS ─── -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>EasyRead</title>
+    <meta name="apple-mobile-web-app-title" content="EasyRead">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/icons/icon-120.png">
+
+    <!-- ─── ANDROID / CHROME ─── -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <!-- ─── OPEN GRAPH / SOCIAL ─── -->
+    <meta property="og:title" content="EasyRead — Knowledge, Simplified">
+    <meta property="og:description" content="Get clear, tailored explanations for any topic. Ask questions, paste notes, or read websites.">
+    <meta property="og:url" content="https://easytoread.vercel.app/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="EasyRead">
+    <meta property="og:image" content="https://easytoread.vercel.app/icons/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+
+    <!-- ─── TWITTER ─── -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="EasyRead — Knowledge, Simplified">
+    <meta name="twitter:description" content="Get clear, tailored explanations for any topic.">
+    <meta name="twitter:image" content="https://easytoread.vercel.app/icons/og-image.png">
+
+    <!-- ─── FAVICON ─── -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png">
+    <link rel="shortcut icon" href="/favicon.ico">
+
+    <!-- ─── FONTS ─── -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -123,7 +167,7 @@
             transition: background 0.3s ease;
         }
 
-        /* ─── SPLASH SCREEN (Enhanced) ─── */
+        /* ─── SPLASH SCREEN ─── */
         #splashScreen {
             position: fixed;
             top: 0; left: 0;
@@ -227,6 +271,98 @@
             100% { transform: scale(0.8); opacity: 0.6; }
         }
 
+        /* ─── GLASS DIALOG (Reusable) ─── */
+        .glass-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 6000;
+            padding: 24px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .glass-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+        .glass-dialog {
+            background: var(--card-bg);
+            backdrop-filter: var(--card-blur);
+            -webkit-backdrop-filter: var(--card-blur);
+            border: var(--glass-border);
+            border-radius: 24px;
+            padding: 32px 28px;
+            max-width: 380px;
+            width: 100%;
+            text-align: center;
+            transform: scale(0.92) translateY(20px);
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .glass-overlay.active .glass-dialog {
+            transform: scale(1) translateY(0);
+        }
+        .glass-dialog .dialog-icon {
+            font-size: 2.8rem;
+            margin-bottom: 8px;
+        }
+        .glass-dialog h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        .glass-dialog p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 18px;
+        }
+        .glass-dialog .dialog-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .glass-dialog .btn-primary {
+            background: var(--accent-color);
+            color: #fff;
+            border: none;
+            padding: 10px 28px;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .glass-dialog .btn-primary:hover { background: var(--accent-hover); }
+        .glass-dialog .btn-secondary {
+            background: var(--mode-bg);
+            color: var(--text-secondary);
+            border: var(--glass-border-subtle);
+            padding: 10px 28px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .glass-dialog .btn-secondary:hover { background: var(--mode-bg-hover); }
+        .glass-dialog .btn-dismiss {
+            background: transparent;
+            border: none;
+            color: var(--text-tertiary);
+            font-size: 0.8rem;
+            cursor: pointer;
+            padding: 8px;
+            margin-top: 4px;
+        }
+        .glass-dialog .btn-dismiss:hover { color: var(--text-secondary); }
+
         /* ─── OFFLINE DIALOG ─── */
         .offline-overlay {
             position: fixed;
@@ -252,32 +388,10 @@
             width: 100%;
             text-align: center;
         }
-        .offline-dialog .icon {
-            font-size: 2.8rem;
-            margin-bottom: 8px;
-        }
-        .offline-dialog h3 {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 4px;
-        }
-        .offline-dialog p {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            line-height: 1.5;
-            margin-bottom: 18px;
-        }
-        .offline-dialog .btn-retry {
-            background: var(--accent-color);
-            color: #fff;
-            border: none;
-            padding: 10px 28px;
-            border-radius: 14px;
-            font-weight: 700;
-            font-size: 0.85rem;
-            cursor: pointer;
-        }
+        .offline-dialog .icon { font-size: 2.8rem; margin-bottom: 8px; }
+        .offline-dialog h3 { font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+        .offline-dialog p { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 18px; }
+        .offline-dialog .btn-retry { background: var(--accent-color); color: #fff; border: none; padding: 10px 28px; border-radius: 14px; font-weight: 700; font-size: 0.85rem; cursor: pointer; }
 
         /* ─── APP SHELL ─── */
         .app-shell {
@@ -654,11 +768,18 @@
         .tab-iframe.active { display: block; }
         .home-content-wrapper { display: flex; flex-direction: column; width: 100%; flex: 1; }
         .home-content-wrapper.hidden { display: none; }
+
+        /* ─── RESPONSIVE ─── */
+        @media (max-width: 420px) {
+            .glass-dialog { padding: 24px 20px; }
+            .glass-dialog .dialog-actions { flex-direction: column; }
+            .glass-dialog .btn-primary, .glass-dialog .btn-secondary { width: 100%; justify-content: center; }
+        }
     </style>
 </head>
 <body>
 
-    <!-- SPLASH SCREEN (Enhanced) -->
+    <!-- ─── SPLASH SCREEN ─── -->
     <div id="splashScreen">
         <div class="splash-pulse-ring"></div>
         <div class="splash-pulse-ring"></div>
@@ -671,7 +792,21 @@
         </div>
     </div>
 
-    <!-- OFFLINE OVERLAY -->
+    <!-- ─── REUSABLE GLASS DIALOG ─── -->
+    <div class="glass-overlay" id="glassOverlay">
+        <div class="glass-dialog">
+            <div class="dialog-icon" id="dialogIcon">📱</div>
+            <h3 id="dialogTitle">Install EasyRead</h3>
+            <p id="dialogMessage">Get the full app experience with offline access and push notifications.</p>
+            <div class="dialog-actions" id="dialogActions">
+                <button class="btn-primary" id="dialogPrimaryBtn">Install</button>
+                <button class="btn-secondary" id="dialogSecondaryBtn">Maybe Later</button>
+            </div>
+            <button class="btn-dismiss" id="dialogDismissBtn">Dismiss</button>
+        </div>
+    </div>
+
+    <!-- ─── OFFLINE OVERLAY ─── -->
     <div class="offline-overlay" id="offlineOverlay">
         <div class="offline-dialog glass-card">
             <div class="icon">📡</div>
@@ -681,8 +816,10 @@
         </div>
     </div>
 
+    <!-- ─── TOAST ─── -->
     <div class="toast" id="toast"></div>
 
+    <!-- ─── APP SHELL ─── -->
     <div class="app-shell">
         <div class="home-content-wrapper" id="homeWrapper">
             <div class="app-container">
@@ -764,6 +901,7 @@
         </nav>
     </div>
 
+    <!-- ─── FULL SCREEN LOADER ─── -->
     <div class="full-screen-loader" id="fullscreenLoader">
         <div class="loader-blur-bg"></div>
         <div class="loader-modal glass-card">
@@ -778,6 +916,58 @@
         const API_BASE_URL = '/api';
         const CACHE_VERSION = 'easyread-v1';
         const CACHE_URLS = ['/', '/blog.html', '/profile.html'];
+
+        // ─── REUSABLE GLASS DIALOG ───
+        const GlassDialog = {
+            overlay: document.getElementById('glassOverlay'),
+            icon: document.getElementById('dialogIcon'),
+            title: document.getElementById('dialogTitle'),
+            message: document.getElementById('dialogMessage'),
+            primaryBtn: document.getElementById('dialogPrimaryBtn'),
+            secondaryBtn: document.getElementById('dialogSecondaryBtn'),
+            dismissBtn: document.getElementById('dialogDismissBtn'),
+            _resolve: null,
+
+            show(options = {}) {
+                return new Promise((resolve) => {
+                    this._resolve = resolve;
+                    this.icon.textContent = options.icon || '📱';
+                    this.title.textContent = options.title || 'EasyRead';
+                    this.message.textContent = options.message || 'Get the full app experience.';
+                    this.primaryBtn.textContent = options.primaryText || 'OK';
+                    this.secondaryBtn.textContent = options.secondaryText || 'Cancel';
+                    this.secondaryBtn.style.display = options.hideSecondary ? 'none' : 'inline-flex';
+                    this.dismissBtn.style.display = options.hideDismiss ? 'none' : 'inline-block';
+
+                    // Remove old listeners
+                    const newPrimary = this.primaryBtn.cloneNode(true);
+                    const newSecondary = this.secondaryBtn.cloneNode(true);
+                    const newDismiss = this.dismissBtn.cloneNode(true);
+                    this.primaryBtn.parentNode.replaceChild(newPrimary, this.primaryBtn);
+                    this.secondaryBtn.parentNode.replaceChild(newSecondary, this.secondaryBtn);
+                    this.dismissBtn.parentNode.replaceChild(newDismiss, this.dismissBtn);
+
+                    // Re-assign
+                    this.primaryBtn = newPrimary;
+                    this.secondaryBtn = newSecondary;
+                    this.dismissBtn = newDismiss;
+
+                    this.primaryBtn.addEventListener('click', () => { this.hide(); resolve(true); });
+                    this.secondaryBtn.addEventListener('click', () => { this.hide(); resolve(false); });
+                    this.dismissBtn.addEventListener('click', () => { this.hide(); resolve(false); });
+
+                    this.overlay.classList.add('active');
+                });
+            },
+
+            hide() {
+                this.overlay.classList.remove('active');
+                if (this._resolve) {
+                    this._resolve(false);
+                    this._resolve = null;
+                }
+            }
+        };
 
         // ─── OFFLINE HANDLING ───
         let isOnline = navigator.onLine;
@@ -809,7 +999,18 @@
         // ─── SERVICE WORKER REGISTRATION ───
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js')
-                .then(() => console.log('[SW] Registered'))
+                .then(reg => {
+                    console.log('[SW] Registered');
+                    // Check for updates
+                    reg.addEventListener('updatefound', () => {
+                        const newWorker = reg.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                showToast('🔄 Update available! Refresh to apply.');
+                            }
+                        });
+                    });
+                })
                 .catch(() => console.log('[SW] Registration failed'));
         }
 
@@ -829,9 +1030,74 @@
                 const splash = document.getElementById('splashScreen');
                 if (splash) splash.classList.add('hidden');
             }, 600);
+
+            // Show install prompt after splash
+            setTimeout(() => {
+                checkAndShowPrompts();
+            }, 2500);
         });
 
-        // ─── THEME (reduced obsessiveness) ───
+        // ─── PWA INSTALL & NOTIFICATION PROMPTS ───
+        let deferredPrompt = null;
+        let installPromptShown = false;
+        let notificationPromptShown = false;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+        });
+
+        async function checkAndShowPrompts() {
+            // Check if already installed
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                                window.navigator.standalone === true;
+
+            // Install prompt
+            if (!isStandalone && !installPromptShown && deferredPrompt) {
+                installPromptShown = true;
+                const confirmed = await GlassDialog.show({
+                    icon: '📱',
+                    title: 'Install EasyRead',
+                    message: 'Get the full app experience with offline access, push notifications, and a home screen icon.',
+                    primaryText: 'Install App',
+                    secondaryText: 'Maybe Later',
+                    hideDismiss: true
+                });
+
+                if (confirmed && deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const result = await deferredPrompt.userChoice;
+                    if (result.outcome === 'accepted') {
+                        showToast('🎉 EasyRead installed!');
+                    }
+                    deferredPrompt = null;
+                }
+            }
+
+            // Notification prompt (if not already shown and not denied)
+            if (!notificationPromptShown && Notification.permission === 'default') {
+                notificationPromptShown = true;
+                const confirmed = await GlassDialog.show({
+                    icon: '🔔',
+                    title: 'Enable Notifications',
+                    message: 'Get notified when your explanations are ready, new articles are published, and more.',
+                    primaryText: 'Allow',
+                    secondaryText: 'Not Now',
+                    hideDismiss: true
+                });
+
+                if (confirmed) {
+                    const perm = await Notification.requestPermission();
+                    if (perm === 'granted') {
+                        showToast('🔔 Notifications enabled!');
+                    } else {
+                        showToast('🔕 Notifications disabled');
+                    }
+                }
+            }
+        }
+
+        // ─── THEME ───
         let currentThemeSetting = localStorage.getItem('easyread-theme') || 'auto';
         function applyTheme(theme) {
             currentThemeSetting = theme;
