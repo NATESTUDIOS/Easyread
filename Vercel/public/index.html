@@ -86,6 +86,8 @@
             --dialog-bg: rgba(255, 255, 255, 0.92);
             --safe-top: env(safe-area-inset-top, 0px);
             --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --shimmer-base: rgba(0, 0, 0, 0.05);
+            --shimmer-highlight: rgba(0, 0, 0, 0.09);
         }
 
         @media (prefers-color-scheme: dark) {
@@ -110,6 +112,8 @@
                 --splash-bg: #09090b;
                 --dialog-overlay: rgba(0, 0, 0, 0.75);
                 --dialog-bg: rgba(20, 20, 25, 0.88);
+                --shimmer-base: rgba(255, 255, 255, 0.04);
+                --shimmer-highlight: rgba(255, 255, 255, 0.09);
             }
         }
 
@@ -133,6 +137,8 @@
             --icon-stroke: #1c1c1e !important;
             --dialog-overlay: rgba(15, 15, 18, 0.6) !important;
             --dialog-bg: rgba(255, 255, 255, 0.92) !important;
+            --shimmer-base: rgba(0, 0, 0, 0.05) !important;
+            --shimmer-highlight: rgba(0, 0, 0, 0.09) !important;
         }
 
         [data-theme="dark"] {
@@ -155,6 +161,8 @@
             --icon-stroke: #f2f2f5 !important;
             --dialog-overlay: rgba(0, 0, 0, 0.75) !important;
             --dialog-bg: rgba(20, 20, 25, 0.88) !important;
+            --shimmer-base: rgba(255, 255, 255, 0.04) !important;
+            --shimmer-highlight: rgba(255, 255, 255, 0.09) !important;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -324,6 +332,50 @@
             font-variant-numeric: tabular-nums;
         }
 
+        /* ─── SHIMMER SKELETON ANIMATION ─── */
+        .skeleton {
+            background: linear-gradient(90deg, var(--shimmer-base) 25%, var(--shimmer-highlight) 50%, var(--shimmer-base) 75%);
+            background-size: 200% 100%;
+            animation: shimmerMove 1.4s ease-in-out infinite;
+            border-radius: 12px;
+        }
+
+        @keyframes shimmerMove {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .skeleton-pill {
+            width: 75px;
+            height: 30px;
+            border-radius: 20px;
+            flex: 0 0 auto;
+        }
+
+        .skeleton-card-item {
+            padding: 16px 18px;
+            margin-bottom: 12px;
+            border: var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .skeleton-line {
+            height: 14px;
+            width: 100%;
+            border-radius: 6px;
+        }
+
+        .skeleton-line.short { width: 45%; }
+        .skeleton-line.mid { width: 75%; }
+        .skeleton-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            flex-shrink: 0;
+        }
+
         /* ─── GLASS DIALOG SYSTEM ─── */
         .glass-overlay {
             position: fixed;
@@ -439,12 +491,12 @@
             position: fixed;
             bottom: calc(76px + var(--safe-bottom));
             left: 50%;
-            transform: translateX(-50%) translateY(140%);
+            transform: translateX(-50%) translateY(160%);
             max-width: 400px;
             width: calc(100% - 32px);
             background: #ef4444;
             color: #ffffff;
-            padding: 10px 16px;
+            padding: 11px 16px;
             border-radius: 14px;
             font-size: 0.82rem;
             font-weight: 600;
@@ -454,8 +506,9 @@
             align-items: center;
             justify-content: space-between;
             transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s;
+            pointer-events: none;
         }
-        #offlineBanner.show { transform: translateX(-50%) translateY(0); }
+        #offlineBanner.show { transform: translateX(-50%) translateY(0); pointer-events: auto; }
         #offlineBanner.online-sync {
             background: #10b981;
             box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
@@ -684,20 +737,22 @@
             width: 36px;
             height: 36px;
             border-radius: 12px;
-            background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 700;
-            font-size: 0.85rem;
+            font-weight: 800;
+            font-size: 0.82rem;
             color: #ffffff;
             position: relative;
             flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.25);
+            letter-spacing: -0.5px;
         }
         .listing-avatar .online-dot {
             position: absolute;
-            bottom: -1px;
-            right: -1px;
+            bottom: -2px;
+            right: -2px;
             width: 9px;
             height: 9px;
             background: #10b981;
@@ -1051,6 +1106,30 @@
         const STORAGE_ARTICLES_KEY = 'easyread_cached_articles';
         const STORAGE_CATEGORIES_KEY = 'easyread_cached_categories';
 
+        // ─── DISTINCT VIBRANT GRADIENTS FOR AVATARS ───
+        const AVATAR_GRADIENTS = [
+            'linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%)', // Sunset Crimson
+            'linear-gradient(135deg, #8a2387 0%, #e94057 50%, #f27121 100%)', // Twilight Horizon
+            'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)', // Deep Ocean
+            'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', // Emerald Glow
+            'linear-gradient(135deg, #f59847 0%, #e65c00 100%)', // Electric Orange
+            'linear-gradient(135deg, #7f00ff 0%, #e100ff 100%)', // Cyber Neon
+            'linear-gradient(135deg, #4776e6 0%, #8e54e9 100%)', // Royal Violet
+            'linear-gradient(135deg, #f857a6 0%, #ff5858 100%)', // Rose Quartz
+            'linear-gradient(135deg, #16a085 0%, #f4d03f 100%)', // Citrus Lime
+            'linear-gradient(135deg, #3a1c71 0%, #d76d77 50%, #ffaf7b 100%)' // Dusk Mirage
+        ];
+
+        function getDeterministicGradient(text) {
+            if (!text) return AVATAR_GRADIENTS[0];
+            let hash = 0;
+            for (let i = 0; i < text.length; i++) {
+                hash = text.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const index = Math.abs(hash) % AVATAR_GRADIENTS.length;
+            return AVATAR_GRADIENTS[index];
+        }
+
         // ─── ICONS DICTIONARY ───
         const ICONS = {
             download: `<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`,
@@ -1136,7 +1215,9 @@
                     offlineBanner.classList.add('online-sync');
                     setTimeout(() => {
                         offlineBanner.classList.remove('show', 'online-sync');
-                    }, 2000);
+                    }, 1800);
+                } else {
+                    offlineBanner.classList.remove('show', 'online-sync');
                 }
             }
         }
@@ -1204,6 +1285,27 @@
             showToast('🎉 EasyRead installed successfully!');
         });
 
+        async function requestNativeNotificationPermission() {
+            if (!('Notification' in window)) return 'unsupported';
+            try {
+                // Handle Promise and legacy callback architectures
+                let permission = Notification.permission;
+                if (permission !== 'granted' && permission !== 'denied') {
+                    const result = await new Promise((resolve) => {
+                        const res = Notification.requestPermission(resolve);
+                        if (res && typeof res.then === 'function') {
+                            res.then(resolve);
+                        }
+                    });
+                    permission = result || Notification.permission;
+                }
+                return permission;
+            } catch (e) {
+                console.warn('Notification permission error:', e);
+                return 'error';
+            }
+        }
+
         async function checkPrompts() {
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
@@ -1212,7 +1314,7 @@
                 const installConfirmed = await GlassDialog.show({
                     icon: 'download',
                     title: 'Install EasyRead',
-                    description: 'Install EasyRead to get offline access, instant launch, and an distraction-free full screen reader.',
+                    description: 'Install EasyRead to get offline access, instant launch, and a distraction-free full screen reader.',
                     primaryText: 'Install App',
                     secondaryText: 'Later'
                 });
@@ -1241,12 +1343,12 @@
                 });
 
                 if (notifConfirmed) {
-                    try {
-                        const perm = await Notification.requestPermission();
-                        if (perm === 'granted') {
-                            showToast('Notifications enabled!');
-                        }
-                    } catch { /* ignore */ }
+                    const perm = await requestNativeNotificationPermission();
+                    if (perm === 'granted') {
+                        showToast('Notifications enabled!');
+                    } else if (perm === 'denied') {
+                        showToast('Notifications disabled in browser settings');
+                    }
                 }
                 sessionStorage.setItem('er_notif_prompt_dismissed', 'true');
             }
@@ -1385,12 +1487,59 @@
             }
         }
 
+        // ─── SHIMMER SKELETON RENDERING ───
+        function showCategoryShimmers() {
+            const container = document.getElementById('categoriesScroll');
+            if (!container) return;
+            container.innerHTML = `
+                <div class="skeleton skeleton-pill"></div>
+                <div class="skeleton skeleton-pill"></div>
+                <div class="skeleton skeleton-pill"></div>
+                <div class="skeleton skeleton-pill"></div>
+            `;
+        }
+
+        function showArticleShimmers() {
+            const container = document.getElementById('homeListingContainer');
+            if (!container) return;
+            container.innerHTML = `
+                <div class="listing-card glass-card skeleton-card-item">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div class="skeleton skeleton-avatar"></div>
+                        <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
+                            <div class="skeleton skeleton-line short"></div>
+                            <div class="skeleton skeleton-line" style="width:30%; height:10px;"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton skeleton-line"></div>
+                    <div class="skeleton skeleton-line mid"></div>
+                    <div style="display:flex; gap:6px; margin-top:4px;">
+                        <div class="skeleton" style="width:50px; height:20px; border-radius:12px;"></div>
+                        <div class="skeleton" style="width:65px; height:20px; border-radius:12px;"></div>
+                    </div>
+                </div>
+                <div class="listing-card glass-card skeleton-card-item">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div class="skeleton skeleton-avatar"></div>
+                        <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
+                            <div class="skeleton skeleton-line short"></div>
+                            <div class="skeleton skeleton-line" style="width:30%; height:10px;"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton skeleton-line"></div>
+                    <div class="skeleton skeleton-line mid"></div>
+                </div>
+            `;
+        }
+
         // ─── OFFLINE RESILIENT DATA FETCHING ───
         async function fetchHomeCategories() {
             const container = document.getElementById('categoriesScroll');
             if (!container) return;
 
             let categories = [];
+            showCategoryShimmers();
+
             try {
                 const res = await fetch(`${API_BASE_URL}/category?action=list`, { cache: 'no-cache' });
                 if (res.ok) {
@@ -1427,6 +1576,8 @@
 
         async function fetchHomeFeed() {
             const container = document.getElementById('homeListingContainer');
+            showArticleShimmers();
+
             try {
                 const response = await fetch(`${API_BASE_URL}/article?action=list`, { cache: 'no-cache' });
                 if (response.ok) {
@@ -1473,10 +1624,17 @@
                 cats.slice(0, 3).forEach(c => { tagsHtml += `<span class="listing-tag">${escapeHtml(c)}</span>`; });
                 const timeStr = art.created_at ? formatTimeAgo(art.created_at) : `${readTime} min read`;
 
+                // Distinct aesthetic gradient per source name
+                const avatarGradient = getDeterministicGradient(source);
+                const avatarInitials = escapeHtml(source.replace(/https?:\/\//i, '').replace(/^www\./i, '').slice(0, 2).toUpperCase());
+
                 container.innerHTML += `
                     <div class="listing-card glass-card" onclick="openArticleInReader('${escapeJs(art.slug || '')}', '${art.article_id}')">
                         <div class="listing-header">
-                            <div class="listing-avatar">${escapeHtml(source.slice(0, 2).toUpperCase())}<div class="online-dot"></div></div>
+                            <div class="listing-avatar" style="background: ${avatarGradient};">
+                                ${avatarInitials}
+                                <div class="online-dot"></div>
+                            </div>
                             <div class="listing-meta">
                                 <div class="listing-name">${escapeHtml(source)} <span class="verified">✓</span></div>
                                 <div class="listing-time">${escapeHtml(timeStr)}</div>
