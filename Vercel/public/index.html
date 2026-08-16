@@ -307,8 +307,16 @@
             transform: scale(1) translateY(0);
         }
         .glass-dialog .dialog-icon {
-            font-size: 2.8rem;
             margin-bottom: 8px;
+            display: flex;
+            justify-content: center;
+        }
+        .glass-dialog .dialog-icon svg {
+            width: 44px;
+            height: 44px;
+            stroke: var(--accent-color);
+            fill: none;
+            stroke-width: 1.8;
         }
         .glass-dialog h3 {
             font-size: 1.15rem;
@@ -363,7 +371,7 @@
         }
         .glass-dialog .btn-dismiss:hover { color: var(--text-secondary); }
 
-        /* ─── OFFLINE DIALOG ─── */
+        /* ─── OFFLINE DIALOG (dismissible) ─── */
         .offline-overlay {
             position: fixed;
             inset: 0;
@@ -387,11 +395,35 @@
             max-width: 360px;
             width: 100%;
             text-align: center;
+            position: relative;
         }
-        .offline-dialog .icon { font-size: 2.8rem; margin-bottom: 8px; }
+        .offline-dialog .icon {
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: center;
+        }
+        .offline-dialog .icon svg {
+            width: 44px;
+            height: 44px;
+            stroke: #ff6b6b;
+            fill: none;
+            stroke-width: 1.8;
+        }
         .offline-dialog h3 { font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
         .offline-dialog p { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 18px; }
         .offline-dialog .btn-retry { background: var(--accent-color); color: #fff; border: none; padding: 10px 28px; border-radius: 14px; font-weight: 700; font-size: 0.85rem; cursor: pointer; }
+        .offline-dialog .btn-dismiss-offline {
+            background: transparent;
+            border: none;
+            color: var(--text-tertiary);
+            font-size: 0.8rem;
+            cursor: pointer;
+            padding: 8px;
+            margin-top: 4px;
+            display: block;
+            width: 100%;
+        }
+        .offline-dialog .btn-dismiss-offline:hover { color: var(--text-secondary); }
 
         /* ─── APP SHELL ─── */
         .app-shell {
@@ -792,10 +824,12 @@
         </div>
     </div>
 
-    <!-- ─── REUSABLE GLASS DIALOG ─── -->
+    <!-- ─── REUSABLE GLASS DIALOG (with SVG icons) ─── -->
     <div class="glass-overlay" id="glassOverlay">
         <div class="glass-dialog">
-            <div class="dialog-icon" id="dialogIcon">📱</div>
+            <div class="dialog-icon" id="dialogIcon">
+                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </div>
             <h3 id="dialogTitle">Install EasyRead</h3>
             <p id="dialogMessage">Get the full app experience with offline access and push notifications.</p>
             <div class="dialog-actions" id="dialogActions">
@@ -806,13 +840,16 @@
         </div>
     </div>
 
-    <!-- ─── OFFLINE OVERLAY ─── -->
+    <!-- ─── OFFLINE OVERLAY (dismissible) ─── -->
     <div class="offline-overlay" id="offlineOverlay">
         <div class="offline-dialog glass-card">
-            <div class="icon">📡</div>
+            <div class="icon">
+                <svg viewBox="0 0 24 24"><path d="M5 12.5a8 8 0 0 1 14 0"/><path d="M8 16.5a5 5 0 0 1 8 0"/><path d="M12 20.5v-0.5"/></svg>
+            </div>
             <h3>No Internet Connection</h3>
             <p>Please check your connection. You can still view cached content.</p>
             <button class="btn-retry" onclick="retryConnection()">Retry</button>
+            <button class="btn-dismiss-offline" onclick="dismissOffline()">Dismiss</button>
         </div>
     </div>
 
@@ -931,7 +968,12 @@
             show(options = {}) {
                 return new Promise((resolve) => {
                     this._resolve = resolve;
-                    this.icon.textContent = options.icon || '📱';
+                    // Use SVG icon if provided, otherwise fallback to text
+                    if (options.iconSvg) {
+                        this.icon.innerHTML = options.iconSvg;
+                    } else {
+                        this.icon.innerHTML = options.icon || '📱';
+                    }
                     this.title.textContent = options.title || 'EasyRead';
                     this.message.textContent = options.message || 'Get the full app experience.';
                     this.primaryBtn.textContent = options.primaryText || 'OK';
@@ -982,6 +1024,10 @@
             }
         }
 
+        function dismissOffline() {
+            offlineOverlay.classList.remove('active');
+        }
+
         window.addEventListener('online', updateOnlineStatus);
         window.addEventListener('offline', updateOnlineStatus);
         updateOnlineStatus();
@@ -989,7 +1035,7 @@
         function retryConnection() {
             if (navigator.onLine) {
                 offlineOverlay.classList.remove('active');
-                showToast('✅ Back online!');
+                showToast('Back online!');
                 fetchHomeFeed();
             } else {
                 showToast('Still offline. Please check your connection.');
@@ -1001,12 +1047,11 @@
             navigator.serviceWorker.register('/sw.js')
                 .then(reg => {
                     console.log('[SW] Registered');
-                    // Check for updates
                     reg.addEventListener('updatefound', () => {
                         const newWorker = reg.installing;
                         newWorker.addEventListener('statechange', () => {
                             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                showToast('🔄 Update available! Refresh to apply.');
+                                showToast('Update available! Refresh to apply.');
                             }
                         });
                     });
@@ -1031,7 +1076,6 @@
                 if (splash) splash.classList.add('hidden');
             }, 600);
 
-            // Show install prompt after splash
             setTimeout(() => {
                 checkAndShowPrompts();
             }, 2500);
@@ -1045,18 +1089,18 @@
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
+            console.log('[PWA] beforeinstallprompt fired');
         });
 
         async function checkAndShowPrompts() {
-            // Check if already installed
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
                                 window.navigator.standalone === true;
 
-            // Install prompt
+            // Install prompt - only if not installed and prompt exists
             if (!isStandalone && !installPromptShown && deferredPrompt) {
                 installPromptShown = true;
                 const confirmed = await GlassDialog.show({
-                    icon: '📱',
+                    iconSvg: `<svg viewBox="0 0 24 24" style="width:44px;height:44px;stroke:var(--accent-color);fill:none;stroke-width:1.8;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`,
                     title: 'Install EasyRead',
                     message: 'Get the full app experience with offline access, push notifications, and a home screen icon.',
                     primaryText: 'Install App',
@@ -1068,17 +1112,17 @@
                     deferredPrompt.prompt();
                     const result = await deferredPrompt.userChoice;
                     if (result.outcome === 'accepted') {
-                        showToast('🎉 EasyRead installed!');
+                        showToast('EasyRead installed!');
                     }
                     deferredPrompt = null;
                 }
             }
 
-            // Notification prompt (if not already shown and not denied)
+            // Notification prompt
             if (!notificationPromptShown && Notification.permission === 'default') {
                 notificationPromptShown = true;
                 const confirmed = await GlassDialog.show({
-                    icon: '🔔',
+                    iconSvg: `<svg viewBox="0 0 24 24" style="width:44px;height:44px;stroke:var(--accent-color);fill:none;stroke-width:1.8;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`,
                     title: 'Enable Notifications',
                     message: 'Get notified when your explanations are ready, new articles are published, and more.',
                     primaryText: 'Allow',
@@ -1089,9 +1133,9 @@
                 if (confirmed) {
                     const perm = await Notification.requestPermission();
                     if (perm === 'granted') {
-                        showToast('🔔 Notifications enabled!');
+                        showToast('Notifications enabled!');
                     } else {
-                        showToast('🔕 Notifications disabled');
+                        showToast('Notifications disabled');
                     }
                 }
             }
@@ -1190,7 +1234,7 @@
         // ─── SUBMIT ───
         async function submitPipeline() {
             if (!isOnline) {
-                showToast('📡 No internet connection. Please try again later.');
+                showToast('No internet connection. Please try again later.');
                 return;
             }
 
@@ -1200,7 +1244,7 @@
             const profileId = parseInt(localStorage.getItem('easyread-profile-id') || '1');
 
             if (!isLoggedIn || !userId) {
-                showToast('Please sign in to generate explanations ⚡');
+                showToast('Please sign in to generate explanations');
                 triggerProfileLogin();
                 return;
             }
@@ -1226,7 +1270,7 @@
                 loader.classList.remove('active');
                 textarea.value = '';
                 charCounter.textContent = "0 / 50k";
-                showToast('✅ Explanation ready!');
+                showToast('Explanation ready!');
 
                 const slug = data.slug || data.explanation?.slug || data.explanation?.article_id || data.article_id;
                 openArticleInReader(slug, data.explanation?.article_id || data.article_id);
