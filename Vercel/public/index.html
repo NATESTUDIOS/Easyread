@@ -7,7 +7,6 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>EasyRead</title>
-    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -20,28 +19,24 @@
             --text-secondary: #5c5c60;
             --text-tertiary: #8e8e93;
             --text-placeholder: #c7c7cc;
-            
-            --card-bg: rgba(242, 242, 247, 0.78); 
+            --card-bg: rgba(242, 242, 247, 0.78);
             --card-bg-hover: rgba(230, 230, 235, 0.9);
             --card-blur: blur(16px);
             --glass-border: 1.5px solid rgba(0, 0, 0, 0.1);
             --glass-border-subtle: 1px solid rgba(0, 0, 0, 0.06);
             --glass-shadow: 0 6px 20px rgba(0,0,0,0.04);
-            --glass-shadow-hover: 0 10px 28px rgba(0,0,0,0.07);
-            
             --mode-bg: rgba(0, 0, 0, 0.04);
             --mode-bg-hover: rgba(0, 0, 0, 0.07);
             --accent-color: #f59847;
             --accent-hover: #e08735;
             --accent-light: rgba(245, 152, 71, 0.12);
             --divider: rgba(0,0,0,0.06);
-            
             --tag-bg: rgba(0, 0, 0, 0.04);
             --tag-text: #4a4a50;
             --icon-stroke: #1c1c1e;
-            
             --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --splash-bg: #111113;
+            --splash-text: #ffffff;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -52,25 +47,19 @@
                 --text-secondary: #9a9a9e;
                 --text-tertiary: #6c6c70;
                 --text-placeholder: #5a5a5e;
-                
                 --card-bg: rgba(22, 22, 24, 0.8);
                 --card-bg-hover: rgba(30, 30, 34, 0.9);
-                --card-blur: blur(16px);
                 --glass-border: 1px solid rgba(255, 255, 255, 0.08);
                 --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.04);
                 --glass-shadow: 0 6px 24px rgba(0,0,0,0.5);
-                --glass-shadow-hover: 0 10px 36px rgba(0,0,0,0.7);
-                
                 --mode-bg: rgba(255, 255, 255, 0.05);
                 --mode-bg-hover: rgba(255, 255, 255, 0.1);
-                --accent-color: #f59847;
-                --accent-hover: #e08735;
-                --accent-light: rgba(245, 152, 71, 0.15);
                 --divider: rgba(255,255,255,0.06);
-                
                 --tag-bg: rgba(255, 255, 255, 0.06);
                 --tag-text: #9a9a9e;
                 --icon-stroke: #e8e8ea;
+                --splash-bg: #000000;
+                --splash-text: #e8e8ea;
             }
         }
 
@@ -92,8 +81,10 @@
             --tag-bg: rgba(0, 0, 0, 0.04) !important;
             --tag-text: #4a4a50 !important;
             --icon-stroke: #1c1c1e !important;
+            --splash-bg: #f6f7f9 !important;
+            --splash-text: #1c1c1e !important;
         }
-        
+
         [data-theme="dark"] {
             --bg-color: #000000 !important;
             --bg-glow: radial-gradient(circle at 50% 0%, rgba(40, 40, 42, 0.3) 0%, transparent 60%) !important;
@@ -108,15 +99,17 @@
             --glass-shadow: 0 6px 24px rgba(0,0,0,0.5) !important;
             --mode-bg: rgba(255, 255, 255, 0.05) !important;
             --mode-bg-hover: rgba(255, 255, 255, 0.1) !important;
-            --divider: rgba(255,255,255,0.06);
+            --divider: rgba(255,255,255,0.06) !important;
             --tag-bg: rgba(255, 255, 255, 0.06) !important;
             --tag-text: #9a9a9e !important;
             --icon-stroke: #e8e8ea !important;
+            --splash-bg: #000000 !important;
+            --splash-text: #e8e8ea !important;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
         *:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 2px; }
-        
+
         body {
             min-height: 100vh;
             min-height: 100dvh;
@@ -124,27 +117,26 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-family: var(--font-body);
+            font-family: var(--font-display);
             -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
             background: var(--bg-color);
             transition: background 0.3s ease;
         }
 
+        /* ─── SPLASH SCREEN (Enhanced) ─── */
         #splashScreen {
             position: fixed;
             top: 0; left: 0;
             width: 100vw; height: 100vh;
-            background: radial-gradient(circle at 50% 50%, #111113 0%, #000000 100%);
+            background: var(--splash-bg);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 9999;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
             overflow: hidden;
         }
-        
         #splashScreen.hidden {
             opacity: 0;
             visibility: hidden;
@@ -153,38 +145,51 @@
 
         .splash-content {
             text-align: center;
-            animation: splashFadeIn 0.8s ease forwards;
+            animation: splashFadeIn 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
-        
+
         @keyframes splashFadeIn {
-            0% { opacity: 0; transform: translateY(15px); }
-            100% { opacity: 1; transform: translateY(0); }
+            0% { opacity: 0; transform: translateY(20px) scale(0.96); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
         }
 
         .splash-logo {
-            font-size: 2.8rem;
+            font-size: 3.4rem;
             font-weight: 800;
-            letter-spacing: -1.5px;
+            letter-spacing: -2px;
             background: linear-gradient(135deg, #f59847 0%, #ffd700 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 0.3rem;
+            margin-bottom: 0.2rem;
             line-height: 1.1;
+            position: relative;
+        }
+        .splash-logo::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #f59847, transparent);
+            border-radius: 4px;
         }
 
         .splash-subtitle {
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             font-weight: 500;
-            color: rgba(255, 255, 255, 0.45);
-            letter-spacing: 2px;
+            color: var(--text-secondary);
+            letter-spacing: 2.5px;
             text-transform: uppercase;
-            margin-bottom: 1.5rem;
+            margin-top: 0.6rem;
+            margin-bottom: 1.8rem;
         }
 
         .splash-loader-track {
-            width: 140px;
-            height: 2px;
-            background: rgba(255, 255, 255, 0.1);
+            width: 160px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.08);
             border-radius: 4px;
             overflow: hidden;
             margin: 0 auto;
@@ -194,7 +199,7 @@
             height: 100%;
             width: 0%;
             background: linear-gradient(90deg, #f59847, #ffd700);
-            animation: loadBar 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation: loadBar 1.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
         @keyframes loadBar {
@@ -202,6 +207,79 @@
             100% { width: 100%; }
         }
 
+        .splash-pulse-ring {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            position: absolute;
+            border: 1px solid rgba(245, 152, 71, 0.12);
+            animation: pulseRing 3s ease-in-out infinite;
+        }
+        .splash-pulse-ring:nth-child(2) {
+            width: 160px;
+            height: 160px;
+            animation-delay: 0.6s;
+            border-color: rgba(245, 152, 71, 0.06);
+        }
+        @keyframes pulseRing {
+            0% { transform: scale(0.8); opacity: 0.6; }
+            50% { transform: scale(1.1); opacity: 0.2; }
+            100% { transform: scale(0.8); opacity: 0.6; }
+        }
+
+        /* ─── OFFLINE DIALOG ─── */
+        .offline-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 5000;
+            padding: 24px;
+        }
+        .offline-overlay.active { display: flex; }
+        .offline-dialog {
+            background: var(--card-bg);
+            backdrop-filter: var(--card-blur);
+            -webkit-backdrop-filter: var(--card-blur);
+            border: var(--glass-border);
+            border-radius: 24px;
+            padding: 32px 28px;
+            max-width: 360px;
+            width: 100%;
+            text-align: center;
+        }
+        .offline-dialog .icon {
+            font-size: 2.8rem;
+            margin-bottom: 8px;
+        }
+        .offline-dialog h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        .offline-dialog p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 18px;
+        }
+        .offline-dialog .btn-retry {
+            background: var(--accent-color);
+            color: #fff;
+            border: none;
+            padding: 10px 28px;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        /* ─── APP SHELL ─── */
         .app-shell {
             max-width: 440px;
             width: 100%;
@@ -212,7 +290,7 @@
             position: relative;
             padding-bottom: 74px;
             background-color: var(--bg-color);
-            background-image: var(--bg-glow); 
+            background-image: var(--bg-glow);
             background-repeat: no-repeat;
             background-size: 100% 100%;
             transition: background-color 0.3s ease, color 0.3s ease;
@@ -228,32 +306,11 @@
             padding: 1.8rem 1rem 1rem 1rem;
         }
 
-        .brand-section { 
-            text-align: center; 
-            margin-bottom: 1.2rem;
-            width: 100%;
-        }
-
-        .brand-title {
-            font-size: 2.2rem;
-            font-weight: 800;
-            letter-spacing: -1.2px;
-            margin-bottom: 0.15rem;
-            line-height: 1.1;
-        }
-        
+        .brand-section { text-align: center; margin-bottom: 1.2rem; width: 100%; }
+        .brand-title { font-size: 2.2rem; font-weight: 800; letter-spacing: -1.2px; margin-bottom: 0.15rem; line-height: 1.1; }
         .brand-title .dark { color: var(--text-primary); }
-        .brand-title .orange { 
-            background: linear-gradient(135deg, var(--accent-color), #ffd700);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .tagline {
-            font-size: 0.82rem;
-            font-weight: 500;
-            color: var(--text-tertiary);
-        }
+        .brand-title .orange { background: linear-gradient(135deg, var(--accent-color), #ffd700); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .tagline { font-size: 0.82rem; font-weight: 500; color: var(--text-tertiary); }
 
         .glass-card {
             background: var(--card-bg);
@@ -265,11 +322,6 @@
             box-shadow: var(--glass-shadow);
         }
 
-        .glass-card:hover {
-            background: var(--card-bg-hover);
-            box-shadow: var(--glass-shadow-hover);
-        }
-
         .login-notice-banner {
             width: 100%;
             padding: 12px 16px;
@@ -278,42 +330,9 @@
             gap: 12px;
             margin-bottom: 1.2rem;
         }
-        
-        .notice-icon svg {
-            width: 18px; height: 18px; stroke: var(--accent-color); fill: none; stroke-width: 2;
-        }
-        
-        .notice-content { flex: 1; text-align: left; }
-        .notice-title { font-size: 0.8rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1px; }
-        .notice-desc { font-size: 0.72rem; color: var(--text-secondary); }
-        
-        .notice-btn {
-            background: var(--accent-color);
-            color: #fff;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 10px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            cursor: pointer;
-            white-space: nowrap;
-        }
 
-        .input-combo-wrapper { 
-            width: 100%; 
-            margin-bottom: 1.4rem;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .input-container-inner {
-            padding: 1.1rem 1.1rem 0.8rem 1.1rem;
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-        }
-
+        .input-combo-wrapper { width: 100%; margin-bottom: 1.4rem; overflow: hidden; display: flex; flex-direction: column; }
+        .input-container-inner { padding: 1.1rem 1.1rem 0.8rem 1.1rem; display: flex; flex-direction: column; width: 100%; }
         .card-textarea {
             width: 100%;
             border: none;
@@ -328,10 +347,7 @@
             line-height: 1.5;
             padding: 0;
         }
-        
-        .card-textarea::placeholder { 
-            color: var(--text-placeholder); 
-        }
+        .card-textarea::placeholder { color: var(--text-placeholder); }
 
         .input-action-bar {
             display: flex;
@@ -353,24 +369,11 @@
             font-weight: 700;
             cursor: pointer;
         }
-        .credits-badge svg {
-            width: 12px; height: 14px;
-            stroke: var(--accent-color); fill: none; stroke-width: 2.2;
-        }
+        .credits-badge svg { width: 12px; height: 14px; stroke: var(--accent-color); fill: none; stroke-width: 2.2; }
         .credits-badge .credits-val { color: var(--text-primary); }
-        .credits-badge .credits-label {
-            color: var(--text-tertiary);
-            font-size: 0.65rem;
-            text-transform: uppercase;
-        }
+        .credits-badge .credits-label { color: var(--text-tertiary); font-size: 0.65rem; text-transform: uppercase; }
 
-        .char-counter {
-            font-size: 0.68rem;
-            color: var(--text-tertiary);
-            font-weight: 600;
-            margin-left: auto;
-            margin-right: 0.75rem;
-        }
+        .char-counter { font-size: 0.68rem; color: var(--text-tertiary); font-weight: 600; margin-left: auto; margin-right: 0.75rem; }
 
         .send-btn {
             width: 36px;
@@ -389,11 +392,7 @@
         .send-btn:active { transform: scale(0.95); }
         .send-btn svg { width: 16px; height: 16px; stroke: #ffffff; stroke-width: 2.5; fill: none; }
 
-        .input-divider {
-            height: 1px;
-            background: var(--divider);
-            margin: 0 1.1rem;
-        }
+        .input-divider { height: 1px; background: var(--divider); margin: 0 1.1rem; }
 
         .mode-selector-inner {
             padding: 9px 1.1rem;
@@ -421,39 +420,15 @@
             white-space: nowrap;
             transition: all 0.2s ease;
         }
-        
         .mode-pill:hover { background-color: var(--mode-bg-hover); color: var(--text-primary); }
         .mode-pill svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
-        .mode-pill.active { 
-            background-color: var(--accent-color) !important; 
-            color: #ffffff !important; 
-            border-color: var(--accent-color) !important;
-        }
+        .mode-pill.active { background-color: var(--accent-color) !important; color: #ffffff !important; border-color: var(--accent-color) !important; }
 
-        .categories-section { 
-            width: 100%; 
-            margin-bottom: 1.2rem;
-        }
-        
-        .categories-label {
-            font-size: 0.68rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: var(--text-tertiary);
-            margin-bottom: 0.5rem;
-            padding-left: 0.1rem;
-        }
-        
-        .categories-scroll { 
-            display: flex; 
-            gap: 6px; 
-            overflow-x: auto; 
-            padding: 1px 0 4px 0; 
-            scrollbar-width: none; 
-        }
+        .categories-section { width: 100%; margin-bottom: 1.2rem; }
+        .categories-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-tertiary); margin-bottom: 0.5rem; padding-left: 0.1rem; }
+        .categories-scroll { display: flex; gap: 6px; overflow-x: auto; padding: 1px 0 4px 0; scrollbar-width: none; }
         .categories-scroll::-webkit-scrollbar { display: none; }
-        
+
         .category-pill {
             flex: 0 0 auto;
             border-radius: 20px;
@@ -467,29 +442,14 @@
             color: var(--text-secondary);
             transition: all 0.2s ease;
         }
-        
         .category-pill:hover { color: var(--text-primary); border-color: var(--accent-color); }
         .category-pill.active { background-color: var(--accent-color); color: #fff; border-color: var(--accent-color); }
 
-        /* --- Dynamic Listing Feed Cards --- */
-        .listing-container { 
-            width: 100%; 
-            margin-bottom: 1.5rem;
-        }
-        
-        .listing-card {
-            border: var(--glass-border);
-            padding: 16px 18px;
-            margin-bottom: 12px;
-        }
+        .listing-container { width: 100%; margin-bottom: 1.5rem; }
+        .listing-card { border: var(--glass-border); padding: 16px 18px; margin-bottom: 12px; cursor: pointer; }
+        .listing-card:hover { background: var(--card-bg-hover); }
 
-        .listing-header { 
-            display: flex; 
-            align-items: center; 
-            gap: 10px; 
-            margin-bottom: 0.75rem; 
-        }
-        
+        .listing-header { display: flex; align-items: center; gap: 10px; margin-bottom: 0.75rem; }
         .listing-avatar {
             width: 36px;
             height: 36px;
@@ -504,7 +464,6 @@
             position: relative;
             flex-shrink: 0;
         }
-
         .listing-avatar .online-dot {
             position: absolute;
             bottom: 0;
@@ -515,16 +474,9 @@
             border-radius: 50%;
             border: 2px solid var(--card-bg);
         }
-        
+
         .listing-meta { flex: 1; min-width: 0; }
-        .listing-name { 
-            font-weight: 700; 
-            font-size: 0.88rem; 
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
+        .listing-name { font-weight: 700; font-size: 0.88rem; color: var(--text-primary); display: flex; align-items: center; gap: 5px; }
         .listing-name .verified { color: var(--accent-color); font-size: 0.8rem; }
         .listing-time { color: var(--text-tertiary); font-size: 0.72rem; margin-top: 1px; font-weight: 500; }
 
@@ -539,22 +491,8 @@
             overflow: hidden;
         }
 
-        .listing-tags { 
-            display: flex; 
-            gap: 6px; 
-            flex-wrap: wrap; 
-            margin-bottom: 0.8rem; 
-        }
-        
-        .listing-tag {
-            background: var(--tag-bg);
-            color: var(--tag-text);
-            padding: 0.25rem 0.65rem;
-            border-radius: 20px;
-            font-size: 0.72rem;
-            font-weight: 600;
-            border: var(--glass-border-subtle);
-        }
+        .listing-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 0.8rem; }
+        .listing-tag { background: var(--tag-bg); color: var(--tag-text); padding: 0.25rem 0.65rem; border-radius: 20px; font-size: 0.72rem; font-weight: 600; border: var(--glass-border-subtle); }
 
         .listing-stats {
             display: flex;
@@ -564,12 +502,7 @@
             padding-bottom: 0.8rem;
             border-bottom: 1px solid var(--divider);
         }
-        
-        .listing-avatars { 
-            display: flex; 
-            align-items: center; 
-        }
-        
+        .listing-avatars { display: flex; align-items: center; }
         .listing-avatars .mini-avatar {
             width: 24px;
             height: 24px;
@@ -583,28 +516,15 @@
             margin-right: -6px;
             border: 1.5px solid var(--card-bg);
         }
-        
         .mini-avatar.a1 { background: #e83e8c; }
         .mini-avatar.a2 { background: #0d6efd; }
         .mini-avatar.a3 { background: #20c997; }
-        
-        .listing-views { 
-            color: var(--text-tertiary); 
-            font-size: 0.76rem; 
-            display: flex; 
-            align-items: center; 
-            gap: 5px; 
-        }
+
+        .listing-views { color: var(--text-tertiary); font-size: 0.76rem; display: flex; align-items: center; gap: 5px; }
         .listing-views strong { color: var(--text-primary); font-weight: 700; }
         .listing-views svg { width: 14px; height: 14px; fill: currentColor; }
 
-        .listing-actions { 
-            display: flex; 
-            justify-content: flex-end; 
-            align-items: center; 
-            gap: 8px; 
-        }
-        
+        .listing-actions { display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
         .listing-action-btn {
             background: transparent;
             border: none;
@@ -618,7 +538,6 @@
             padding: 5px 10px;
             border-radius: 10px;
             transition: all 0.2s;
-            text-decoration: none;
         }
         .listing-action-btn:hover { background: var(--mode-bg); color: var(--text-primary); }
         .listing-action-btn svg { width: 14px; height: 14px; fill: currentColor; }
@@ -664,19 +583,8 @@
             transition: all 0.2s ease;
             flex: 1;
         }
-        
-        .nav-item.active {
-            color: var(--accent-color);
-            background: var(--accent-light);
-        }
-
-        .nav-icon svg { 
-            width: 18px; 
-            height: 18px; 
-            stroke: currentColor; 
-            fill: none; 
-            stroke-width: 2; 
-        }
+        .nav-item.active { color: var(--accent-color); background: var(--accent-light); }
+        .nav-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
 
         .full-screen-loader {
             position: fixed;
@@ -713,8 +621,6 @@
             margin: 0 auto 16px auto;
         }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        .loader-modal h4 { font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
-        .loader-modal p { font-size: 0.78rem; color: var(--text-secondary); }
 
         .toast {
             position: fixed;
@@ -751,13 +657,27 @@
     </style>
 </head>
 <body>
+
+    <!-- SPLASH SCREEN (Enhanced) -->
     <div id="splashScreen">
+        <div class="splash-pulse-ring"></div>
+        <div class="splash-pulse-ring"></div>
         <div class="splash-content">
             <div class="splash-logo">EasyRead</div>
             <div class="splash-subtitle">Knowledge, Simplified</div>
             <div class="splash-loader-track">
                 <div class="splash-loader-bar"></div>
             </div>
+        </div>
+    </div>
+
+    <!-- OFFLINE OVERLAY -->
+    <div class="offline-overlay" id="offlineOverlay">
+        <div class="offline-dialog glass-card">
+            <div class="icon">📡</div>
+            <h3>No Internet Connection</h3>
+            <p>Please check your connection. You can still view cached content.</p>
+            <button class="btn-retry" onclick="retryConnection()">Retry</button>
         </div>
     </div>
 
@@ -785,16 +705,13 @@
                 <div class="input-combo-wrapper glass-card">
                     <div class="input-container-inner">
                         <textarea class="card-textarea" id="submitTextArea" placeholder="Ask a question about any topic..." rows="3"></textarea>
-                        
                         <div class="input-action-bar">
                             <div class="credits-badge" id="inputCreditsBadge" onclick="switchTab('profile')" title="Credits">
                                 <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                                 <span class="credits-val" id="inputCreditsDisplay">0.0</span>
                                 <span class="credits-label">credits</span>
                             </div>
-
                             <div class="char-counter" id="charCounter">0 / 50k</div>
-
                             <button class="send-btn" id="sendBtn" onclick="submitPipeline()" aria-label="Send">
                                 <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
                             </button>
@@ -857,27 +774,91 @@
     </div>
 
     <script>
+        // ─── CONFIG ───
         const API_BASE_URL = '/api';
+        const CACHE_VERSION = 'easyread-v1';
+        const CACHE_URLS = ['/', '/blog.html', '/profile.html'];
 
+        // ─── OFFLINE HANDLING ───
+        let isOnline = navigator.onLine;
+        const offlineOverlay = document.getElementById('offlineOverlay');
+
+        function updateOnlineStatus() {
+            isOnline = navigator.onLine;
+            if (!isOnline) {
+                offlineOverlay.classList.add('active');
+            } else {
+                offlineOverlay.classList.remove('active');
+            }
+        }
+
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        updateOnlineStatus();
+
+        function retryConnection() {
+            if (navigator.onLine) {
+                offlineOverlay.classList.remove('active');
+                showToast('✅ Back online!');
+                fetchHomeFeed();
+            } else {
+                showToast('Still offline. Please check your connection.');
+            }
+        }
+
+        // ─── SERVICE WORKER REGISTRATION ───
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(() => console.log('[SW] Registered'))
+                .catch(() => console.log('[SW] Registration failed'));
+        }
+
+        // ─── CACHE STATIC ASSETS ───
+        async function cacheStaticAssets() {
+            try {
+                const cache = await caches.open(CACHE_VERSION);
+                await cache.addAll(CACHE_URLS);
+                console.log('[Cache] Static assets cached');
+            } catch (e) { /* ignore */ }
+        }
+        cacheStaticAssets();
+
+        // ─── SPLASH SCREEN ───
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                const splash = document.getElementById('splashScreen');
+                if (splash) splash.classList.add('hidden');
+            }, 600);
+        });
+
+        // ─── THEME (reduced obsessiveness) ───
         let currentThemeSetting = localStorage.getItem('easyread-theme') || 'auto';
+        function applyTheme(theme) {
+            currentThemeSetting = theme;
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else if (theme === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+        }
+        applyTheme(currentThemeSetting);
+
+        // ─── STATE ───
         let currentCredits = parseFloat(localStorage.getItem('easyread-credits')) || 0;
         let inputMode = 'ask';
         let homeArticles = [];
         let activeCategory = 'All';
 
         function updateCreditsUI() {
-            const inputDisplay = document.getElementById('inputCreditsDisplay');
-            if (inputDisplay) inputDisplay.textContent = currentCredits.toFixed(1);
+            const el = document.getElementById('inputCreditsDisplay');
+            if (el) el.textContent = currentCredits.toFixed(1);
         }
 
         function escapeHtml(text) {
             if (!text) return '';
-            return String(text)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
+            return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
         }
 
         function escapeJs(text) {
@@ -889,96 +870,64 @@
             if (!dateString) return 'Recently';
             const date = new Date(dateString);
             const now = new Date();
-            const diffInSeconds = Math.floor((now - date) / 1000);
-            
-            if (diffInSeconds < 60) return 'Just now';
-            const diffInMinutes = Math.floor(diffInSeconds / 60);
-            if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-            const diffInHours = Math.floor(diffInMinutes / 60);
-            if (diffInHours < 24) return `${diffInHours}h ago`;
-            const diffInDays = Math.floor(diffInHours / 24);
-            if (diffInDays < 7) return `${diffInDays}d ago`;
+            const diff = Math.floor((now - date) / 1000);
+            if (diff < 60) return 'Just now';
+            const mins = Math.floor(diff / 60);
+            if (mins < 60) return `${mins}m ago`;
+            const hrs = Math.floor(mins / 60);
+            if (hrs < 24) return `${hrs}h ago`;
+            const days = Math.floor(hrs / 24);
+            if (days < 7) return `${days}d ago`;
             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         }
 
-        function applyTheme(theme) {
-            currentThemeSetting = theme;
-            if (theme === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            } else if (theme === 'light') {
-                document.documentElement.setAttribute('data-theme', 'light');
-            } else {
-                document.documentElement.removeAttribute('data-theme');
-            }
-        }
-
-        applyTheme(currentThemeSetting);
-
         function updateLoginNotice() {
             const isLoggedIn = localStorage.getItem('easyread-logged-in') === 'true';
-            const noticeBanner = document.getElementById('loginNotice');
-            if (noticeBanner) {
-                noticeBanner.style.display = isLoggedIn ? 'none' : 'flex';
-            }
+            const banner = document.getElementById('loginNotice');
+            if (banner) banner.style.display = isLoggedIn ? 'none' : 'flex';
         }
 
         function triggerProfileLogin() {
             switchTab('profile');
             setTimeout(() => {
-                const profileFrame = document.getElementById('profileFrame');
-                if (profileFrame && profileFrame.contentWindow) {
-                    profileFrame.contentWindow.postMessage('triggerLogin', '*');
-                }
+                const frame = document.getElementById('profileFrame');
+                if (frame?.contentWindow) frame.contentWindow.postMessage('triggerLogin', '*');
             }, 100);
         }
 
         setInterval(() => {
-            const storedTheme = localStorage.getItem('easyread-theme') || 'auto';
-            if (storedTheme !== currentThemeSetting) applyTheme(storedTheme);
-
-            const storedCredits = parseFloat(localStorage.getItem('easyread-credits')) || 0;
-            if (storedCredits !== currentCredits) {
-                currentCredits = storedCredits;
-                updateCreditsUI();
-            }
+            const stored = localStorage.getItem('easyread-theme') || 'auto';
+            if (stored !== currentThemeSetting) applyTheme(stored);
+            const credits = parseFloat(localStorage.getItem('easyread-credits')) || 0;
+            if (credits !== currentCredits) { currentCredits = credits; updateCreditsUI(); }
             updateLoginNotice();
         }, 500);
 
-        window.addEventListener('load', function() {
-            setTimeout(function() {
-                const splash = document.getElementById('splashScreen');
-                if (splash) splash.classList.add('hidden');
-            }, 500);
-        });
-
+        // ─── MODE ───
         function setMode(mode) {
             inputMode = mode;
             document.querySelectorAll('.mode-pill').forEach(p => p.classList.remove('active'));
-            const textarea = document.getElementById('submitTextArea');
-            
-            if (mode === 'ask') {
-                document.getElementById('btnAsk').classList.add('active');
-                textarea.placeholder = "Ask a question about any topic...";
-            } else if (mode === 'paste') { 
-                document.getElementById('btnPaste').classList.add('active'); 
-                textarea.placeholder = "Paste your note or text here (min 20 chars)..."; 
-            } else if (mode === 'website') { 
-                document.getElementById('btnWebsite').classList.add('active'); 
-                textarea.placeholder = "Paste article URL (e.g., https://example.com/article)..."; 
-            }
+            const ta = document.getElementById('submitTextArea');
+            if (mode === 'ask') { document.getElementById('btnAsk').classList.add('active'); ta.placeholder = "Ask a question about any topic..."; }
+            else if (mode === 'paste') { document.getElementById('btnPaste').classList.add('active'); ta.placeholder = "Paste your note or text here (min 20 chars)..."; }
+            else if (mode === 'website') { document.getElementById('btnWebsite').classList.add('active'); ta.placeholder = "Paste article URL (e.g., https://example.com/article)..."; }
         }
 
         const textarea = document.getElementById('submitTextArea');
         const charCounter = document.getElementById('charCounter');
-        
         textarea.addEventListener('input', () => {
-            const length = textarea.value.length;
-            charCounter.textContent = `${length.toLocaleString()} / 50k`;
-            charCounter.style.color = length > 50000 ? '#ff3b30' : 'var(--text-tertiary)';
+            const len = textarea.value.length;
+            charCounter.textContent = `${len.toLocaleString()} / 50k`;
+            charCounter.style.color = len > 50000 ? '#ff3b30' : 'var(--text-tertiary)';
         });
 
-        // Submit exclusively to explanation.js with auth validation
+        // ─── SUBMIT ───
         async function submitPipeline() {
+            if (!isOnline) {
+                showToast('📡 No internet connection. Please try again later.');
+                return;
+            }
+
             const isLoggedIn = localStorage.getItem('easyread-logged-in') === 'true';
             const userId = localStorage.getItem('easyread_user_id');
             const sessionToken = localStorage.getItem('easyread_session_token') || '';
@@ -991,56 +940,30 @@
             }
 
             const userInput = textarea.value.trim();
-            if (!userInput) {
-                showToast('Please enter text first');
-                return;
-            }
-
-            if (inputMode === 'ask' && userInput.length < 5) {
-                showToast('Question is too short (minimum 5 characters)');
-                return;
-            }
-            if (inputMode === 'paste' && userInput.length < 20) {
-                showToast('Paste text requires at least 20 characters');
-                return;
-            }
-            if (inputMode === 'website' && !userInput.startsWith('http')) {
-                showToast('Please enter a valid URL starting with http:// or https://');
-                return;
-            }
+            if (!userInput) { showToast('Please enter text first'); return; }
+            if (inputMode === 'ask' && userInput.length < 5) { showToast('Question is too short (min 5 chars)'); return; }
+            if (inputMode === 'paste' && userInput.length < 20) { showToast('Paste requires at least 20 characters'); return; }
+            if (inputMode === 'website' && !userInput.startsWith('http')) { showToast('Please enter a valid URL'); return; }
 
             const loader = document.getElementById('fullscreenLoader');
             loader.classList.add('active');
 
             try {
-                const expRes = await fetch(`${API_BASE_URL}/explanation?action=generate`, {
+                const res = await fetch(`${API_BASE_URL}/explanation?action=generate`, {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'x-user-id': userId,
-                        'x-session-token': sessionToken
-                    },
-                    body: JSON.stringify({
-                        content: userInput,
-                        prompt: userInput,
-                        mode: inputMode,
-                        profile_id: profileId,
-                        force: false
-                    })
+                    headers: { 'Content-Type': 'application/json', 'x-user-id': userId, 'x-session-token': sessionToken },
+                    body: JSON.stringify({ content: userInput, prompt: userInput, mode: inputMode, profile_id: profileId, force: false })
                 });
-
-                const expData = await expRes.json();
-                if (!expRes.ok || !expData.success) {
-                    throw new Error(expData.error || 'Failed to generate explanation');
-                }
+                const data = await res.json();
+                if (!res.ok || !data.success) throw new Error(data.error || 'Generation failed');
 
                 loader.classList.remove('active');
                 textarea.value = '';
                 charCounter.textContent = "0 / 50k";
-                showToast('Explanation ready!');
+                showToast('✅ Explanation ready!');
 
-                const articleSlug = expData.slug || expData.explanation?.slug || expData.explanation?.article_id || expData.article_id;
-                openArticleInReader(articleSlug, expData.explanation?.article_id || expData.article_id);
+                const slug = data.slug || data.explanation?.slug || data.explanation?.article_id || data.article_id;
+                openArticleInReader(slug, data.explanation?.article_id || data.article_id);
 
             } catch (err) {
                 loader.classList.remove('active');
@@ -1048,16 +971,15 @@
             }
         }
 
+        // ─── FEED ───
         async function fetchHomeCategories() {
             const container = document.getElementById('categoriesScroll');
             if (!container) return;
-
             try {
                 const res = await fetch(`${API_BASE_URL}/category?action=list`);
                 if (!res.ok) throw new Error();
                 const data = await res.json();
                 const categories = Array.isArray(data) ? data : (data.categories || []);
-
                 let html = `<button class="category-pill ${activeCategory === 'All' ? 'active' : ''}" onclick="filterHomeCategory('All', this)">For you</button>`;
                 categories.forEach(cat => {
                     const name = typeof cat === 'string' ? cat : (cat.name || cat.canonical_name);
@@ -1067,9 +989,7 @@
                     }
                 });
                 container.innerHTML = html;
-            } catch (err) {
-                container.innerHTML = `<button class="category-pill active" onclick="filterHomeCategory('All', this)">For you</button>`;
-            }
+            } catch { /* ignore */ }
         }
 
         function filterHomeCategory(cat, elem) {
@@ -1088,88 +1008,46 @@
                 homeArticles = Array.isArray(data) ? data : (data.articles || []);
                 renderFeed();
             } catch (err) {
-                container.innerHTML = `
-                    <div style="text-align:center; color:var(--text-secondary); padding:2rem 0; font-size:0.85rem;">
-                        No articles available yet.
-                    </div>
-                `;
+                container.innerHTML = `<div style="text-align:center; color:var(--text-secondary); padding:2rem 0; font-size:0.85rem;">No articles available.</div>`;
             }
         }
 
         function renderFeed() {
             const container = document.getElementById('homeListingContainer');
-            const filtered = activeCategory === 'All' 
-                ? homeArticles 
-                : homeArticles.filter(a => Array.isArray(a.categories) && a.categories.includes(activeCategory));
-
+            const filtered = activeCategory === 'All' ? homeArticles : homeArticles.filter(a => Array.isArray(a.categories) && a.categories.includes(activeCategory));
             if (filtered.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align:center; color:var(--text-secondary); padding:2rem 0; font-size:0.85rem;">
-                        No articles found in this category.
-                    </div>
-                `;
+                container.innerHTML = `<div style="text-align:center; color:var(--text-secondary); padding:2rem 0; font-size:0.85rem;">No articles found in this category.</div>`;
                 return;
             }
-
             container.innerHTML = '';
             filtered.forEach(art => {
                 const source = art.source_domain || 'EasyRead';
                 const targetIdentifier = art.slug || art.article_id;
                 const views = art.view_count || 0;
                 const readTime = art.reading_time || Math.max(1, Math.ceil((art.word_count || 300) / 200));
-
                 const cats = Array.isArray(art.categories) && art.categories.length > 0 ? art.categories : ['General'];
                 let tagsHtml = '';
-                cats.slice(0, 3).forEach(c => {
-                    tagsHtml += `<span class="listing-tag">${escapeHtml(c)}</span>`;
-                });
-
+                cats.slice(0, 3).forEach(c => { tagsHtml += `<span class="listing-tag">${escapeHtml(c)}</span>`; });
                 const timeStr = art.created_at ? formatTimeAgo(art.created_at) : `${readTime} min read`;
 
                 container.innerHTML += `
-                    <div class="listing-card glass-card">
+                    <div class="listing-card glass-card" onclick="openArticleInReader('${escapeJs(art.slug || '')}', '${art.article_id}')">
                         <div class="listing-header">
-                            <div class="listing-avatar">
-                                ${escapeHtml(source.slice(0, 2).toUpperCase())}
-                                <div class="online-dot"></div>
-                            </div>
+                            <div class="listing-avatar">${escapeHtml(source.slice(0, 2).toUpperCase())}<div class="online-dot"></div></div>
                             <div class="listing-meta">
-                                <div class="listing-name">
-                                    ${escapeHtml(source)} <span class="verified">✓</span>
-                                </div>
+                                <div class="listing-name">${escapeHtml(source)} <span class="verified">✓</span></div>
                                 <div class="listing-time">${escapeHtml(timeStr)}</div>
                             </div>
                         </div>
-
-                        <div class="listing-body">
-                            ${escapeHtml(art.canonical_title ? art.canonical_title + ' — ' : '')}${escapeHtml(art.summary || 'Tap to read tailored explanations.')}
-                        </div>
-
-                        <div class="listing-tags">
-                            ${tagsHtml}
-                        </div>
-
+                        <div class="listing-body">${escapeHtml(art.canonical_title ? art.canonical_title + ' — ' : '')}${escapeHtml(art.summary || 'Tap to read tailored explanations.')}</div>
+                        <div class="listing-tags">${tagsHtml}</div>
                         <div class="listing-stats">
-                            <div class="listing-avatars">
-                                <div class="mini-avatar a1">ER</div>
-                                <div class="mini-avatar a2">AI</div>
-                                <div class="mini-avatar a3">⚡</div>
-                            </div>
-                            <div class="listing-views">
-                                <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
-                                <strong>${views}</strong> views
-                            </div>
+                            <div class="listing-avatars"><div class="mini-avatar a1">ER</div><div class="mini-avatar a2">AI</div><div class="mini-avatar a3">⚡</div></div>
+                            <div class="listing-views"><svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg><strong>${views}</strong> views</div>
                         </div>
-
                         <div class="listing-actions">
-                            <button class="listing-action-btn open-btn" onclick="openArticleInReader('${escapeJs(art.slug || '')}', '${art.article_id}')">
-                                <svg viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
-                                Open
-                            </button>
-                            <button class="listing-action-btn" onclick="shareArticleLink('${escapeJs(art.canonical_title || '')}', '${escapeJs(targetIdentifier)}')">
-                                <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
-                                Share
-                            </button>
+                            <button class="listing-action-btn open-btn" onclick="event.stopPropagation(); openArticleInReader('${escapeJs(art.slug || '')}', '${art.article_id}')"><svg viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg> Open</button>
+                            <button class="listing-action-btn" onclick="event.stopPropagation(); shareArticleLink('${escapeJs(art.canonical_title || '')}', '${escapeJs(targetIdentifier)}')"><svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg> Share</button>
                         </div>
                     </div>
                 `;
@@ -1177,48 +1055,37 @@
         }
 
         function shareArticleLink(title, identifier) {
-            const articleUrl = window.location.origin + '/article/' + encodeURIComponent(identifier);
+            const url = window.location.origin + '/article/' + encodeURIComponent(identifier);
             if (navigator.share) {
-                navigator.share({
-                    title: title || 'EasyRead Article',
-                    text: 'Read this simplified article on EasyRead!',
-                    url: articleUrl
-                }).catch(() => {});
+                navigator.share({ title: title || 'EasyRead Article', text: 'Read this simplified article on EasyRead!', url }).catch(() => {});
             } else {
-                navigator.clipboard.writeText(articleUrl).then(() => {
-                    showToast('Link copied to clipboard!', 'success');
-                }).catch(() => {
-                    showToast('Failed to copy link', 'error');
-                });
+                navigator.clipboard.writeText(url).then(() => showToast('Link copied!')).catch(() => showToast('Failed to copy'));
             }
         }
 
         function openArticleInReader(slug, id) {
-            const targetIdentifier = slug || id;
+            const target = slug || id;
             if (window.parent && window.parent !== window) {
-                window.parent.postMessage({
-                    type: 'openArticle',
-                    article_id: id,
-                    slug: slug
-                }, '*');
+                window.parent.postMessage({ type: 'openArticle', article_id: id, slug: slug }, '*');
             } else {
-                window.location.href = `/article/${encodeURIComponent(targetIdentifier)}`;
+                window.location.href = `/article/${encodeURIComponent(target)}`;
             }
         }
 
+        // ─── TAB SWITCHING ───
         function switchTab(tab) {
             document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
             const activeNav = document.querySelector(`[data-tab="${tab}"]`);
             if (activeNav) activeNav.classList.add('active');
-            
+
             const homeWrapper = document.getElementById('homeWrapper');
             const blogFrame = document.getElementById('blogFrame');
             const profileFrame = document.getElementById('profileFrame');
-            
+
             homeWrapper.classList.add('hidden');
             blogFrame.classList.remove('active');
             profileFrame.classList.remove('active');
-            
+
             if (tab === 'home') {
                 homeWrapper.classList.remove('hidden');
                 fetchHomeFeed();
@@ -1229,23 +1096,16 @@
             }
         }
 
+        // ─── MESSAGE HANDLING ───
         window.addEventListener('message', (event) => {
             if (!event.data) return;
-            if (event.data.type === 'switchTab') {
-                switchTab(event.data.tab);
-            } else if (event.data.type === 'themeChanged') {
-                applyTheme(event.data.theme);
-                const blog = document.getElementById('blogFrame');
-                const profile = document.getElementById('profileFrame');
-                if (blog?.contentWindow) blog.contentWindow.postMessage(event.data, '*');
-                if (profile?.contentWindow) profile.contentWindow.postMessage(event.data, '*');
-            } else if (event.data.type === 'authChanged') {
-                updateLoginNotice();
-            } else if (event.data.type === 'openArticle') {
-                openArticleInReader(event.data.slug, event.data.article_id);
-            }
+            if (event.data.type === 'switchTab') switchTab(event.data.tab);
+            else if (event.data.type === 'themeChanged') applyTheme(event.data.theme);
+            else if (event.data.type === 'authChanged') updateLoginNotice();
+            else if (event.data.type === 'openArticle') openArticleInReader(event.data.slug, event.data.article_id);
         });
 
+        // ─── TOAST ───
         function showToast(message) {
             const toast = document.getElementById('toast');
             if (!toast) return;
@@ -1254,8 +1114,9 @@
             clearTimeout(toast._timeout);
             toast._timeout = setTimeout(() => toast.classList.remove('show'), 2200);
         }
-        
-        document.addEventListener('DOMContentLoaded', function() { 
+
+        // ─── INIT ───
+        document.addEventListener('DOMContentLoaded', function() {
             updateCreditsUI();
             updateLoginNotice();
             fetchHomeCategories();
