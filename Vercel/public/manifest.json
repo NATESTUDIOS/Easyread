@@ -50,21 +50,21 @@
 
   "screenshots": [
     {
-      "src": "/images/screenshots/home-dark.png",
+      "src": "/screenshots/3.png",
       "type": "image/png",
       "sizes": "540x720",
       "form_factor": "narrow",
       "label": "Home - Dark mode"
     },
     {
-      "src": "/images/screenshots/feed-dark.png",
+      "src": "/screenshots/2.png",
       "type": "image/png",
       "sizes": "540x720",
       "form_factor": "narrow",
       "label": "Feed - Dark mode"
     },
     {
-      "src": "/images/screenshots/profile-dark.png",
+      "src": "/screenshots/1.png",
       "type": "image/png",
       "sizes": "540x720",
       "form_factor": "narrow",
@@ -78,21 +78,21 @@
       "short_name": "Home",
       "description": "Go to the main feed",
       "url": "/",
-      "icons": [{ "src": "/icons/shortcut-home.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/icons/icon-512.png", "sizes": "96x96" }]
     },
     {
       "name": "Blog",
       "short_name": "Blog",
       "description": "Read the latest articles",
       "url": "/blog.html",
-      "icons": [{ "src": "/icons/shortcut-blog.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/icons/icon-512.png", "sizes": "96x96" }]
     },
     {
       "name": "Profile",
       "short_name": "Profile",
       "description": "View your profile and credits",
       "url": "/profile.html",
-      "icons": [{ "src": "/icons/shortcut-profile.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/icons/icon-512.png", "sizes": "96x96" }]
     }
   ],
 
