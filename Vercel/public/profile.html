@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -758,7 +757,7 @@
         async function loadProfilePerspectives() {
             const container = document.getElementById('profileOptionsContainer');
             try {
-                const res = await fetch(`${API_BASE_URL}/profiles`);
+                const res = await fetch(`${API_BASE_URL}/profile?action=list`);
                 if (!res.ok) throw new Error();
                 const data = await res.json();
                 availableProfiles = Array.isArray(data) ? data : (data.profiles || []);
@@ -964,7 +963,7 @@
             if (!userId) return;
 
             try {
-                // Fetch profile metadata & credits
+                // 1. Fetch profile metadata & credits
                 const profRes = await fetch(`${API_BASE_URL}/account?action=profile&user_id=${encodeURIComponent(userId)}`, {
                     headers: { 'x-user-id': userId, 'x-session-token': sessionToken || '' }
                 });
@@ -980,7 +979,7 @@
                     }
                 }
 
-                // Fetch real reading history
+                // 2. Fetch reading history from articles endpoint
                 const histRes = await fetch(`${API_BASE_URL}/articles?action=history&user_id=${encodeURIComponent(userId)}`, {
                     headers: { 'x-user-id': userId, 'x-session-token': sessionToken || '' }
                 });
@@ -990,8 +989,8 @@
                     renderHistory(histData.history || []);
                 }
 
-                // Fetch real bookmarks
-                const bmRes = await fetch(`${API_BASE_URL}/view?action=bookmark-status`, {
+                // 3. Fetch saved bookmarks from articles endpoint
+                const bmRes = await fetch(`${API_BASE_URL}/articles?action=bookmarks&user_id=${encodeURIComponent(userId)}`, {
                     headers: { 'x-user-id': userId, 'x-session-token': sessionToken || '' }
                 });
 
@@ -1024,11 +1023,12 @@
             list.innerHTML = '';
             history.forEach(item => {
                 const article = item.articles || item;
+                const articleId = item.article_id || article.article_id || '';
                 const date = item.viewed_at || item.date ? new Date(item.viewed_at || item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Recently';
                 const domain = article.source_domain || 'EasyRead';
                 
                 list.innerHTML += `
-                    <div class="mini-card" onclick="openArticle('${article.slug || ''}', ${item.article_id || ''})">
+                    <div class="mini-card" onclick="openArticle('${article.slug || ''}', '${articleId}')">
                         <div class="mini-icon">
                             <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
                         </div>
@@ -1061,10 +1061,11 @@
             list.innerHTML = '';
             bookmarks.forEach((item, idx) => {
                 const article = item.articles || item;
+                const articleId = item.article_id || article.article_id || '';
                 const date = item.created_at ? new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Saved';
                 
                 list.innerHTML += `
-                    <div class="saved-row" onclick="openArticle('${article.slug || ''}', ${item.article_id || ''})">
+                    <div class="saved-row" onclick="openArticle('${article.slug || ''}', '${articleId}')">
                         <div class="saved-dot" style="background: ${getRandomGradient(idx)}">
                             <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
                         </div>
