@@ -1,5 +1,5 @@
 // api/view.js
-// EasyRead Article View - Full article viewer with dynamic personas, accordions, bookmarks, and deep dives
+// EasyRead Article View - Full article viewer with dynamic personas, timer-based generation, bookmarks, and deep dives
 
 import { 
   supabase,
@@ -136,24 +136,20 @@ async function renderArticlePage(req, res) {
       return res.status(404).send(renderNotFoundPage('Article Not Found', "The explanation you're looking for doesn't exist, has been removed, or the link is incorrect."));
     }
 
-    // Increment views safely
     const viewCount = (article.view_count || 0) + 1;
     await supabase.from('articles').update({ view_count: viewCount }).eq('article_id', article.article_id);
     article.view_count = viewCount;
 
-    // Record reading history if user is authenticated
     if (user_id) {
       await recordReadingHistory(article.article_id, user_id);
     }
 
-    // Fetch explanations
     const { data: explanations } = await supabase
       .from('explanation_views')
       .select(`view_id, title, content, summary, profile_id, view_count, rating_avg, rating_count, profiles:profile_id (profile_id, name, description)`)
       .eq('article_id', article.article_id)
       .order('view_count', { ascending: false });
 
-    // Fetch deep dives
     const { data: deepDives } = await supabase
       .from('deep_dives')
       .select('*')
@@ -478,7 +474,7 @@ function buildArticleHTML({
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 
   <style>${getCSSStyles()}</style>
 </head>
@@ -611,16 +607,20 @@ function buildArticleHTML({
       <a href="/#profile" class="guest-signin-btn">Sign In</a>
     </div>
 
-    <!-- Article Content Body -->
+    <!-- Article Content Body (With Live Generation Timer Progress Card) -->
     <article class="article-body" id="articleContent">
-      <div class="content-skeleton-loader" id="contentSkeleton" style="display: none;">
-        <div class="skeleton-card-pulse glass-card">
-          <div class="skeleton-line" style="width: 40%; height: 18px; margin-bottom: 14px;"></div>
-          <div class="skeleton-line" style="width: 100%;"></div>
-          <div class="skeleton-line" style="width: 90%;"></div>
-          <div class="skeleton-line" style="width: 75%;"></div>
+      <div class="generation-timer-card glass-card" id="contentTimerLoader" style="display: none;">
+        <div class="timer-header-row">
+          <div class="timer-spinner"></div>
+          <div class="timer-digits-badge" id="genTimerDigits">0min : 00secs / 2mins</div>
+        </div>
+        <h4 class="timer-status-title" id="genTimerStatus">Synthesizing Perspective...</h4>
+        <p class="timer-status-sub" id="genTimerSub">Analyzing core concepts and context...</p>
+        <div class="timer-progress-track">
+          <div class="timer-progress-fill" id="genTimerFill"></div>
         </div>
       </div>
+      
       <div id="articleText" class="rich-article-text">
         ${renderParsedExplanationToHtml(defaultExplanation?.content || article.base_content || '')}
       </div>
@@ -802,13 +802,11 @@ function renderParsedExplanationToHtml(rawText) {
     text = text.substring(1, text.length - 1).trim();
   }
 
-  // Split into paragraphs/blocks cleanly without aggressive accordions
   const blocks = text.split(/\n\s*\n/);
   return blocks.map(block => {
     const trimmed = block.trim();
     if (!trimmed) return '';
 
-    // Main Markdown Headings
     if (trimmed.startsWith('### ')) {
       return `<h3 class="subheading-h3">${escapeHtml(trimmed.replace(/^###\s+/, ''))}</h3>`;
     }
@@ -818,8 +816,6 @@ function renderParsedExplanationToHtml(rawText) {
     if (trimmed.startsWith('# ')) {
       return `<h2 class="subheading">${escapeHtml(trimmed.replace(/^#\s+/, ''))}</h2>`;
     }
-
-    // Callout quote block
     if (trimmed.startsWith('> ')) {
       return `<blockquote class="article-quote">${renderMarkdownText(trimmed.replace(/^>\s*/, ''))}</blockquote>`;
     }
@@ -1037,16 +1033,15 @@ window.submitUserRating = async function() {
       sessionStorage.setItem('rated_prompt_' + currentArticleId, 'true');
       showToast('Rating submitted! +0.2 Credits');
       document.getElementById('rateBtn')?.classList.add('rated');
-      document.getElementById('ratingModalContent').innerHTML = \`
-        <div class="review-submitted-state">
-          <div class="modal-icon-badge" style="background:rgba(245,152,71,0.15);">
-            <svg viewBox="0 0 24 24" style="stroke:var(--accent-color);"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          </div>
-          <h3>Thank You!</h3>
-          <p>Your feedback helps improve our explanation algorithms.</p>
-          <button class="btn btn-primary" style="margin-top:16px; width:100%;" onclick="closeRatingModal()">Done</button>
-        </div>
-      \`;
+      document.getElementById('ratingModalContent').innerHTML = 
+        '<div class="review-submitted-state">' +
+          '<div class="modal-icon-badge" style="background:rgba(245,152,71,0.15);">' +
+            '<svg viewBox="0 0 24 24" style="stroke:var(--accent-color);"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' +
+          '</div>' +
+          '<h3>Thank You!</h3>' +
+          '<p>Your feedback helps improve our explanation algorithms.</p>' +
+          '<button class="btn btn-primary" style="margin-top:16px; width:100%;" onclick="closeRatingModal()">Done</button>' +
+        '</div>';
       if (data.bonus_earned) {
         currentCredits += data.bonus_earned;
         localStorage.setItem('easyread-credits', currentCredits.toString());
@@ -1089,6 +1084,69 @@ window.handleBookmarkToggle = async function() {
   }
 };
 
+// ─── DYNAMIC PROGRESS TIMER CONTROLLER (Issue 2) ───
+class GenerationTimer {
+  constructor(digitsId, statusId, subId, fillId) {
+    this.digitsEl = document.getElementById(digitsId);
+    this.statusEl = document.getElementById(statusId);
+    this.subEl = document.getElementById(subId);
+    this.fillEl = document.getElementById(fillId);
+    this.seconds = 0;
+    this.interval = null;
+  }
+
+  start() {
+    this.seconds = 0;
+    this.updateUI();
+    if (this.interval) clearInterval(this.interval);
+    this.interval = setInterval(() => {
+      this.seconds++;
+      this.updateUI();
+    }, 1000);
+  }
+
+  stop() {
+    if (this.interval) clearInterval(this.interval);
+  }
+
+  updateUI() {
+    const mins = Math.floor(this.seconds / 60);
+    const secs = this.seconds % 60;
+    const padSecs = secs.toString().padStart(2, '0');
+    
+    if (this.digitsEl) {
+      this.digitsEl.textContent = mins + 'min : ' + padSecs + 'secs / 2mins';
+    }
+
+    if (this.fillEl) {
+      const pct = Math.min(100, (this.seconds / 120) * 100);
+      this.fillEl.style.width = pct + '%';
+    }
+
+    // Dynamic phase transitions
+    if (this.seconds < 15) {
+      if (this.statusEl) this.statusEl.textContent = 'Synthesizing Perspective...';
+      if (this.subEl) this.subEl.textContent = 'Analyzing core concepts and context...';
+    } else if (this.seconds < 35) {
+      if (this.statusEl) this.statusEl.textContent = 'Adapting Persona Tone...';
+      if (this.subEl) this.subEl.textContent = 'Translating technical jargon into intuitive language...';
+    } else if (this.seconds < 60) {
+      if (this.statusEl) this.statusEl.textContent = 'Drafting Analogies & Insights...';
+      if (this.subEl) this.subEl.textContent = 'Formulating clear real-world takeaways...';
+    } else if (this.seconds < 90) {
+      if (this.statusEl) this.statusEl.textContent = 'Polishing Perspective Layout...';
+      if (this.subEl) this.subEl.textContent = 'Structuring headings, lists, and key points...';
+    } else if (this.seconds < 120) {
+      if (this.statusEl) this.statusEl.textContent = 'Finalizing Generation...';
+      if (this.subEl) this.subEl.textContent = 'Wrapping up response and verifying quality...';
+    } else {
+      // Exceeded 2 minutes
+      if (this.statusEl) this.statusEl.textContent = 'Processing High-Density Content';
+      if (this.subEl) this.subEl.innerHTML = '<span style="color:#f59e0b;font-weight:700;">Please wait, this is taking a bit longer than expected, we are fixing it...</span>';
+    }
+  }
+}
+
 // ─── SWITCH PERSPECTIVES (MAINTAINS CLEAN FORMATTING) ───
 window.switchProfile = function(profileId, btnElem) {
   document.querySelectorAll('.persona-pill').forEach(p => p.classList.remove('active'));
@@ -1106,33 +1164,27 @@ window.switchProfile = function(profileId, btnElem) {
   }
 
   const textElem = document.getElementById('articleText');
-  const skeleton = document.getElementById('contentSkeleton');
+  const timerLoader = document.getElementById('contentTimerLoader');
 
   if (textElem) textElem.style.display = 'none';
-  if (skeleton) skeleton.style.display = 'block';
+  if (timerLoader) timerLoader.style.display = 'none';
 
-  setTimeout(() => {
-    if (skeleton) skeleton.style.display = 'none';
-    if (textElem) {
-      if (explanation) {
-        currentViewId = explanation.view_id;
-        textElem.innerHTML = renderClientExplanationHtml(explanation.content);
-        textElem.style.display = 'block';
-      } else {
-        textElem.innerHTML = \`
-          <div class="no-explanation-box glass-card">
-            <div class="modal-icon-badge"><svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></div>
-            <h4>No \${escapeHtml(profile ? profile.name : 'Custom')} Explanation Yet</h4>
-            <p>Generate a tailored breakdown tailored to this persona with one tap.</p>
-            \${isAuthenticated 
-              ? '<button onclick="generateExplanation(' + profileId + ')" class="btn btn-primary" style="margin-top:14px;">Generate Explanation</button>' 
-              : '<button onclick="showLoginModal()" class="btn btn-primary" style="margin-top:14px;">Sign In to Generate</button>'}
-          </div>
-        \`;
-        textElem.style.display = 'block';
-      }
-    }
-  }, 220);
+  if (explanation) {
+    currentViewId = explanation.view_id;
+    textElem.innerHTML = renderClientExplanationHtml(explanation.content);
+    textElem.style.display = 'block';
+  } else {
+    textElem.innerHTML = 
+      '<div class="no-explanation-box glass-card">' +
+        '<div class="modal-icon-badge"><svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></div>' +
+        '<h4>No ' + escapeHtml(profile ? profile.name : 'Custom') + ' Explanation Yet</h4>' +
+        '<p>Generate a tailored breakdown tailored to this persona with one tap.</p>' +
+        (isAuthenticated 
+          ? '<button onclick="generateExplanation(' + profileId + ')" class="btn btn-primary" style="margin-top:14px;">Generate Explanation</button>' 
+          : '<button onclick="showLoginModal()" class="btn btn-primary" style="margin-top:14px;">Sign In to Generate</button>') +
+      '</div>';
+    textElem.style.display = 'block';
+  }
 };
 
 window.generateExplanation = async function(profileId) {
@@ -1140,10 +1192,13 @@ window.generateExplanation = async function(profileId) {
     showLoginModal();
     return;
   }
-  const skeleton = document.getElementById('contentSkeleton');
+  const timerLoader = document.getElementById('contentTimerLoader');
   const textElem = document.getElementById('articleText');
   if (textElem) textElem.style.display = 'none';
-  if (skeleton) skeleton.style.display = 'block';
+  if (timerLoader) timerLoader.style.display = 'block';
+
+  const timer = new GenerationTimer('genTimerDigits', 'genTimerStatus', 'genTimerSub', 'genTimerFill');
+  timer.start();
 
   showToast('Generating tailored perspective...');
   try {
@@ -1153,22 +1208,24 @@ window.generateExplanation = async function(profileId) {
       body: JSON.stringify({ article_id: currentArticleId, profile_id: profileId, force: false })
     });
     const data = await res.json();
+    timer.stop();
     if (data.success) {
       showToast('Explanation ready!');
       setTimeout(() => window.location.reload(), 450);
     } else {
-      if (skeleton) skeleton.style.display = 'none';
+      if (timerLoader) timerLoader.style.display = 'none';
       if (textElem) textElem.style.display = 'block';
       showToast(data.error || 'Generation failed');
     }
   } catch (err) {
-    if (skeleton) skeleton.style.display = 'none';
+    timer.stop();
+    if (timerLoader) timerLoader.style.display = 'none';
     if (textElem) textElem.style.display = 'block';
     showToast('Error communicating with generation engine');
   }
 };
 
-// ─── DEEP DIVE ENGINE WITH SHIMMER ───
+// ─── DEEP DIVE ENGINE WITH LIVE TIMER ───
 window.submitInlineDeepDive = async function(e) {
   e.preventDefault();
   if (!isAuthenticated) {
@@ -1190,24 +1247,40 @@ window.submitInlineDeepDive = async function(e) {
   const card = document.createElement('div');
   card.className = 'deep-dive-accordion glass-card';
   card.id = cardId;
-  card.innerHTML = \`
-    <div class="dd-header" onclick="toggleDeepDiveAccordion('\${cardId}')">
-      <div class="dd-title-row">
-        <span class="dd-q-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
-        <h4>\${escapeHtml(question)}</h4>
-      </div>
-      <span class="accordion-chevron"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></span>
-    </div>
-    <div class="dd-body">
-      <div class="dd-answer-text" id="\${cardId}-ans">
-        <div class="skeleton-line" style="width:90%;"></div>
-        <div class="skeleton-line" style="width:75%;"></div>
-        <div class="skeleton-line" style="width:60%;"></div>
-      </div>
-    </div>
-  \`;
+  card.innerHTML = 
+    '<div class="dd-header" onclick="toggleDeepDiveAccordion(\'' + cardId + '\')">' +
+      '<div class="dd-title-row">' +
+        '<span class="dd-q-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>' +
+        '<h4>' + escapeHtml(question) + '</h4>' +
+      '</div>' +
+      '<span class="accordion-chevron"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></span>' +
+    '</div>' +
+    '<div class="dd-body">' +
+      '<div class="dd-answer-text" id="' + cardId + '-ans">' +
+        '<div class="dd-live-timer-row">' +
+          '<div class="timer-spinner"></div>' +
+          '<span class="timer-digits-badge" id="' + cardId + '-timer">0min : 00secs / 2mins</span>' +
+        '</div>' +
+        '<p id="' + cardId + '-status" style="font-size:0.84rem;color:var(--text-secondary);margin-top:6px;">Synthesizing deep-dive response...</p>' +
+      '</div>' +
+    '</div>';
 
   list.appendChild(card);
+
+  // Live timer for deep dive
+  let ddSeconds = 0;
+  const ddTimerDigits = document.getElementById(cardId + '-timer');
+  const ddStatus = document.getElementById(cardId + '-status');
+  const ddInterval = setInterval(() => {
+    ddSeconds++;
+    const mins = Math.floor(ddSeconds / 60);
+    const secs = (ddSeconds % 60).toString().padStart(2, '0');
+    if (ddTimerDigits) ddTimerDigits.textContent = mins + 'min : ' + secs + 'secs / 2mins';
+    
+    if (ddSeconds > 120 && ddStatus) {
+      ddStatus.innerHTML = '<span style="color:#f59e0b;font-weight:700;">Please wait, this is taking a bit longer than expected, we are fixing it...</span>';
+    }
+  }, 1000);
 
   try {
     const res = await fetch('/api/view?action=deep-dive', {
@@ -1216,6 +1289,7 @@ window.submitInlineDeepDive = async function(e) {
       body: JSON.stringify({ article_id: currentArticleId, profile_id: currentProfileId, question })
     });
     const data = await res.json();
+    clearInterval(ddInterval);
     const ansContainer = document.getElementById(cardId + '-ans');
 
     if (data.success && data.deep_dive) {
@@ -1229,6 +1303,7 @@ window.submitInlineDeepDive = async function(e) {
       ansContainer.innerHTML = '<p style="color:var(--danger);">' + (data.error || 'Failed to generate deep dive') + '</p>';
     }
   } catch (err) {
+    clearInterval(ddInterval);
     const ansContainer = document.getElementById(cardId + '-ans');
     if (ansContainer) ansContainer.innerHTML = '<p style="color:var(--danger);">Network error generating answer.</p>';
   }
@@ -1549,52 +1624,41 @@ body {
 .guest-signin-btn:hover { background: var(--accent-hover); }
 
 /* ─── RICH ARTICLE TYPOGRAPHY ─── */
-.rich-article-text {
-  font-size: 1rem;
-  line-height: 1.75;
-  color: var(--text-secondary);
-}
-.rich-article-text p {
-  margin-bottom: 1.25rem;
-}
-.subheading {
-  font-size: 1.35rem;
-  font-weight: 800;
-  color: var(--text-main);
-  margin-top: 1.6rem;
-  margin-bottom: 0.8rem;
-  letter-spacing: -0.02em;
-}
-.subheading-h3 {
-  font-size: 1.12rem;
-  font-weight: 700;
-  color: var(--text-main);
-  margin-top: 1.3rem;
-  margin-bottom: 0.6rem;
-}
-.content-list {
-  padding-left: 1.4rem;
-  margin-bottom: 1.25rem;
-  color: var(--text-secondary);
-  line-height: 1.7;
-}
+.rich-article-text { font-size: 1rem; line-height: 1.75; color: var(--text-secondary); }
+.rich-article-text p { margin-bottom: 1.25rem; }
+.subheading { font-size: 1.35rem; font-weight: 800; color: var(--text-main); margin-top: 1.6rem; margin-bottom: 0.8rem; letter-spacing: -0.02em; }
+.subheading-h3 { font-size: 1.12rem; font-weight: 700; color: var(--text-main); margin-top: 1.3rem; margin-bottom: 0.6rem; }
+.content-list { padding-left: 1.4rem; margin-bottom: 1.25rem; color: var(--text-secondary); line-height: 1.7; }
 .content-list li { margin-bottom: 0.45rem; }
 .article-quote {
-  border-left: 3px solid var(--accent-color);
-  background: var(--accent-light);
-  padding: 12px 16px;
-  border-radius: 0 12px 12px 0;
-  margin: 1.25rem 0;
-  font-style: italic;
-  color: var(--text-main);
+  border-left: 3px solid var(--accent-color); background: var(--accent-light);
+  padding: 12px 16px; border-radius: 0 12px 12px 0; margin: 1.25rem 0;
+  font-style: italic; color: var(--text-main);
 }
-code {
-  background: var(--mode-bg-hover);
-  padding: 2px 6px;
-  border-radius: 6px;
-  font-family: monospace;
-  font-size: 0.9em;
+code { background: var(--mode-bg-hover); padding: 2px 6px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.9em; }
+
+/* ─── LIVE GENERATION TIMER CARD (Issue 2) ─── */
+.generation-timer-card { padding: 24px 20px; text-align: center; margin: 1.2rem 0; border: 1px solid var(--accent-glow); }
+.timer-header-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 14px; }
+.timer-spinner {
+  width: 22px; height: 22px; border: 2.5px solid var(--mode-bg-hover);
+  border-top-color: var(--accent-color); border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }
+@keyframes spin { 100% { transform: rotate(360deg); } }
+
+.timer-digits-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem; font-weight: 700; color: var(--accent-color);
+  background: var(--accent-light); padding: 4px 12px; border-radius: 12px;
+  border: 1px solid var(--accent-glow); letter-spacing: 0.5px;
+}
+.timer-status-title { font-size: 1.05rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px; }
+.timer-status-sub { font-size: 0.84rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 16px; min-height: 24px; }
+.timer-progress-track { width: 100%; max-width: 320px; height: 4px; background: var(--mode-bg-hover); border-radius: 4px; margin: 0 auto; overflow: hidden; }
+.timer-progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent-color), #ffbd59); border-radius: 4px; transition: width 0.4s ease; }
+
+.dd-live-timer-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 
 /* ─── SUMMARY / KEY TAKEAWAY ─── */
 .summary-wrapper { margin: 1.8rem 0 1.4rem; padding: 16px 20px; border-left: 3px solid var(--accent-color); }
@@ -1641,19 +1705,6 @@ code {
   border-radius: 10px; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: background 0.2s;
 }
 .ask-submit-btn:hover { background: var(--accent-hover); }
-
-/* ─── SHIMMER LOADERS ─── */
-.skeleton-card-pulse { padding: 20px; }
-.skeleton-line {
-  height: 12px; border-radius: 6px; background: rgba(255,255,255,0.04);
-  position: relative; overflow: hidden; margin-bottom: 10px;
-}
-.skeleton-line::after {
-  position: absolute; inset: 0; transform: translateX(-100%);
-  background-image: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%);
-  animation: shimmerSwipe 1.5s infinite; content: '';
-}
-@keyframes shimmerSwipe { 100% { transform: translateX(100%); } }
 
 /* ─── METADATA ROW ─── */
 .article-metadata {
