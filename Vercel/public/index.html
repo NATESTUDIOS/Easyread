@@ -8,7 +8,7 @@
     <!-- ─── PRIMARY META TAGS ─── -->
     <title>EasyRead — Knowledge, Simplified</title>
     <meta name="description" content="EasyRead explains complex topics in a way tailored just for you. Ask questions, paste notes, or read websites with crystal clarity.">
-    <meta name="keywords" content="explain, simplify, reading, knowledge, AI, learning, study, education">
+    <meta name="keywords" content="explain, blog, learn, simplify, reading, knowledge, AI, learning, study, easyread, easytoread, study, books, understand, knowledge, education">
     <meta name="author" content="EasyRead">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://easytoread.vercel.app/">
@@ -486,35 +486,55 @@
         .glass-dialog .btn-secondary:hover { background: var(--mode-bg-hover); color: var(--text-primary); }
         .glass-dialog .btn-secondary:active { transform: scale(0.97); }
 
-        /* ─── OFFLINE BOTTOM BANNER ─── */
+        /* ─── OFFLINE BOTTOM BANNER (FIXED DISPLAY & TIMING) ─── */
         #offlineBanner {
             position: fixed;
-            bottom: calc(76px + var(--safe-bottom));
+            bottom: calc(78px + var(--safe-bottom));
             left: 50%;
-            transform: translateX(-50%) translateY(160%);
+            transform: translateX(-50%) translateY(14px);
             max-width: 400px;
             width: calc(100% - 32px);
             background: #ef4444;
             color: #ffffff;
-            padding: 11px 16px;
+            padding: 10px 14px;
             border-radius: 14px;
             font-size: 0.82rem;
             font-weight: 600;
-            z-index: 2000;
-            box-shadow: 0 8px 24px rgba(239, 68, 68, 0.35);
+            z-index: 5000;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s;
+            opacity: 0;
+            visibility: hidden;
             pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s ease, background 0.3s ease;
         }
-        #offlineBanner.show { transform: translateX(-50%) translateY(0); pointer-events: auto; }
+        #offlineBanner.show {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transform: translateX(-50%) translateY(0);
+        }
         #offlineBanner.online-sync {
             background: #10b981;
-            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+            box-shadow: 0 10px 28px rgba(16, 185, 129, 0.35);
         }
         #offlineBanner .banner-left { display: flex; align-items: center; gap: 8px; }
-        #offlineBanner svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+        #offlineBanner svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
+        .offline-dismiss-btn {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.1rem;
+            line-height: 1;
+            padding: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .offline-dismiss-btn:hover { color: #ffffff; }
 
         /* ─── INLINE OFFLINE STATUS ─── */
         .inline-offline-badge {
@@ -991,12 +1011,13 @@
         </div>
     </div>
 
-    <!-- ─── BOTTOM SLIDING OFFLINE BANNER ─── -->
+    <!-- ─── BOTTOM SLIDING OFFLINE BANNER (FIXED) ─── -->
     <div id="offlineBanner">
         <div class="banner-left">
             <svg viewBox="0 0 24 24"><path d="M5 12.5a8 8 0 0 1 14 0"/><path d="M8 16.5a5 5 0 0 1 8 0"/><path d="M12 20.5v-0.5"/></svg>
             <span id="offlineBannerText">No connection — viewing offline cache</span>
         </div>
+        <button class="offline-dismiss-btn" onclick="hideOfflineBanner()" aria-label="Dismiss banner">✕</button>
     </div>
 
     <!-- ─── TOAST ─── -->
@@ -1108,16 +1129,16 @@
 
         // ─── DISTINCT VIBRANT GRADIENTS FOR AVATARS ───
         const AVATAR_GRADIENTS = [
-            'linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%)', // Sunset Crimson
-            'linear-gradient(135deg, #8a2387 0%, #e94057 50%, #f27121 100%)', // Twilight Horizon
-            'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)', // Deep Ocean
-            'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', // Emerald Glow
-            'linear-gradient(135deg, #f59847 0%, #e65c00 100%)', // Electric Orange
-            'linear-gradient(135deg, #7f00ff 0%, #e100ff 100%)', // Cyber Neon
-            'linear-gradient(135deg, #4776e6 0%, #8e54e9 100%)', // Royal Violet
-            'linear-gradient(135deg, #f857a6 0%, #ff5858 100%)', // Rose Quartz
-            'linear-gradient(135deg, #16a085 0%, #f4d03f 100%)', // Citrus Lime
-            'linear-gradient(135deg, #3a1c71 0%, #d76d77 50%, #ffaf7b 100%)' // Dusk Mirage
+            'linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%)',
+            'linear-gradient(135deg, #8a2387 0%, #e94057 50%, #f27121 100%)',
+            'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)',
+            'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+            'linear-gradient(135deg, #f59847 0%, #e65c00 100%)',
+            'linear-gradient(135deg, #7f00ff 0%, #e100ff 100%)',
+            'linear-gradient(135deg, #4776e6 0%, #8e54e9 100%)',
+            'linear-gradient(135deg, #f857a6 0%, #ff5858 100%)',
+            'linear-gradient(135deg, #16a085 0%, #f4d03f 100%)',
+            'linear-gradient(135deg, #3a1c71 0%, #d76d77 50%, #ffaf7b 100%)'
         ];
 
         function getDeterministicGradient(text) {
@@ -1183,7 +1204,7 @@
             }
         };
 
-        // ─── THEME HANDLING (Fix contrast in dark mode) ───
+        // ─── THEME HANDLING ───
         let currentThemeSetting = localStorage.getItem('easyread-theme') || 'auto';
         function applyTheme(theme) {
             currentThemeSetting = theme;
@@ -1201,6 +1222,12 @@
         const offlineBanner = document.getElementById('offlineBanner');
         const offlineBannerText = document.getElementById('offlineBannerText');
         const inlineOfflineBadge = document.getElementById('inlineOfflineBadge');
+        let offlineBannerTimeout = null;
+
+        function hideOfflineBanner() {
+            if (offlineBannerTimeout) clearTimeout(offlineBannerTimeout);
+            offlineBanner.classList.remove('show', 'online-sync');
+        }
 
         function setOfflineState(isOffline, reason = 'No connection — viewing offline cache') {
             if (isOffline) {
@@ -1208,16 +1235,23 @@
                 offlineBannerText.textContent = reason;
                 offlineBanner.classList.remove('online-sync');
                 offlineBanner.classList.add('show');
+                
+                // Auto-dismiss popup banner after 3.5s so it never blocks the navigation bar
+                if (offlineBannerTimeout) clearTimeout(offlineBannerTimeout);
+                offlineBannerTimeout = setTimeout(() => {
+                    offlineBanner.classList.remove('show');
+                }, 3500);
             } else {
                 inlineOfflineBadge.classList.remove('active');
                 if (offlineBanner.classList.contains('show')) {
                     offlineBannerText.textContent = 'Connected — live feed synced';
                     offlineBanner.classList.add('online-sync');
-                    setTimeout(() => {
-                        offlineBanner.classList.remove('show', 'online-sync');
+                    if (offlineBannerTimeout) clearTimeout(offlineBannerTimeout);
+                    offlineBannerTimeout = setTimeout(() => {
+                        hideOfflineBanner();
                     }, 1800);
                 } else {
-                    offlineBanner.classList.remove('show', 'online-sync');
+                    hideOfflineBanner();
                 }
             }
         }
@@ -1288,7 +1322,6 @@
         async function requestNativeNotificationPermission() {
             if (!('Notification' in window)) return 'unsupported';
             try {
-                // Handle Promise and legacy callback architectures
                 let permission = Notification.permission;
                 if (permission !== 'granted' && permission !== 'denied') {
                     const result = await new Promise((resolve) => {
@@ -1624,7 +1657,6 @@
                 cats.slice(0, 3).forEach(c => { tagsHtml += `<span class="listing-tag">${escapeHtml(c)}</span>`; });
                 const timeStr = art.created_at ? formatTimeAgo(art.created_at) : `${readTime} min read`;
 
-                // Distinct aesthetic gradient per source name
                 const avatarGradient = getDeterministicGradient(source);
                 const avatarInitials = escapeHtml(source.replace(/https?:\/\//i, '').replace(/^www\./i, '').slice(0, 2).toUpperCase());
 
