@@ -2,18 +2,19 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
     <!-- ─── PRIMARY META TAGS ─── -->
     <title>EasyRead — Knowledge, Simplified</title>
-    <meta name="description" content="EasyRead explains complex topics in a way only you understand. Ask questions, paste notes, or read websites — get clear, tailored explanations.">
+    <meta name="description" content="EasyRead explains complex topics in a way tailored just for you. Ask questions, paste notes, or read websites with crystal clarity.">
     <meta name="keywords" content="explain, simplify, reading, knowledge, AI, learning, study, education">
     <meta name="author" content="EasyRead">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://easytoread.vercel.app/">
 
     <!-- ─── THEME COLOR ─── -->
-    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#0d0d0f" media="(prefers-color-scheme: dark)">
     <meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)">
 
     <!-- ─── APPLE / IOS ─── -->
@@ -58,97 +59,102 @@
     <style>
         :root {
             --bg-color: #f6f7f9;
-            --bg-glow: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.9) 0%, transparent 70%);
-            --text-primary: #1c1c1e;
-            --text-secondary: #5c5c60;
-            --text-tertiary: #8e8e93;
-            --text-placeholder: #c7c7cc;
-            --card-bg: rgba(242, 242, 247, 0.78);
-            --card-bg-hover: rgba(230, 230, 235, 0.9);
-            --card-blur: blur(16px);
-            --glass-border: 1.5px solid rgba(0, 0, 0, 0.1);
-            --glass-border-subtle: 1px solid rgba(0, 0, 0, 0.06);
-            --glass-shadow: 0 6px 20px rgba(0,0,0,0.04);
+            --bg-glow: radial-gradient(circle at 50% 0%, rgba(245, 152, 71, 0.08) 0%, transparent 65%);
+            --text-primary: #111113;
+            --text-secondary: #5c5c63;
+            --text-tertiary: #8e8e96;
+            --text-placeholder: #b0b0b8;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --card-bg-hover: rgba(255, 255, 255, 0.98);
+            --card-blur: blur(20px);
+            --glass-border: 1px solid rgba(0, 0, 0, 0.08);
+            --glass-border-subtle: 1px solid rgba(0, 0, 0, 0.04);
+            --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
             --mode-bg: rgba(0, 0, 0, 0.04);
-            --mode-bg-hover: rgba(0, 0, 0, 0.07);
+            --mode-bg-hover: rgba(0, 0, 0, 0.08);
             --accent-color: #f59847;
-            --accent-hover: #e08735;
+            --accent-hover: #e08333;
+            --accent-glow: rgba(245, 152, 71, 0.25);
             --accent-light: rgba(245, 152, 71, 0.12);
-            --divider: rgba(0,0,0,0.06);
+            --divider: rgba(0, 0, 0, 0.06);
             --tag-bg: rgba(0, 0, 0, 0.04);
-            --tag-text: #4a4a50;
+            --tag-text: #4a4a52;
             --icon-stroke: #1c1c1e;
             --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            --splash-bg: #111113;
-            --splash-text: #ffffff;
+            --splash-bg: #0d0d0f;
+            --dialog-overlay: rgba(15, 15, 18, 0.6);
+            --dialog-bg: rgba(255, 255, 255, 0.92);
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
         }
 
         @media (prefers-color-scheme: dark) {
             :root {
-                --bg-color: #000000;
-                --bg-glow: radial-gradient(circle at 50% 0%, rgba(40, 40, 42, 0.3) 0%, transparent 60%);
-                --text-primary: #e8e8ea;
-                --text-secondary: #9a9a9e;
-                --text-tertiary: #6c6c70;
-                --text-placeholder: #5a5a5e;
-                --card-bg: rgba(22, 22, 24, 0.8);
-                --card-bg-hover: rgba(30, 30, 34, 0.9);
-                --glass-border: 1px solid rgba(255, 255, 255, 0.08);
-                --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.04);
-                --glass-shadow: 0 6px 24px rgba(0,0,0,0.5);
-                --mode-bg: rgba(255, 255, 255, 0.05);
-                --mode-bg-hover: rgba(255, 255, 255, 0.1);
-                --divider: rgba(255,255,255,0.06);
+                --bg-color: #09090b;
+                --bg-glow: radial-gradient(circle at 50% 0%, rgba(245, 152, 71, 0.12) 0%, transparent 60%);
+                --text-primary: #f2f2f5;
+                --text-secondary: #a1a1aa;
+                --text-tertiary: #71717a;
+                --text-placeholder: #52525b;
+                --card-bg: rgba(18, 18, 22, 0.75);
+                --card-bg-hover: rgba(26, 26, 32, 0.9);
+                --glass-border: 1px solid rgba(255, 255, 255, 0.09);
+                --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.05);
+                --glass-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
+                --mode-bg: rgba(255, 255, 255, 0.06);
+                --mode-bg-hover: rgba(255, 255, 255, 0.11);
+                --divider: rgba(255, 255, 255, 0.07);
                 --tag-bg: rgba(255, 255, 255, 0.06);
-                --tag-text: #9a9a9e;
-                --icon-stroke: #e8e8ea;
-                --splash-bg: #000000;
-                --splash-text: #e8e8ea;
+                --tag-text: #a1a1aa;
+                --icon-stroke: #f2f2f5;
+                --splash-bg: #09090b;
+                --dialog-overlay: rgba(0, 0, 0, 0.75);
+                --dialog-bg: rgba(20, 20, 25, 0.88);
             }
         }
 
         [data-theme="light"] {
             --bg-color: #f6f7f9 !important;
-            --bg-glow: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.9) 0%, transparent 70%) !important;
-            --text-primary: #1c1c1e !important;
-            --text-secondary: #5c5c60 !important;
-            --text-tertiary: #8e8e93 !important;
-            --text-placeholder: #c7c7cc !important;
-            --card-bg: rgba(242, 242, 247, 0.78) !important;
-            --card-bg-hover: rgba(230, 230, 235, 0.9) !important;
-            --glass-border: 1.5px solid rgba(0, 0, 0, 0.1) !important;
-            --glass-border-subtle: 1px solid rgba(0, 0, 0, 0.06) !important;
-            --glass-shadow: 0 6px 20px rgba(0,0,0,0.04) !important;
+            --bg-glow: radial-gradient(circle at 50% 0%, rgba(245, 152, 71, 0.08) 0%, transparent 65%) !important;
+            --text-primary: #111113 !important;
+            --text-secondary: #5c5c63 !important;
+            --text-tertiary: #8e8e96 !important;
+            --text-placeholder: #b0b0b8 !important;
+            --card-bg: rgba(255, 255, 255, 0.85) !important;
+            --card-bg-hover: rgba(255, 255, 255, 0.98) !important;
+            --glass-border: 1px solid rgba(0, 0, 0, 0.08) !important;
+            --glass-border-subtle: 1px solid rgba(0, 0, 0, 0.04) !important;
+            --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
             --mode-bg: rgba(0, 0, 0, 0.04) !important;
-            --mode-bg-hover: rgba(0, 0, 0, 0.07) !important;
-            --divider: rgba(0,0,0,0.06) !important;
+            --mode-bg-hover: rgba(0, 0, 0, 0.08) !important;
+            --divider: rgba(0, 0, 0, 0.06) !important;
             --tag-bg: rgba(0, 0, 0, 0.04) !important;
-            --tag-text: #4a4a50 !important;
+            --tag-text: #4a4a52 !important;
             --icon-stroke: #1c1c1e !important;
-            --splash-bg: #f6f7f9 !important;
-            --splash-text: #1c1c1e !important;
+            --dialog-overlay: rgba(15, 15, 18, 0.6) !important;
+            --dialog-bg: rgba(255, 255, 255, 0.92) !important;
         }
 
         [data-theme="dark"] {
-            --bg-color: #000000 !important;
-            --bg-glow: radial-gradient(circle at 50% 0%, rgba(40, 40, 42, 0.3) 0%, transparent 60%) !important;
-            --text-primary: #e8e8ea !important;
-            --text-secondary: #9a9a9e !important;
-            --text-tertiary: #6c6c70 !important;
-            --text-placeholder: #5a5a5e !important;
-            --card-bg: rgba(22, 22, 24, 0.8) !important;
-            --card-bg-hover: rgba(30, 30, 34, 0.9) !important;
-            --glass-border: 1px solid rgba(255, 255, 255, 0.08) !important;
-            --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.04) !important;
-            --glass-shadow: 0 6px 24px rgba(0,0,0,0.5) !important;
-            --mode-bg: rgba(255, 255, 255, 0.05) !important;
-            --mode-bg-hover: rgba(255, 255, 255, 0.1) !important;
-            --divider: rgba(255,255,255,0.06) !important;
+            --bg-color: #09090b !important;
+            --bg-glow: radial-gradient(circle at 50% 0%, rgba(245, 152, 71, 0.12) 0%, transparent 60%) !important;
+            --text-primary: #f2f2f5 !important;
+            --text-secondary: #a1a1aa !important;
+            --text-tertiary: #71717a !important;
+            --text-placeholder: #52525b !important;
+            --card-bg: rgba(18, 18, 22, 0.75) !important;
+            --card-bg-hover: rgba(26, 26, 32, 0.9) !important;
+            --glass-border: 1px solid rgba(255, 255, 255, 0.09) !important;
+            --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.05) !important;
+            --glass-shadow: 0 12px 36px rgba(0, 0, 0, 0.6) !important;
+            --mode-bg: rgba(255, 255, 255, 0.06) !important;
+            --mode-bg-hover: rgba(255, 255, 255, 0.11) !important;
+            --divider: rgba(255, 255, 255, 0.07) !important;
             --tag-bg: rgba(255, 255, 255, 0.06) !important;
-            --tag-text: #9a9a9e !important;
-            --icon-stroke: #e8e8ea !important;
-            --splash-bg: #000000 !important;
-            --splash-text: #e8e8ea !important;
+            --tag-text: #a1a1aa !important;
+            --icon-stroke: #f2f2f5 !important;
+            --dialog-overlay: rgba(0, 0, 0, 0.75) !important;
+            --dialog-bg: rgba(20, 20, 25, 0.88) !important;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -160,270 +166,321 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             font-family: var(--font-display);
             -webkit-font-smoothing: antialiased;
             background: var(--bg-color);
-            transition: background 0.3s ease;
+            color: var(--text-primary);
+            overflow-x: hidden;
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
-        /* ─── SPLASH SCREEN ─── */
+        /* ─── SOPHISTICATED SPLASH SCREEN ─── */
         #splashScreen {
             position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
+            inset: 0;
             background: var(--splash-bg);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 9999;
-            transition: opacity 0.6s ease, visibility 0.6s ease;
+            transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1), transform 0.55s ease, visibility 0.55s ease;
             overflow: hidden;
         }
         #splashScreen.hidden {
             opacity: 0;
+            transform: scale(1.02);
             visibility: hidden;
             pointer-events: none;
         }
 
-        .splash-content {
-            text-align: center;
-            animation: splashFadeIn 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        .splash-brand-emblem {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 22px;
         }
 
-        @keyframes splashFadeIn {
-            0% { opacity: 0; transform: translateY(20px) scale(0.96); }
-            100% { opacity: 1; transform: translateY(0) scale(1); }
+        .splash-ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 1.5px solid rgba(245, 152, 71, 0.2);
+            animation: orbitSpin 5s linear infinite;
+        }
+        .splash-ring::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: 50%;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            box-shadow: 0 0 12px var(--accent-color);
+            transform: translateX(-50%);
+        }
+        .splash-ring:nth-child(2) {
+            inset: -12px;
+            border-color: rgba(245, 152, 71, 0.08);
+            animation-duration: 9s;
+            animation-direction: reverse;
+        }
+
+        @keyframes orbitSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .splash-glass-badge {
+            width: 64px;
+            height: 64px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            z-index: 2;
+        }
+        .splash-glass-badge svg {
+            width: 32px;
+            height: 32px;
+            stroke: var(--accent-color);
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .splash-content {
+            text-align: center;
+            animation: splashFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        @keyframes splashFadeUp {
+            0% { opacity: 0; transform: translateY(12px); }
+            100% { opacity: 1; transform: translateY(0); }
         }
 
         .splash-logo {
-            font-size: 3.4rem;
+            font-size: 2.2rem;
             font-weight: 800;
-            letter-spacing: -2px;
-            background: linear-gradient(135deg, #f59847 0%, #ffd700 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 0.2rem;
+            letter-spacing: -0.04em;
+            color: #ffffff;
             line-height: 1.1;
-            position: relative;
         }
-        .splash-logo::after {
-            content: '';
-            position: absolute;
-            bottom: -4px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60px;
-            height: 3px;
-            background: linear-gradient(90deg, transparent, #f59847, transparent);
-            border-radius: 4px;
+        .splash-logo span {
+            color: var(--accent-color);
         }
 
         .splash-subtitle {
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             font-weight: 500;
-            color: var(--text-secondary);
-            letter-spacing: 2.5px;
+            color: rgba(255, 255, 255, 0.55);
+            letter-spacing: 0.16em;
             text-transform: uppercase;
-            margin-top: 0.6rem;
-            margin-bottom: 1.8rem;
+            margin-top: 6px;
+            margin-bottom: 28px;
+        }
+
+        .splash-progress-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
         .splash-loader-track {
-            width: 160px;
+            width: 140px;
             height: 3px;
             background: rgba(255, 255, 255, 0.08);
             border-radius: 4px;
             overflow: hidden;
-            margin: 0 auto;
         }
 
         .splash-loader-bar {
             height: 100%;
             width: 0%;
-            background: linear-gradient(90deg, #f59847, #ffd700);
-            animation: loadBar 1.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            background: linear-gradient(90deg, var(--accent-color), #ffbd59);
+            border-radius: 4px;
+            transition: width 0.3s ease;
         }
 
-        @keyframes loadBar {
-            0% { width: 0%; }
-            100% { width: 100%; }
+        .splash-percent {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.4);
+            min-width: 28px;
+            font-variant-numeric: tabular-nums;
         }
 
-        .splash-pulse-ring {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            position: absolute;
-            border: 1px solid rgba(245, 152, 71, 0.12);
-            animation: pulseRing 3s ease-in-out infinite;
-        }
-        .splash-pulse-ring:nth-child(2) {
-            width: 160px;
-            height: 160px;
-            animation-delay: 0.6s;
-            border-color: rgba(245, 152, 71, 0.06);
-        }
-        @keyframes pulseRing {
-            0% { transform: scale(0.8); opacity: 0.6; }
-            50% { transform: scale(1.1); opacity: 0.2; }
-            100% { transform: scale(0.8); opacity: 0.6; }
-        }
-
-        /* ─── GLASS DIALOG (Reusable) ─── */
+        /* ─── GLASS DIALOG SYSTEM ─── */
         .glass-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.6);
+            background: var(--dialog-overlay);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            display: none;
+            display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 6000;
-            padding: 24px;
+            z-index: 7000;
+            padding: 20px;
             opacity: 0;
+            pointer-events: none;
             transition: opacity 0.3s ease;
         }
         .glass-overlay.active {
-            display: flex;
             opacity: 1;
+            pointer-events: auto;
         }
+
         .glass-dialog {
-            background: var(--card-bg);
-            backdrop-filter: var(--card-blur);
-            -webkit-backdrop-filter: var(--card-blur);
+            background: var(--dialog-bg);
+            backdrop-filter: blur(36px);
+            -webkit-backdrop-filter: blur(36px);
             border: var(--glass-border);
-            border-radius: 24px;
-            padding: 32px 28px;
+            border-radius: 26px;
+            padding: 30px 24px 26px;
             max-width: 380px;
             width: 100%;
             text-align: center;
-            transform: scale(0.92) translateY(20px);
-            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: var(--glass-shadow);
+            transform: scale(0.94) translateY(14px);
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s;
+            position: relative;
         }
         .glass-overlay.active .glass-dialog {
             transform: scale(1) translateY(0);
         }
-        .glass-dialog .dialog-icon {
-            margin-bottom: 8px;
+
+        .dialog-icon-wrapper {
+            width: 58px;
+            height: 58px;
+            border-radius: 18px;
+            background: var(--accent-light);
             display: flex;
+            align-items: center;
             justify-content: center;
+            margin: 0 auto 16px;
+            border: 1px solid var(--accent-glow);
         }
-        .glass-dialog .dialog-icon svg {
-            width: 44px;
-            height: 44px;
+        .dialog-icon-wrapper svg {
+            width: 28px;
+            height: 28px;
             stroke: var(--accent-color);
             fill: none;
-            stroke-width: 1.8;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
         }
+
         .glass-dialog h3 {
-            font-size: 1.15rem;
+            font-size: 1.2rem;
             font-weight: 700;
             color: var(--text-primary);
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            letter-spacing: -0.02em;
         }
         .glass-dialog p {
-            font-size: 0.85rem;
+            font-size: 0.88rem;
             color: var(--text-secondary);
-            line-height: 1.5;
-            margin-bottom: 18px;
+            line-height: 1.55;
+            margin-bottom: 22px;
         }
+
         .glass-dialog .dialog-actions {
             display: flex;
             gap: 10px;
             justify-content: center;
-            flex-wrap: wrap;
+        }
+        .glass-dialog .btn-dialog {
+            flex: 1;
+            padding: 12px 18px;
+            border-radius: 14px;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.88rem;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
         }
         .glass-dialog .btn-primary {
             background: var(--accent-color);
-            color: #fff;
-            border: none;
-            padding: 10px 28px;
-            border-radius: 14px;
-            font-weight: 700;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: background 0.2s;
+            color: #ffffff;
         }
         .glass-dialog .btn-primary:hover { background: var(--accent-hover); }
+        .glass-dialog .btn-primary:active { transform: scale(0.97); }
+
         .glass-dialog .btn-secondary {
             background: var(--mode-bg);
             color: var(--text-secondary);
             border: var(--glass-border-subtle);
-            padding: 10px 28px;
-            border-radius: 14px;
-            font-weight: 600;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: background 0.2s;
         }
-        .glass-dialog .btn-secondary:hover { background: var(--mode-bg-hover); }
-        .glass-dialog .btn-dismiss {
-            background: transparent;
-            border: none;
-            color: var(--text-tertiary);
-            font-size: 0.8rem;
-            cursor: pointer;
-            padding: 8px;
-            margin-top: 4px;
-        }
-        .glass-dialog .btn-dismiss:hover { color: var(--text-secondary); }
+        .glass-dialog .btn-secondary:hover { background: var(--mode-bg-hover); color: var(--text-primary); }
+        .glass-dialog .btn-secondary:active { transform: scale(0.97); }
 
-        /* ─── OFFLINE DIALOG (dismissible) ─── */
-        .offline-overlay {
+        /* ─── OFFLINE BOTTOM BANNER ─── */
+        #offlineBanner {
             position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            bottom: calc(76px + var(--safe-bottom));
+            left: 50%;
+            transform: translateX(-50%) translateY(140%);
+            max-width: 400px;
+            width: calc(100% - 32px);
+            background: #ef4444;
+            color: #ffffff;
+            padding: 10px 16px;
+            border-radius: 14px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            z-index: 2000;
+            box-shadow: 0 8px 24px rgba(239, 68, 68, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s;
+        }
+        #offlineBanner.show { transform: translateX(-50%) translateY(0); }
+        #offlineBanner.online-sync {
+            background: #10b981;
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+        }
+        #offlineBanner .banner-left { display: flex; align-items: center; gap: 8px; }
+        #offlineBanner svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+        /* ─── INLINE OFFLINE STATUS ─── */
+        .inline-offline-badge {
             display: none;
             align-items: center;
             justify-content: center;
-            z-index: 5000;
-            padding: 24px;
-        }
-        .offline-overlay.active { display: flex; }
-        .offline-dialog {
-            background: var(--card-bg);
-            backdrop-filter: var(--card-blur);
-            -webkit-backdrop-filter: var(--card-blur);
-            border: var(--glass-border);
-            border-radius: 24px;
-            padding: 32px 28px;
-            max-width: 360px;
+            gap: 6px;
             width: 100%;
-            text-align: center;
-            position: relative;
+            padding: 7px 12px;
+            border-radius: 12px;
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            font-size: 0.78rem;
+            font-weight: 600;
+            margin-bottom: 12px;
         }
-        .offline-dialog .icon {
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: center;
-        }
-        .offline-dialog .icon svg {
-            width: 44px;
-            height: 44px;
-            stroke: #ff6b6b;
-            fill: none;
-            stroke-width: 1.8;
-        }
-        .offline-dialog h3 { font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
-        .offline-dialog p { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 18px; }
-        .offline-dialog .btn-retry { background: var(--accent-color); color: #fff; border: none; padding: 10px 28px; border-radius: 14px; font-weight: 700; font-size: 0.85rem; cursor: pointer; }
-        .offline-dialog .btn-dismiss-offline {
-            background: transparent;
-            border: none;
-            color: var(--text-tertiary);
-            font-size: 0.8rem;
-            cursor: pointer;
-            padding: 8px;
-            margin-top: 4px;
-            display: block;
-            width: 100%;
-        }
-        .offline-dialog .btn-dismiss-offline:hover { color: var(--text-secondary); }
+        .inline-offline-badge.active { display: flex; }
+        .inline-offline-badge svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
 
         /* ─── APP SHELL ─── */
         .app-shell {
@@ -434,28 +491,30 @@
             display: flex;
             flex-direction: column;
             position: relative;
-            padding-bottom: 74px;
+            padding-bottom: calc(76px + var(--safe-bottom));
             background-color: var(--bg-color);
             background-image: var(--bg-glow);
             background-repeat: no-repeat;
-            background-size: 100% 100%;
-            transition: background-color 0.3s ease, color 0.3s ease;
+            background-size: 100% 400px;
             color: var(--text-primary);
         }
 
         .app-container {
-            max-width: 440px;
             width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 1.8rem 1rem 1rem 1rem;
+            padding: calc(1.4rem + var(--safe-top)) 1rem 1rem 1rem;
         }
 
-        .brand-section { text-align: center; margin-bottom: 1.2rem; width: 100%; }
-        .brand-title { font-size: 2.2rem; font-weight: 800; letter-spacing: -1.2px; margin-bottom: 0.15rem; line-height: 1.1; }
+        .brand-section { text-align: center; margin-bottom: 1.1rem; width: 100%; }
+        .brand-title { font-size: 2.1rem; font-weight: 800; letter-spacing: -0.04em; margin-bottom: 0.15rem; line-height: 1.1; }
         .brand-title .dark { color: var(--text-primary); }
-        .brand-title .orange { background: linear-gradient(135deg, var(--accent-color), #ffd700); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .brand-title .orange {
+            background: linear-gradient(135deg, var(--accent-color), #ffb85a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
         .tagline { font-size: 0.82rem; font-weight: 500; color: var(--text-tertiary); }
 
         .glass-card {
@@ -463,9 +522,9 @@
             backdrop-filter: var(--card-blur);
             -webkit-backdrop-filter: var(--card-blur);
             border: var(--glass-border);
-            border-radius: 18px;
-            transition: all 0.2s ease;
+            border-radius: 20px;
             box-shadow: var(--glass-shadow);
+            transition: background 0.25s, border-color 0.25s, transform 0.2s;
         }
 
         .login-notice-banner {
@@ -476,8 +535,32 @@
             gap: 12px;
             margin-bottom: 1.2rem;
         }
+        .login-notice-banner .notice-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            background: var(--accent-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .login-notice-banner .notice-icon svg { width: 18px; height: 18px; stroke: var(--accent-color); fill: none; stroke-width: 2; }
+        .notice-content { flex: 1; }
+        .notice-title { font-size: 0.85rem; font-weight: 700; color: var(--text-primary); }
+        .notice-desc { font-size: 0.74rem; color: var(--text-secondary); margin-top: 1px; }
+        .notice-btn {
+            background: var(--accent-color);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
 
-        .input-combo-wrapper { width: 100%; margin-bottom: 1.4rem; overflow: hidden; display: flex; flex-direction: column; }
+        .input-combo-wrapper { width: 100%; margin-bottom: 1.3rem; overflow: hidden; display: flex; flex-direction: column; }
         .input-container-inner { padding: 1.1rem 1.1rem 0.8rem 1.1rem; display: flex; flex-direction: column; width: 100%; }
         .card-textarea {
             width: 100%;
@@ -514,8 +597,9 @@
             font-size: 0.75rem;
             font-weight: 700;
             cursor: pointer;
+            color: var(--text-primary);
         }
-        .credits-badge svg { width: 12px; height: 14px; stroke: var(--accent-color); fill: none; stroke-width: 2.2; }
+        .credits-badge svg { width: 13px; height: 13px; stroke: var(--accent-color); fill: none; stroke-width: 2.2; }
         .credits-badge .credits-val { color: var(--text-primary); }
         .credits-badge .credits-label { color: var(--text-tertiary); font-size: 0.65rem; text-transform: uppercase; }
 
@@ -532,7 +616,7 @@
             justify-content: center;
             cursor: pointer;
             transition: all 0.2s ease;
-            box-shadow: 0 3px 10px rgba(245, 152, 71, 0.25);
+            box-shadow: 0 4px 12px var(--accent-glow);
         }
         .send-btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
         .send-btn:active { transform: scale(0.95); }
@@ -570,8 +654,8 @@
         .mode-pill svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
         .mode-pill.active { background-color: var(--accent-color) !important; color: #ffffff !important; border-color: var(--accent-color) !important; }
 
-        .categories-section { width: 100%; margin-bottom: 1.2rem; }
-        .categories-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-tertiary); margin-bottom: 0.5rem; padding-left: 0.1rem; }
+        .categories-section { width: 100%; margin-bottom: 1.1rem; }
+        .categories-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-tertiary); margin-bottom: 0.5rem; padding-left: 0.2rem; }
         .categories-scroll { display: flex; gap: 6px; overflow-x: auto; padding: 1px 0 4px 0; scrollbar-width: none; }
         .categories-scroll::-webkit-scrollbar { display: none; }
 
@@ -599,7 +683,7 @@
         .listing-avatar {
             width: 36px;
             height: 36px;
-            border-radius: 50%;
+            border-radius: 12px;
             background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
             display: flex;
             align-items: center;
@@ -612,11 +696,11 @@
         }
         .listing-avatar .online-dot {
             position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 10px;
-            height: 10px;
-            background: #28a745;
+            bottom: -1px;
+            right: -1px;
+            width: 9px;
+            height: 9px;
+            background: #10b981;
             border-radius: 50%;
             border: 2px solid var(--card-bg);
         }
@@ -650,21 +734,21 @@
         }
         .listing-avatars { display: flex; align-items: center; }
         .listing-avatars .mini-avatar {
-            width: 24px;
-            height: 24px;
+            width: 22px;
+            height: 22px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.6rem;
+            font-size: 0.58rem;
             font-weight: 700;
             color: #fff;
-            margin-right: -6px;
+            margin-right: -5px;
             border: 1.5px solid var(--card-bg);
         }
         .mini-avatar.a1 { background: #e83e8c; }
-        .mini-avatar.a2 { background: #0d6efd; }
-        .mini-avatar.a3 { background: #20c997; }
+        .mini-avatar.a2 { background: #3b82f6; }
+        .mini-avatar.a3 { background: #10b981; }
 
         .listing-views { color: var(--text-tertiary); font-size: 0.76rem; display: flex; align-items: center; gap: 5px; }
         .listing-views strong { color: var(--text-primary); font-weight: 700; }
@@ -690,20 +774,20 @@
         .listing-action-btn.open-btn { color: var(--accent-color); }
         .listing-action-btn.open-btn:hover { background: var(--accent-light); }
 
+        /* ─── BOTTOM NAVIGATION ─── */
         .bottom-nav {
             position: fixed;
-            bottom: 14px;
-            bottom: calc(14px + env(safe-area-inset-bottom));
+            bottom: calc(12px + var(--safe-bottom));
             left: 50%;
             transform: translateX(-50%);
             max-width: 420px;
             width: calc(100% - 24px);
             background: var(--card-bg);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
             border: var(--glass-border);
-            border-radius: 20px;
-            padding: 5px 6px;
+            border-radius: 22px;
+            padding: 4px 6px;
             display: flex;
             justify-content: space-around;
             align-items: center;
@@ -717,8 +801,8 @@
             align-items: center;
             justify-content: center;
             gap: 3px;
-            padding: 6px 10px;
-            border-radius: 14px;
+            padding: 7px 12px;
+            border-radius: 16px;
             border: none;
             background: transparent;
             color: var(--text-tertiary);
@@ -732,35 +816,39 @@
         .nav-item.active { color: var(--accent-color); background: var(--accent-light); }
         .nav-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
 
+        /* ─── FULL SCREEN LOADER ─── */
         .full-screen-loader {
             position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
+            inset: 0;
             display: none;
-            align-items: center; justify-content: center;
-            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            z-index: 8000;
             opacity: 0;
             transition: opacity 0.3s ease;
         }
         .full-screen-loader.active { display: flex; opacity: 1; }
         .loader-blur-bg {
             position: absolute; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.45);
+            background: rgba(0, 0, 0, 0.55);
             backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
         }
         .loader-modal {
             position: relative;
             z-index: 10;
-            max-width: 340px; width: 90%;
+            max-width: 320px;
+            width: 88%;
             padding: 28px 20px;
             text-align: center;
-            border-radius: 22px;
+            border-radius: 24px;
             border: var(--glass-border);
-            background: var(--card-bg);
+            background: var(--dialog-bg);
             backdrop-filter: var(--card-blur);
         }
         .pipeline-spinner-ring {
-            width: 38px; height: 38px;
-            border: 3px solid rgba(0,0,0,0.1);
+            width: 40px; height: 40px;
+            border: 3px solid var(--divider);
             border-top-color: var(--accent-color);
             border-radius: 50%;
             animation: spin 0.8s infinite linear;
@@ -768,24 +856,32 @@
         }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
+        .loader-modal h4 { color: var(--text-primary); font-size: 1.05rem; margin-bottom: 4px; }
+        .loader-modal p { color: var(--text-secondary); font-size: 0.82rem; }
+
+        /* ─── TOAST ─── */
         .toast {
             position: fixed;
-            bottom: 80px;
+            bottom: calc(82px + var(--safe-bottom));
             left: 50%;
-            transform: translateX(-50%) translateY(50px);
-            background: var(--card-bg);
+            transform: translateX(-50%) translateY(40px);
+            background: var(--dialog-bg);
             backdrop-filter: var(--card-blur);
+            -webkit-backdrop-filter: var(--card-blur);
             border: var(--glass-border);
-            border-radius: 12px;
-            padding: 9px 18px;
+            border-radius: 14px;
+            padding: 10px 18px;
             color: var(--text-primary);
-            font-size: 0.82rem;
+            font-size: 0.84rem;
             box-shadow: var(--glass-shadow);
-            z-index: 2000;
+            z-index: 9000;
             opacity: 0;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             pointer-events: none;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
@@ -800,56 +896,51 @@
         .tab-iframe.active { display: block; }
         .home-content-wrapper { display: flex; flex-direction: column; width: 100%; flex: 1; }
         .home-content-wrapper.hidden { display: none; }
-
-        /* ─── RESPONSIVE ─── */
-        @media (max-width: 420px) {
-            .glass-dialog { padding: 24px 20px; }
-            .glass-dialog .dialog-actions { flex-direction: column; }
-            .glass-dialog .btn-primary, .glass-dialog .btn-secondary { width: 100%; justify-content: center; }
-        }
     </style>
 </head>
 <body>
 
-    <!-- ─── SPLASH SCREEN ─── -->
+    <!-- ─── SOPHISTICATED SPLASH SCREEN ─── -->
     <div id="splashScreen">
-        <div class="splash-pulse-ring"></div>
-        <div class="splash-pulse-ring"></div>
+        <div class="splash-brand-emblem">
+            <div class="splash-ring"></div>
+            <div class="splash-ring"></div>
+            <div class="splash-glass-badge">
+                <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="9" y1="7" x2="16" y2="7"/><line x1="9" y1="11" x2="14" y2="11"/></svg>
+            </div>
+        </div>
         <div class="splash-content">
-            <div class="splash-logo">EasyRead</div>
+            <div class="splash-logo">Easy<span>Read</span></div>
             <div class="splash-subtitle">Knowledge, Simplified</div>
-            <div class="splash-loader-track">
-                <div class="splash-loader-bar"></div>
+            <div class="splash-progress-wrapper">
+                <div class="splash-loader-track">
+                    <div class="splash-loader-bar" id="splashBar"></div>
+                </div>
+                <span class="splash-percent" id="splashPercent">0%</span>
             </div>
         </div>
     </div>
 
-    <!-- ─── REUSABLE GLASS DIALOG (with SVG icons) ─── -->
+    <!-- ─── REUSABLE GLASS DIALOG ─── -->
     <div class="glass-overlay" id="glassOverlay">
         <div class="glass-dialog">
-            <div class="dialog-icon" id="dialogIcon">
-                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <div class="dialog-icon-wrapper" id="dialogIcon">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
             </div>
-            <h3 id="dialogTitle">Install EasyRead</h3>
-            <p id="dialogMessage">Get the full app experience with offline access and push notifications.</p>
+            <h3 id="dialogTitle">Notice</h3>
+            <p id="dialogMessage">Get the full app experience.</p>
             <div class="dialog-actions" id="dialogActions">
-                <button class="btn-primary" id="dialogPrimaryBtn">Install</button>
-                <button class="btn-secondary" id="dialogSecondaryBtn">Maybe Later</button>
+                <button class="btn-dialog btn-secondary" id="dialogSecondaryBtn">Cancel</button>
+                <button class="btn-dialog btn-primary" id="dialogPrimaryBtn">Confirm</button>
             </div>
-            <button class="btn-dismiss" id="dialogDismissBtn">Dismiss</button>
         </div>
     </div>
 
-    <!-- ─── OFFLINE OVERLAY (dismissible) ─── -->
-    <div class="offline-overlay" id="offlineOverlay">
-        <div class="offline-dialog glass-card">
-            <div class="icon">
-                <svg viewBox="0 0 24 24"><path d="M5 12.5a8 8 0 0 1 14 0"/><path d="M8 16.5a5 5 0 0 1 8 0"/><path d="M12 20.5v-0.5"/></svg>
-            </div>
-            <h3>No Internet Connection</h3>
-            <p>Please check your connection. You can still view cached content.</p>
-            <button class="btn-retry" onclick="retryConnection()">Retry</button>
-            <button class="btn-dismiss-offline" onclick="dismissOffline()">Dismiss</button>
+    <!-- ─── BOTTOM SLIDING OFFLINE BANNER ─── -->
+    <div id="offlineBanner">
+        <div class="banner-left">
+            <svg viewBox="0 0 24 24"><path d="M5 12.5a8 8 0 0 1 14 0"/><path d="M8 16.5a5 5 0 0 1 8 0"/><path d="M12 20.5v-0.5"/></svg>
+            <span id="offlineBannerText">No connection — viewing offline cache</span>
         </div>
     </div>
 
@@ -863,6 +954,12 @@
                 <div class="brand-section">
                     <h1 class="brand-title"><span class="dark">Easy</span><span class="orange">Read</span></h1>
                     <p class="tagline">Explained in a way only you understand</p>
+                </div>
+
+                <!-- Inline Offline Indicator -->
+                <div class="inline-offline-badge" id="inlineOfflineBadge">
+                    <svg viewBox="0 0 24 24"><path d="M5 12.5a8 8 0 0 1 14 0"/><path d="M8 16.5a5 5 0 0 1 8 0"/><path d="M12 20.5v-0.5"/></svg>
+                    <span>Offline mode &bull; showing cached feed</span>
                 </div>
 
                 <div class="login-notice-banner glass-card" id="loginNotice">
@@ -938,23 +1035,32 @@
         </nav>
     </div>
 
-    <!-- ─── FULL SCREEN LOADER ─── -->
+    <!-- ─── FULL SCREEN GENERATING LOADER ─── -->
     <div class="full-screen-loader" id="fullscreenLoader">
         <div class="loader-blur-bg"></div>
         <div class="loader-modal glass-card">
             <div class="pipeline-spinner-ring"></div>
-            <h4 id="loaderStageTitle">Generating Explanation...</h4>
-            <p id="loaderStageSub">Delegating to explanation processing engine</p>
+            <h4 id="loaderStageTitle">Simplifying Knowledge...</h4>
+            <p id="loaderStageSub">Tailoring explanation to your personal learning profile</p>
         </div>
     </div>
 
     <script>
-        // ─── CONFIG ───
+        // ─── CONFIG & KEYS ───
         const API_BASE_URL = '/api';
-        const CACHE_VERSION = 'easyread-v1';
-        const CACHE_URLS = ['/', '/blog.html', '/profile.html'];
+        const STORAGE_ARTICLES_KEY = 'easyread_cached_articles';
+        const STORAGE_CATEGORIES_KEY = 'easyread_cached_categories';
 
-        // ─── REUSABLE GLASS DIALOG ───
+        // ─── ICONS DICTIONARY ───
+        const ICONS = {
+            download: `<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`,
+            bell: `<svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`,
+            alert: `<svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+            check: `<svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+            info: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`
+        };
+
+        // ─── GLASS DIALOG SYSTEM ───
         const GlassDialog = {
             overlay: document.getElementById('glassOverlay'),
             icon: document.getElementById('dialogIcon'),
@@ -962,41 +1068,28 @@
             message: document.getElementById('dialogMessage'),
             primaryBtn: document.getElementById('dialogPrimaryBtn'),
             secondaryBtn: document.getElementById('dialogSecondaryBtn'),
-            dismissBtn: document.getElementById('dialogDismissBtn'),
             _resolve: null,
 
             show(options = {}) {
                 return new Promise((resolve) => {
                     this._resolve = resolve;
-                    // Use SVG icon if provided, otherwise fallback to text
-                    if (options.iconSvg) {
-                        this.icon.innerHTML = options.iconSvg;
-                    } else {
-                        this.icon.innerHTML = options.icon || '📱';
-                    }
+                    this.icon.innerHTML = ICONS[options.icon] || options.iconSvg || ICONS.info;
                     this.title.textContent = options.title || 'EasyRead';
-                    this.message.textContent = options.message || 'Get the full app experience.';
-                    this.primaryBtn.textContent = options.primaryText || 'OK';
+                    this.message.textContent = options.description || options.message || '';
+                    this.primaryBtn.textContent = options.primaryText || 'Confirm';
                     this.secondaryBtn.textContent = options.secondaryText || 'Cancel';
                     this.secondaryBtn.style.display = options.hideSecondary ? 'none' : 'inline-flex';
-                    this.dismissBtn.style.display = options.hideDismiss ? 'none' : 'inline-block';
 
-                    // Remove old listeners
                     const newPrimary = this.primaryBtn.cloneNode(true);
                     const newSecondary = this.secondaryBtn.cloneNode(true);
-                    const newDismiss = this.dismissBtn.cloneNode(true);
                     this.primaryBtn.parentNode.replaceChild(newPrimary, this.primaryBtn);
                     this.secondaryBtn.parentNode.replaceChild(newSecondary, this.secondaryBtn);
-                    this.dismissBtn.parentNode.replaceChild(newDismiss, this.dismissBtn);
 
-                    // Re-assign
                     this.primaryBtn = newPrimary;
                     this.secondaryBtn = newSecondary;
-                    this.dismissBtn = newDismiss;
 
                     this.primaryBtn.addEventListener('click', () => { this.hide(); resolve(true); });
                     this.secondaryBtn.addEventListener('click', () => { this.hide(); resolve(false); });
-                    this.dismissBtn.addEventListener('click', () => { this.hide(); resolve(false); });
 
                     this.overlay.classList.add('active');
                 });
@@ -1011,137 +1104,7 @@
             }
         };
 
-        // ─── OFFLINE HANDLING ───
-        let isOnline = navigator.onLine;
-        const offlineOverlay = document.getElementById('offlineOverlay');
-
-        function updateOnlineStatus() {
-            isOnline = navigator.onLine;
-            if (!isOnline) {
-                offlineOverlay.classList.add('active');
-            } else {
-                offlineOverlay.classList.remove('active');
-            }
-        }
-
-        function dismissOffline() {
-            offlineOverlay.classList.remove('active');
-        }
-
-        window.addEventListener('online', updateOnlineStatus);
-        window.addEventListener('offline', updateOnlineStatus);
-        updateOnlineStatus();
-
-        function retryConnection() {
-            if (navigator.onLine) {
-                offlineOverlay.classList.remove('active');
-                showToast('Back online!');
-                fetchHomeFeed();
-            } else {
-                showToast('Still offline. Please check your connection.');
-            }
-        }
-
-        // ─── SERVICE WORKER REGISTRATION ───
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js')
-                .then(reg => {
-                    console.log('[SW] Registered');
-                    reg.addEventListener('updatefound', () => {
-                        const newWorker = reg.installing;
-                        newWorker.addEventListener('statechange', () => {
-                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                showToast('Update available! Refresh to apply.');
-                            }
-                        });
-                    });
-                })
-                .catch(() => console.log('[SW] Registration failed'));
-        }
-
-        // ─── CACHE STATIC ASSETS ───
-        async function cacheStaticAssets() {
-            try {
-                const cache = await caches.open(CACHE_VERSION);
-                await cache.addAll(CACHE_URLS);
-                console.log('[Cache] Static assets cached');
-            } catch (e) { /* ignore */ }
-        }
-        cacheStaticAssets();
-
-        // ─── SPLASH SCREEN ───
-        window.addEventListener('load', function() {
-            setTimeout(function() {
-                const splash = document.getElementById('splashScreen');
-                if (splash) splash.classList.add('hidden');
-            }, 600);
-
-            setTimeout(() => {
-                checkAndShowPrompts();
-            }, 2500);
-        });
-
-        // ─── PWA INSTALL & NOTIFICATION PROMPTS ───
-        let deferredPrompt = null;
-        let installPromptShown = false;
-        let notificationPromptShown = false;
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            console.log('[PWA] beforeinstallprompt fired');
-        });
-
-        async function checkAndShowPrompts() {
-            const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
-                                window.navigator.standalone === true;
-
-            // Install prompt - only if not installed and prompt exists
-            if (!isStandalone && !installPromptShown && deferredPrompt) {
-                installPromptShown = true;
-                const confirmed = await GlassDialog.show({
-                    iconSvg: `<svg viewBox="0 0 24 24" style="width:44px;height:44px;stroke:var(--accent-color);fill:none;stroke-width:1.8;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`,
-                    title: 'Install EasyRead',
-                    message: 'Get the full app experience with offline access, push notifications, and a home screen icon.',
-                    primaryText: 'Install App',
-                    secondaryText: 'Maybe Later',
-                    hideDismiss: true
-                });
-
-                if (confirmed && deferredPrompt) {
-                    deferredPrompt.prompt();
-                    const result = await deferredPrompt.userChoice;
-                    if (result.outcome === 'accepted') {
-                        showToast('EasyRead installed!');
-                    }
-                    deferredPrompt = null;
-                }
-            }
-
-            // Notification prompt
-            if (!notificationPromptShown && Notification.permission === 'default') {
-                notificationPromptShown = true;
-                const confirmed = await GlassDialog.show({
-                    iconSvg: `<svg viewBox="0 0 24 24" style="width:44px;height:44px;stroke:var(--accent-color);fill:none;stroke-width:1.8;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`,
-                    title: 'Enable Notifications',
-                    message: 'Get notified when your explanations are ready, new articles are published, and more.',
-                    primaryText: 'Allow',
-                    secondaryText: 'Not Now',
-                    hideDismiss: true
-                });
-
-                if (confirmed) {
-                    const perm = await Notification.requestPermission();
-                    if (perm === 'granted') {
-                        showToast('Notifications enabled!');
-                    } else {
-                        showToast('Notifications disabled');
-                    }
-                }
-            }
-        }
-
-        // ─── THEME ───
+        // ─── THEME HANDLING (Fix contrast in dark mode) ───
         let currentThemeSetting = localStorage.getItem('easyread-theme') || 'auto';
         function applyTheme(theme) {
             currentThemeSetting = theme;
@@ -1155,7 +1118,125 @@
         }
         applyTheme(currentThemeSetting);
 
-        // ─── STATE ───
+        // ─── NETWORK & OFFLINE SETUP ───
+        const offlineBanner = document.getElementById('offlineBanner');
+        const offlineBannerText = document.getElementById('offlineBannerText');
+        const inlineOfflineBadge = document.getElementById('inlineOfflineBadge');
+
+        function updateOnlineStatus() {
+            if (!navigator.onLine) {
+                inlineOfflineBadge.classList.add('active');
+                offlineBannerText.textContent = 'No connection — viewing offline cache';
+                offlineBanner.classList.remove('online-sync');
+                offlineBanner.classList.add('show');
+            } else {
+                inlineOfflineBadge.classList.remove('active');
+                if (offlineBanner.classList.contains('show')) {
+                    offlineBannerText.textContent = 'Back online — syncing articles';
+                    offlineBanner.classList.add('online-sync');
+                    setTimeout(() => {
+                        offlineBanner.classList.remove('show', 'online-sync');
+                    }, 2400);
+                }
+                fetchHomeFeed();
+                fetchHomeCategories();
+            }
+        }
+
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+
+        // ─── SERVICE WORKER ───
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(() => {});
+        }
+
+        // ─── SPLASH SCREEN ANIMATION ───
+        function runSplash() {
+            const bar = document.getElementById('splashBar');
+            const percent = document.getElementById('splashPercent');
+            const splash = document.getElementById('splashScreen');
+            let progress = 0;
+
+            const interval = setInterval(() => {
+                progress += Math.floor(Math.random() * 15) + 12;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    bar.style.width = '100%';
+                    percent.textContent = '100%';
+                    setTimeout(() => {
+                        splash.classList.add('hidden');
+                        setTimeout(checkPrompts, 1800);
+                    }, 350);
+                } else {
+                    bar.style.width = progress + '%';
+                    percent.textContent = progress + '%';
+                }
+            }, 70);
+        }
+
+        // ─── PROMPT TRIGGERS (Install & Push) ───
+        let deferredPrompt = null;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+        });
+
+        window.addEventListener('appinstalled', () => {
+            deferredPrompt = null;
+            showToast('🎉 EasyRead installed successfully!');
+        });
+
+        async function checkPrompts() {
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+            // 1. Install Prompt
+            if (!isStandalone && deferredPrompt && !sessionStorage.getItem('er_install_prompt_dismissed')) {
+                const installConfirmed = await GlassDialog.show({
+                    icon: 'download',
+                    title: 'Install EasyRead',
+                    description: 'Install EasyRead to get offline access, instant launch, and an distraction-free full screen reader.',
+                    primaryText: 'Install App',
+                    secondaryText: 'Later'
+                });
+
+                if (installConfirmed && deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const choice = await deferredPrompt.userChoice;
+                    if (choice.outcome === 'accepted') {
+                        showToast('EasyRead installed!');
+                    }
+                    deferredPrompt = null;
+                } else {
+                    sessionStorage.setItem('er_install_prompt_dismissed', 'true');
+                }
+                return;
+            }
+
+            // 2. Notification Prompt
+            if ('Notification' in window && Notification.permission === 'default' && !sessionStorage.getItem('er_notif_prompt_dismissed')) {
+                const notifConfirmed = await GlassDialog.show({
+                    icon: 'bell',
+                    title: 'Stay Informed',
+                    description: 'Get notified when your simplified explanations are ready and when fresh feed articles drop.',
+                    primaryText: 'Enable',
+                    secondaryText: 'Not Now'
+                });
+
+                if (notifConfirmed) {
+                    try {
+                        const perm = await Notification.requestPermission();
+                        if (perm === 'granted') {
+                            showToast('Notifications enabled!');
+                        }
+                    } catch { /* ignore */ }
+                }
+                sessionStorage.setItem('er_notif_prompt_dismissed', 'true');
+            }
+        }
+
+        // ─── STATE & FEED ───
         let currentCredits = parseFloat(localStorage.getItem('easyread-credits')) || 0;
         let inputMode = 'ask';
         let homeArticles = [];
@@ -1179,8 +1260,7 @@
         function formatTimeAgo(dateString) {
             if (!dateString) return 'Recently';
             const date = new Date(dateString);
-            const now = new Date();
-            const diff = Math.floor((now - date) / 1000);
+            const diff = Math.floor((new Date() - date) / 1000);
             if (diff < 60) return 'Just now';
             const mins = Math.floor(diff / 60);
             if (mins < 60) return `${mins}m ago`;
@@ -1205,22 +1285,30 @@
             }, 100);
         }
 
+        // Sync local storage modifications
         setInterval(() => {
-            const stored = localStorage.getItem('easyread-theme') || 'auto';
-            if (stored !== currentThemeSetting) applyTheme(stored);
+            const storedTheme = localStorage.getItem('easyread-theme') || 'auto';
+            if (storedTheme !== currentThemeSetting) applyTheme(storedTheme);
             const credits = parseFloat(localStorage.getItem('easyread-credits')) || 0;
             if (credits !== currentCredits) { currentCredits = credits; updateCreditsUI(); }
             updateLoginNotice();
-        }, 500);
+        }, 600);
 
-        // ─── MODE ───
+        // ─── INPUT / MODE ───
         function setMode(mode) {
             inputMode = mode;
             document.querySelectorAll('.mode-pill').forEach(p => p.classList.remove('active'));
             const ta = document.getElementById('submitTextArea');
-            if (mode === 'ask') { document.getElementById('btnAsk').classList.add('active'); ta.placeholder = "Ask a question about any topic..."; }
-            else if (mode === 'paste') { document.getElementById('btnPaste').classList.add('active'); ta.placeholder = "Paste your note or text here (min 20 chars)..."; }
-            else if (mode === 'website') { document.getElementById('btnWebsite').classList.add('active'); ta.placeholder = "Paste article URL (e.g., https://example.com/article)..."; }
+            if (mode === 'ask') {
+                document.getElementById('btnAsk').classList.add('active');
+                ta.placeholder = "Ask a question about any topic...";
+            } else if (mode === 'paste') {
+                document.getElementById('btnPaste').classList.add('active');
+                ta.placeholder = "Paste your note or text here (min 20 chars)...";
+            } else if (mode === 'website') {
+                document.getElementById('btnWebsite').classList.add('active');
+                ta.placeholder = "Paste article URL (e.g., https://example.com/article)...";
+            }
         }
 
         const textarea = document.getElementById('submitTextArea');
@@ -1228,13 +1316,13 @@
         textarea.addEventListener('input', () => {
             const len = textarea.value.length;
             charCounter.textContent = `${len.toLocaleString()} / 50k`;
-            charCounter.style.color = len > 50000 ? '#ff3b30' : 'var(--text-tertiary)';
+            charCounter.style.color = len > 50000 ? '#ef4444' : 'var(--text-tertiary)';
         });
 
-        // ─── SUBMIT ───
+        // ─── SUBMISSION ENGINE ───
         async function submitPipeline() {
-            if (!isOnline) {
-                showToast('No internet connection. Please try again later.');
+            if (!navigator.onLine) {
+                showToast('Offline: Generating explanations requires internet.');
                 return;
             }
 
@@ -1250,9 +1338,9 @@
             }
 
             const userInput = textarea.value.trim();
-            if (!userInput) { showToast('Please enter text first'); return; }
+            if (!userInput) { showToast('Please enter content'); return; }
             if (inputMode === 'ask' && userInput.length < 5) { showToast('Question is too short (min 5 chars)'); return; }
-            if (inputMode === 'paste' && userInput.length < 20) { showToast('Paste requires at least 20 characters'); return; }
+            if (inputMode === 'paste' && userInput.length < 20) { showToast('Text must be at least 20 characters'); return; }
             if (inputMode === 'website' && !userInput.startsWith('http')) { showToast('Please enter a valid URL'); return; }
 
             const loader = document.getElementById('fullscreenLoader');
@@ -1281,25 +1369,38 @@
             }
         }
 
-        // ─── FEED ───
+        // ─── OFFLINE RESILIENT DATA FETCHING ───
         async function fetchHomeCategories() {
             const container = document.getElementById('categoriesScroll');
             if (!container) return;
-            try {
-                const res = await fetch(`${API_BASE_URL}/category?action=list`);
-                if (!res.ok) throw new Error();
-                const data = await res.json();
-                const categories = Array.isArray(data) ? data : (data.categories || []);
-                let html = `<button class="category-pill ${activeCategory === 'All' ? 'active' : ''}" onclick="filterHomeCategory('All', this)">For you</button>`;
-                categories.forEach(cat => {
-                    const name = typeof cat === 'string' ? cat : (cat.name || cat.canonical_name);
-                    if (name) {
-                        const isActive = activeCategory.toLowerCase() === name.toLowerCase();
-                        html += `<button class="category-pill ${isActive ? 'active' : ''}" onclick="filterHomeCategory('${escapeHtml(name)}', this)">${escapeHtml(name)}</button>`;
+
+            let categories = [];
+            if (navigator.onLine) {
+                try {
+                    const res = await fetch(`${API_BASE_URL}/category?action=list`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        categories = Array.isArray(data) ? data : (data.categories || []);
+                        localStorage.setItem(STORAGE_CATEGORIES_KEY, JSON.stringify(categories));
                     }
-                });
-                container.innerHTML = html;
-            } catch { /* ignore */ }
+                } catch { /* fallback to cache */ }
+            }
+
+            if (!categories.length) {
+                try {
+                    categories = JSON.parse(localStorage.getItem(STORAGE_CATEGORIES_KEY) || '[]');
+                } catch { categories = []; }
+            }
+
+            let html = `<button class="category-pill ${activeCategory === 'All' ? 'active' : ''}" onclick="filterHomeCategory('All', this)">For you</button>`;
+            categories.forEach(cat => {
+                const name = typeof cat === 'string' ? cat : (cat.name || cat.canonical_name);
+                if (name) {
+                    const isActive = activeCategory.toLowerCase() === name.toLowerCase();
+                    html += `<button class="category-pill ${isActive ? 'active' : ''}" onclick="filterHomeCategory('${escapeHtml(name)}', this)">${escapeHtml(name)}</button>`;
+                }
+            });
+            container.innerHTML = html;
         }
 
         function filterHomeCategory(cat, elem) {
@@ -1311,22 +1412,39 @@
 
         async function fetchHomeFeed() {
             const container = document.getElementById('homeListingContainer');
+            if (navigator.onLine) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/article?action=list`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        homeArticles = Array.isArray(data) ? data : (data.articles || []);
+                        localStorage.setItem(STORAGE_ARTICLES_KEY, JSON.stringify(homeArticles));
+                        renderFeed();
+                        return;
+                    }
+                } catch { /* proceed to cache */ }
+            }
+
+            // Fallback to cache
             try {
-                const response = await fetch(`${API_BASE_URL}/article?action=list`);
-                if (!response.ok) throw new Error();
-                const data = await response.json();
-                homeArticles = Array.isArray(data) ? data : (data.articles || []);
+                homeArticles = JSON.parse(localStorage.getItem(STORAGE_ARTICLES_KEY) || '[]');
+            } catch { homeArticles = []; }
+
+            if (homeArticles.length > 0) {
                 renderFeed();
-            } catch (err) {
-                container.innerHTML = `<div style="text-align:center; color:var(--text-secondary); padding:2rem 0; font-size:0.85rem;">No articles available.</div>`;
+            } else {
+                container.innerHTML = `<div style="text-align:center; color:var(--text-secondary); padding:2rem 0; font-size:0.85rem;">No articles available offline yet.</div>`;
             }
         }
 
         function renderFeed() {
             const container = document.getElementById('homeListingContainer');
-            const filtered = activeCategory === 'All' ? homeArticles : homeArticles.filter(a => Array.isArray(a.categories) && a.categories.includes(activeCategory));
+            const filtered = activeCategory === 'All'
+                ? homeArticles
+                : homeArticles.filter(a => Array.isArray(a.categories) && a.categories.some(c => c.toLowerCase() === activeCategory.toLowerCase()));
+
             if (filtered.length === 0) {
-                container.innerHTML = `<div style="text-align:center; color:var(--text-secondary); padding:2rem 0; font-size:0.85rem;">No articles found in this category.</div>`;
+                container.innerHTML = `<div style="text-align:center; color:var(--text-secondary); padding:2.5rem 0; font-size:0.85rem;">No articles found in this category.</div>`;
                 return;
             }
             container.innerHTML = '';
@@ -1367,7 +1485,7 @@
         function shareArticleLink(title, identifier) {
             const url = window.location.origin + '/article/' + encodeURIComponent(identifier);
             if (navigator.share) {
-                navigator.share({ title: title || 'EasyRead Article', text: 'Read this simplified article on EasyRead!', url }).catch(() => {});
+                navigator.share({ title: title || 'EasyRead Article', text: 'Read this simplified explanation on EasyRead', url }).catch(() => {});
             } else {
                 navigator.clipboard.writeText(url).then(() => showToast('Link copied!')).catch(() => showToast('Failed to copy'));
             }
@@ -1382,7 +1500,7 @@
             }
         }
 
-        // ─── TAB SWITCHING ───
+        // ─── TABS ───
         function switchTab(tab) {
             document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
             const activeNav = document.querySelector(`[data-tab="${tab}"]`);
@@ -1422,13 +1540,15 @@
             toast.textContent = message;
             toast.classList.add('show');
             clearTimeout(toast._timeout);
-            toast._timeout = setTimeout(() => toast.classList.remove('show'), 2200);
+            toast._timeout = setTimeout(() => toast.classList.remove('show'), 2400);
         }
 
         // ─── INIT ───
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', () => {
+            runSplash();
             updateCreditsUI();
             updateLoginNotice();
+            updateOnlineStatus();
             fetchHomeCategories();
             fetchHomeFeed();
         });
