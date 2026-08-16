@@ -1,5 +1,5 @@
 // api/view.js
-// EasyRead Article View - Full article viewer with dynamic personas, accordions, bookmarks, and deep dives
+// EasyRead Article View - Full article viewer with dynamic personas, accordions, bookmarks, and read recording
 
 import { 
   supabase,
@@ -86,8 +86,61 @@ export default async function handler(req, res) {
 }
 
 // ============================================
-// RENDER ARTICLE PAGE
+// RENDER ARTICLE PAGE & RECORD USER READS
 // ============================================
+async function recordReadingHistory(article_id, user_id) {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const { data: existing } = await supabase
+      .from('reading_history')
+      .select('history_id')
+      .eq('user_id', user_id)
+      .eq('article_id', parseInt(article_id))
+      .eq('date', today)
+      .maybeSingle();
+
+    if (!existing) {
+      await insert('reading_history', {
+        user_id,
+        article_id: parseInt(article_id),
+        date: today,
+        viewed_at: new Date().toISOString()
+      });
+    } else {
+      await supabase
+        .from('reading_history')
+        .update({ viewed_at: new Date().toISOString() })
+        .eq('history_id', existing.history_id);
+    }
+
+    // Update usage
+    const { data: todayUsage } = await supabase
+      .from('usage')
+      .select('usage_id, articles_read')
+      .eq('user_id', user_id)
+      .eq('date', today)
+      .maybeSingle();
+
+    if (todayUsage) {
+      await supabase
+        .from('usage')
+        .update({ articles_read: (todayUsage.articles_read || 0) + 1 })
+        .eq('usage_id', todayUsage.usage_id);
+    } else {
+      await insert('usage', {
+        user_id,
+        date: today,
+        articles_read: 1,
+        questions: 0,
+        deep_dives: 0,
+        credits_used: 0
+      });
+    }
+  } catch (err) {
+    console.error('Record reading history error:', err);
+  }
+}
+
 async function renderArticlePage(req, res) {
   const { id, slug } = req.query;
   const user_id = req.headers['x-user-id'] || req.query.user_id;
@@ -110,6 +163,11 @@ async function renderArticlePage(req, res) {
     const viewCount = (article.view_count || 0) + 1;
     await supabase.from('articles').update({ view_count: viewCount }).eq('article_id', article.article_id);
     article.view_count = viewCount;
+
+    // Record reading history on server if authenticated
+    if (user_id) {
+      await recordReadingHistory(article.article_id, user_id);
+    }
 
     // Fetch explanations
     const { data: explanations } = await supabase
@@ -247,7 +305,7 @@ async function removeBookmark(req, res) {
 async function getBookmarkStatus(req, res) {
   const { article_id } = req.query;
   const user_id = req.headers['x-user-id'] || req.query.user_id;
-  if (!user_id) return res.json({ isBookmarked: false, isAuthenticated: false });
+  if (!user_id || !article_id) return res.json({ isBookmarked: false, isAuthenticated: false });
 
   try {
     const { data: bm } = await supabase
@@ -364,7 +422,6 @@ function buildArticleHTML({
   const canonicalUrl = `${SITE_URL}/article/${encodeURIComponent(article.slug || article.article_id)}`;
   const cleanSummary = (defaultExplanation?.summary || article.summary || '').replace(/"/g, '&quot;');
 
-  // Profile partitioning for "+ More" modal
   const VISIBLE_PROFILE_COUNT = 4;
   const visibleProfiles = profiles.slice(0, VISIBLE_PROFILE_COUNT);
   const overflowProfiles = profiles.slice(VISIBLE_PROFILE_COUNT);
@@ -873,7 +930,14 @@ function syncClientState() {
       if (display) display.textContent = currentCredits.toFixed(1);
     }
 
-    // Sync live bookmark status
+    // 1. Record reading history on client load
+    fetch('/api/articles?action=track-view', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-user-id': userId },
+      body: JSON.stringify({ article_id: currentArticleId, user_id: userId })
+    }).catch(() => {});
+
+    // 2. Sync live bookmark status
     fetch('/api/view?action=bookmark-status&article_id=' + currentArticleId, {
       headers: { 'x-user-id': userId }
     })
@@ -1305,7 +1369,6 @@ window.addEventListener('scroll', () => {
     const progress = (scrollTop / docHeight) * 100;
     bar.style.width = progress + '%';
 
-    // Auto-prompt rating modal if user reached bottom and stayed for 10s
     if (progress >= 85 && !hasUserRated && !hasShownAutoRating && isAuthenticated) {
       if (!autoRatingTimer) {
         autoRatingTimer = setTimeout(() => {
@@ -1613,7 +1676,7 @@ body {
 }
 .skeleton-line::after {
   position: absolute; inset: 0; transform: translateX(-100%);
-  background-image: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%);
+  background-image: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0 100%);
   animation: shimmerSwipe 1.5s infinite; content: '';
 }
 @keyframes shimmerSwipe { 100% { transform: translateX(100%); } }
