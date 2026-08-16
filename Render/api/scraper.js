@@ -5,6 +5,7 @@ import { Router } from "express";
 import fetch from "node-fetch";
 import * as cheerio from "cheerio";
 import crypto from "crypto";
+import cors from "cors";
 import { 
   supabase,
   getById,
@@ -29,6 +30,80 @@ const BATCH_SIZE = parseInt(process.env.SCRAPER_BATCH_SIZE) || 3;
 const MAX_RETRIES = parseInt(process.env.SCRAPER_MAX_RETRIES) || 3;
 const MIN_WORD_COUNT = 200;
 const REFRESH_INTERVAL_DAYS = 14;
+
+// ============================================
+// CORS CONFIGURATION
+// ============================================
+
+const allowedOrigins = [
+  'https://easytoread.vercel.app',
+  'https://my-fcm-server.onrender.com',
+  'https://easyread.rf.gd',
+  // Include www subdomains
+  'https://www.easytoread.vercel.app',
+  'https://www.my-fcm-server.onrender.com',
+  'https://www.easyread.rf.gd'
+];
+
+// Helper function to check if origin is allowed (including subdomains)
+function isOriginAllowed(origin) {
+  if (!origin) return false;
+  
+  // Check exact match first
+  if (allowedOrigins.includes(origin)) return true;
+  
+  // Check for subdomains
+  try {
+    const url = new URL(origin);
+    const hostname = url.hostname;
+    
+    // Check if it's a subdomain of our allowed domains
+    return allowedOrigins.some(allowed => {
+      const allowedUrl = new URL(allowed);
+      const allowedHostname = allowedUrl.hostname;
+      
+      // Check if hostname ends with .allowedHostname (for subdomains)
+      return hostname.endsWith('.' + allowedHostname);
+    });
+  } catch (error) {
+    return false;
+  }
+}
+
+// CORS options
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) {
+      return callback(null, true);
+    }
+    
+    if (isOriginAllowed(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`⚠️ CORS blocked for origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'x-admin-key',
+    'Accept',
+    'Origin',
+    'X-Requested-With'
+  ],
+  credentials: true,
+  optionsSuccessStatus: 200,
+  maxAge: 86400 // 24 hours
+};
+
+// Apply CORS middleware to all routes
+router.use(cors(corsOptions));
+
+// Handle preflight requests explicitly
+router.options('*', cors(corsOptions));
 
 // ============================================
 // LOGGING
@@ -68,17 +143,17 @@ let stats = {
 
 async function authenticateUser(userId) {
   if (!userId) return null;
-  
+
   const users = await getByColumn('users', 'user_id', userId);
   if (users.length === 0) return null;
-  
+
   return users[0];
 }
 
 async function checkUserCredits(userId, requiredCredits = 1) {
   const user = await authenticateUser(userId);
   if (!user) return { valid: false, error: "User not found" };
-  
+
   // Check if user has enough credits for context submission (1 credit)
   if (user.credits < requiredCredits) {
     return { 
@@ -88,13 +163,13 @@ async function checkUserCredits(userId, requiredCredits = 1) {
       required: requiredCredits
     };
   }
-  
+
   // Check daily limit (50 credits per day)
   const today = new Date().toISOString().split('T')[0];
   const usageRecords = await getByColumn('usage', 'user_id', userId);
   const todayUsage = usageRecords.find(u => u.date === today);
   const dailyCreditsUsed = todayUsage ? todayUsage.credits_used : 0;
-  
+
   if (dailyCreditsUsed + requiredCredits > 50) {
     return {
       valid: false,
@@ -104,19 +179,19 @@ async function checkUserCredits(userId, requiredCredits = 1) {
       remaining: 50 - dailyCreditsUsed
     };
   }
-  
+
   return { valid: true, user };
 }
 
 async function deductUserCredits(userId, amount = 1, reason = 'context_submit') {
   const users = await getByColumn('users', 'user_id', userId);
   if (users.length === 0) return null;
-  
+
   const user = users[0];
   const newCredits = user.credits - amount;
-  
+
   await update('users', userId, { credits: newCredits });
-  
+
   // Log transaction
   await insert('credit_transactions', {
     user_id: userId,
@@ -124,12 +199,12 @@ async function deductUserCredits(userId, amount = 1, reason = 'context_submit') 
     reason: reason,
     balance_after: newCredits
   });
-  
+
   // Update usage
   const today = new Date().toISOString().split('T')[0];
   const usageRecords = await getByColumn('usage', 'user_id', userId);
   const todayUsage = usageRecords.find(u => u.date === today);
-  
+
   if (todayUsage) {
     await update('usage', todayUsage.usage_id, {
       credits_used: (todayUsage.credits_used || 0) + amount,
@@ -146,7 +221,7 @@ async function deductUserCredits(userId, amount = 1, reason = 'context_submit') 
       articles_read: 0
     });
   }
-  
+
   return { newCredits };
 }
 
@@ -738,14 +813,6 @@ export async function processPendingJobs() {
 
   return { processed, failed };
 }
-
-// ============================================
-// (Rest of the functions remain the same)
-// processJob, fetchContent, extractContent, 
-// checkQuality, checkDuplicate, saveArticle, 
-// sendToProcessor, updateJobStage, failJob, 
-// completeJob, helper functions...
-// ============================================
 
 async function processJob(job) {
   const jobId = job.job_id;
