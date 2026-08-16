@@ -2,109 +2,159 @@
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-  <title>Kx Admin · Command Center</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <title>EasyRead Admin · Command Center</title>
+  
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
   <style>
-    /* ─── ROOT (borrowed from settings.html) ─── */
+    /* ─── DESIGN TOKENS & SYSTEM ─── */
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    *:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 2px; }
 
     :root {
-      --theme-primary: #ff4fb2;
-      --theme-primary-hover: #e6459e;
-      --theme-bg: #000000;
-      --theme-surface: #1a1a1a;
-      --theme-surface-elevated: #222222;
-      --theme-text: #ffffff;
-      --theme-text-secondary: rgba(255, 255, 255, 0.55);
-      --theme-text-tertiary: rgba(255, 255, 255, 0.3);
-      --theme-border: rgba(255, 255, 255, 0.08);
-      --theme-glass-bg: rgba(255, 255, 255, 0.06);
-      --card-bg: rgba(26, 26, 26, 0.75);
-      --card-hover: rgba(34, 34, 34, 0.9);
-      --card-blur: blur(16px);
-      --glass-shadow: 0 10px 30px -8px rgba(0,0,0,0.7);
+      --bg-color: #09090b;
+      --bg-glow: radial-gradient(circle at 50% 0%, rgba(245, 152, 71, 0.12) 0%, transparent 60%);
+      --text-primary: #f2f2f5;
+      --text-secondary: #a1a1aa;
+      --text-tertiary: #71717a;
+      --text-placeholder: #52525b;
+      
+      --card-bg: rgba(18, 18, 22, 0.75);
+      --card-bg-hover: rgba(26, 26, 32, 0.9);
+      --card-blur: blur(24px);
+      
+      --glass-border: 1px solid rgba(255, 255, 255, 0.09);
+      --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.05);
+      --glass-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+      
+      --mode-bg: rgba(255, 255, 255, 0.06);
+      --mode-bg-hover: rgba(255, 255, 255, 0.11);
+      
+      --accent-color: #f59847;
+      --accent-hover: #e08333;
+      --accent-glow: rgba(245, 152, 71, 0.25);
+      --accent-light: rgba(245, 152, 71, 0.12);
+      --divider: rgba(255, 255, 255, 0.07);
       
       --success: #10b981;
       --success-bg: rgba(16, 185, 129, 0.12);
-      --danger: #ff3b30;
-      --danger-bg: rgba(255, 59, 48, 0.12);
+      --success-border: rgba(16, 185, 129, 0.25);
+      
+      --danger: #ef4444;
+      --danger-bg: rgba(239, 68, 68, 0.12);
+      --danger-border: rgba(239, 68, 68, 0.25);
+      
       --warning: #f59e0b;
       --warning-bg: rgba(245, 158, 11, 0.12);
+      --warning-border: rgba(245, 158, 11, 0.25);
+
       --info: #3b82f6;
       --info-bg: rgba(59, 130, 246, 0.12);
-      
-      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --info-border: rgba(59, 130, 246, 0.25);
+
+      --shimmer-base: rgba(255, 255, 255, 0.04);
+      --shimmer-highlight: rgba(255, 255, 255, 0.09);
+
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
     }
 
     [data-theme="light"] {
-      --theme-bg: #f4f6f9;
-      --theme-surface: rgba(255,255,255,0.7);
-      --theme-surface-elevated: rgba(245,247,250,0.95);
-      --theme-text: #0f172a;
-      --theme-text-secondary: #475569;
-      --theme-text-tertiary: #94a3b8;
-      --theme-border: rgba(0,0,0,0.08);
-      --theme-glass-bg: rgba(0,0,0,0.03);
-      --card-bg: rgba(255,255,255,0.75);
-      --card-hover: rgba(245,247,250,0.9);
+      --bg-color: #f6f7f9 !important;
+      --bg-glow: radial-gradient(circle at 50% 0%, rgba(245, 152, 71, 0.08) 0%, transparent 65%) !important;
+      --text-primary: #111113 !important;
+      --text-secondary: #5c5c63 !important;
+      --text-tertiary: #8e8e96 !important;
+      --text-placeholder: #b0b0b8 !important;
+      --card-bg: rgba(255, 255, 255, 0.85) !important;
+      --card-bg-hover: rgba(255, 255, 255, 0.98) !important;
+      --glass-border: 1px solid rgba(0, 0, 0, 0.08) !important;
+      --glass-border-subtle: 1px solid rgba(0, 0, 0, 0.04) !important;
+      --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
+      --mode-bg: rgba(0, 0, 0, 0.04) !important;
+      --mode-bg-hover: rgba(0, 0, 0, 0.08) !important;
+      --divider: rgba(0, 0, 0, 0.06) !important;
+      --shimmer-base: rgba(0, 0, 0, 0.05) !important;
+      --shimmer-highlight: rgba(0, 0, 0, 0.09) !important;
     }
 
     body {
-      background: var(--theme-bg);
-      color: var(--theme-text);
+      background-color: var(--bg-color);
+      background-image: var(--bg-glow);
+      background-repeat: no-repeat;
+      background-size: 100% 500px;
+      color: var(--text-primary);
       font-family: var(--font-sans);
       min-height: 100vh;
       -webkit-font-smoothing: antialiased;
-      padding: 0;
-      margin: 0;
+      transition: background 0.3s ease, color 0.3s ease;
     }
 
-    /* ─── GLASS CONTAINER (settings vibe) ─── */
+    /* ─── APP CONTAINER ─── */
     .app-container {
-      max-width: 1400px;
+      max-width: 1360px;
       margin: 0 auto;
-      padding: 1.2rem 1.5rem 2rem;
+      padding: 1.4rem 1.6rem 3rem;
     }
 
-    /* ─── HEADER (settings style) ─── */
+    /* ─── HEADER ─── */
     .admin-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0.75rem 0 1rem;
-      border-bottom: 1px solid var(--theme-border);
-      margin-bottom: 1.5rem;
+      padding: 0.6rem 0 1.2rem;
+      border-bottom: 1px solid var(--divider);
+      margin-bottom: 1.6rem;
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 14px;
     }
 
     .brand-group {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
     .brand-logo {
-      font-size: 1.4rem;
+      font-size: 1.6rem;
       font-weight: 800;
-      letter-spacing: -0.5px;
-      color: var(--theme-text);
+      letter-spacing: -0.04em;
+      color: var(--text-primary);
       text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
     }
-    .brand-logo span { color: var(--theme-primary); }
+    .brand-logo span {
+      background: linear-gradient(135deg, var(--accent-color), #ffb85a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
     .badge-admin {
-      background: var(--theme-glass-bg);
-      border: 1px solid var(--theme-border);
-      color: var(--theme-text-secondary);
-      font-size: 0.6rem;
+      background: var(--accent-light);
+      border: 1px solid var(--accent-glow);
+      color: var(--accent-color);
+      font-size: 0.68rem;
       font-weight: 700;
-      padding: 0.2rem 0.6rem;
+      padding: 0.25rem 0.65rem;
       border-radius: 20px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.08em;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .badge-admin::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-color);
+      box-shadow: 0 0 8px var(--accent-color);
     }
 
     .header-controls {
@@ -117,434 +167,848 @@
     .key-input-wrapper {
       display: flex;
       align-items: center;
-      background: var(--theme-surface);
-      border: 1px solid var(--theme-border);
-      border-radius: 12px;
-      padding: 0.2rem 0.6rem 0.2rem 0.8rem;
-      gap: 6px;
+      background: var(--card-bg);
+      backdrop-filter: var(--card-blur);
+      border: var(--glass-border);
+      border-radius: 14px;
+      padding: 0.25rem 0.4rem 0.25rem 0.8rem;
+      gap: 8px;
+      box-shadow: var(--glass-shadow);
+      transition: border-color 0.2s;
     }
+    .key-input-wrapper:focus-within { border-color: var(--accent-color); }
+    .key-input-wrapper svg { width: 14px; height: 14px; stroke: var(--text-tertiary); fill: none; stroke-width: 2; }
     .key-input-wrapper input {
       background: transparent;
       border: none;
-      color: var(--theme-text);
+      color: var(--text-primary);
       font-family: var(--font-mono);
-      font-size: 0.72rem;
-      width: 160px;
+      font-size: 0.76rem;
+      width: 170px;
       outline: none;
-      padding: 6px 0;
+      padding: 5px 0;
     }
-    .key-input-wrapper input::placeholder { color: var(--theme-text-tertiary); }
+    .key-input-wrapper input::placeholder { color: var(--text-placeholder); }
 
+    /* ─── BUTTONS ─── */
     .btn {
-      background: var(--theme-glass-bg);
-      border: 1px solid var(--theme-border);
-      color: var(--theme-text);
-      padding: 0.45rem 0.9rem;
+      background: var(--mode-bg);
+      border: var(--glass-border-subtle);
+      color: var(--text-primary);
+      padding: 0.5rem 1rem;
       border-radius: 12px;
       font-family: inherit;
-      font-size: 0.78rem;
+      font-size: 0.8rem;
       font-weight: 600;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      transition: all 0.2s ease;
-      backdrop-filter: blur(4px);
+      justify-content: center;
+      gap: 7px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      backdrop-filter: blur(8px);
+      white-space: nowrap;
     }
-    .btn:hover { background: var(--theme-surface-elevated); border-color: var(--theme-primary); }
+    .btn:hover { background: var(--mode-bg-hover); transform: translateY(-1px); }
     .btn:active { transform: scale(0.96); }
-    .btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
-    .btn-primary { background: var(--theme-primary); color: #fff; border-color: var(--theme-primary); }
-    .btn-primary:hover { background: var(--theme-primary-hover); border-color: var(--theme-primary-hover); }
-    .btn-danger { background: var(--danger-bg); color: var(--danger); border-color: rgba(255,59,48,0.2); }
+    .btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    
+    .btn-primary { background: var(--accent-color); color: #fff; border-color: var(--accent-color); box-shadow: 0 4px 14px var(--accent-glow); }
+    .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+    
+    .btn-danger { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-border); }
     .btn-danger:hover { background: var(--danger); color: #fff; }
-    .btn-success { background: var(--success-bg); color: var(--success); border-color: rgba(16,185,129,0.2); }
+    
+    .btn-success { background: var(--success-bg); color: var(--success); border-color: var(--success-border); }
     .btn-success:hover { background: var(--success); color: #fff; }
+    
+    .btn-warning { background: var(--warning-bg); color: var(--warning); border-color: var(--warning-border); }
+    .btn-warning:hover { background: var(--warning); color: #fff; }
 
-    /* ─── TABS (settings-inspired pill) ─── */
+    .btn-icon { width: 38px; height: 38px; padding: 0; border-radius: 12px; }
+
+    /* ─── TABS NAVIGATION ─── */
     .tabs-nav {
       display: flex;
-      gap: 4px;
-      border-bottom: 1px solid var(--theme-border);
-      padding-bottom: 10px;
-      margin-bottom: 1.5rem;
+      gap: 6px;
+      padding-bottom: 12px;
+      margin-bottom: 1.6rem;
       overflow-x: auto;
       scrollbar-width: none;
-      flex-wrap: nowrap;
+      border-bottom: 1px solid var(--divider);
     }
     .tabs-nav::-webkit-scrollbar { display: none; }
 
     .tab-btn {
-      background: transparent;
-      border: 1px solid transparent;
-      color: var(--theme-text-secondary);
+      background: var(--card-bg);
+      border: var(--glass-border-subtle);
+      color: var(--text-secondary);
       font-family: inherit;
-      font-size: 0.8rem;
+      font-size: 0.82rem;
       font-weight: 600;
-      padding: 0.5rem 1rem;
-      border-radius: 30px;
+      padding: 0.55rem 1.1rem;
+      border-radius: 20px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      transition: all 0.2s;
+      gap: 7px;
+      transition: all 0.2s ease;
       white-space: nowrap;
     }
-    .tab-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
-    .tab-btn:hover { color: var(--theme-text); background: var(--theme-glass-bg); }
+    .tab-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; }
+    .tab-btn:hover { color: var(--text-primary); border-color: var(--accent-color); background: var(--card-bg-hover); }
     .tab-btn.active {
-      background: var(--theme-primary);
-      color: #fff;
-      border-color: var(--theme-primary);
-      box-shadow: 0 4px 14px rgba(255, 79, 178, 0.25);
+      background: var(--accent-color) !important;
+      color: #ffffff !important;
+      border-color: var(--accent-color) !important;
+      box-shadow: 0 4px 14px var(--accent-glow);
     }
     .tab-btn.active svg { stroke: #fff; }
 
-    .tab-pane { display: none; animation: fadeIn 0.25s ease; }
+    .tab-pane { display: none; animation: tabFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
     .tab-pane.active { display: block; }
-    @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes tabFadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
 
-    /* ─── STATS GRID (settings card style) ─── */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .stat-card {
-      background: var(--theme-surface);
-      border: 1px solid var(--theme-border);
-      border-radius: 18px;
-      padding: 1.2rem 1.2rem;
+    /* ─── GLASS PANEL & CARDS ─── */
+    .glass-card {
+      background: var(--card-bg);
+      backdrop-filter: var(--card-blur);
+      -webkit-backdrop-filter: var(--card-blur);
+      border: var(--glass-border);
+      border-radius: 20px;
       box-shadow: var(--glass-shadow);
-      transition: background 0.2s;
-    }
-    .stat-card:hover { background: var(--theme-surface-elevated); }
-    .stat-card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 6px;
-    }
-    .stat-card-title {
-      font-size: 0.65rem;
-      font-weight: 700;
-      color: var(--theme-text-tertiary);
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-    }
-    .stat-icon {
-      width: 32px; height: 32px;
-      border-radius: 10px;
-      background: var(--theme-glass-bg);
-      display: flex; align-items: center; justify-content: center;
-      color: var(--theme-primary);
-    }
-    .stat-icon svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; }
-    .stat-card-val {
-      font-size: 1.8rem;
-      font-weight: 800;
-      font-family: var(--font-mono);
-      letter-spacing: -0.5px;
-      color: var(--theme-text);
-    }
-    .stat-card-sub {
-      font-size: 0.7rem;
-      color: var(--theme-text-secondary);
-      margin-top: 4px;
+      transition: background 0.25s, border-color 0.25s;
     }
 
-    /* ─── PANEL (settings group) ─── */
     .panel {
-      background: var(--theme-surface);
-      border: 1px solid var(--theme-border);
-      border-radius: 18px;
-      padding: 1.2rem 1.4rem;
+      background: var(--card-bg);
+      backdrop-filter: var(--card-blur);
+      -webkit-backdrop-filter: var(--card-blur);
+      border: var(--glass-border);
+      border-radius: 22px;
+      padding: 1.4rem 1.6rem;
       margin-bottom: 1.5rem;
       box-shadow: var(--glass-shadow);
     }
+
     .panel-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 1rem;
+      gap: 12px;
+      margin-bottom: 1.2rem;
     }
     .panel-title {
-      font-size: 1rem;
+      font-size: 1.1rem;
       font-weight: 700;
-      color: var(--theme-text);
-      letter-spacing: -0.3px;
-    }
-
-    /* ─── TABLE ─── */
-    .table-responsive {
-      width: 100%;
-      overflow-x: auto;
-      border-radius: 14px;
-      border: 1px solid var(--theme-border);
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.78rem;
-      text-align: left;
-      white-space: nowrap;
-    }
-    th {
-      padding: 10px 14px;
-      background: var(--theme-glass-bg);
-      color: var(--theme-text-tertiary);
-      font-weight: 700;
-      text-transform: uppercase;
-      font-size: 0.6rem;
-      letter-spacing: 0.6px;
-      border-bottom: 1px solid var(--theme-border);
-    }
-    td {
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--theme-border);
-      color: var(--theme-text-secondary);
-    }
-    tr:last-child td { border-bottom: none; }
-    tr:hover td { background: var(--theme-glass-bg); color: var(--theme-text); }
-
-    /* ─── BADGE ─── */
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 0.15rem 0.6rem;
-      border-radius: 30px;
-      font-size: 0.65rem;
-      font-weight: 700;
-    }
-    .badge-success { background: var(--success-bg); color: var(--success); border:1px solid rgba(16,185,129,0.15); }
-    .badge-warning { background: var(--warning-bg); color: var(--warning); border:1px solid rgba(245,158,11,0.15); }
-    .badge-danger { background: var(--danger-bg); color: var(--danger); border:1px solid rgba(255,59,48,0.15); }
-    .badge-info { background: var(--info-bg); color: var(--info); border:1px solid rgba(59,130,246,0.15); }
-
-    /* ─── FORM ELEMENTS (settings style) ─── */
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 1.2rem;
-    }
-    .form-group { margin-bottom: 1rem; }
-    .form-label {
-      display: block;
-      font-size: 0.68rem;
-      font-weight: 700;
-      color: var(--theme-text-tertiary);
-      margin-bottom: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
-    }
-    .form-control {
-      width: 100%;
-      background: var(--theme-glass-bg);
-      border: 1px solid var(--theme-border);
-      border-radius: 12px;
-      padding: 10px 14px;
-      color: var(--theme-text);
-      font-family: inherit;
-      font-size: 0.85rem;
-      outline: none;
-      transition: border 0.2s;
-    }
-    .form-control:focus { border-color: var(--theme-primary); }
-    textarea.form-control { resize: vertical; min-height: 70px; }
-
-    /* ─── MODAL (settings confirm style) ─── */
-    .modal-overlay {
-      position: fixed;
-      inset:0; background: rgba(0,0,0,0.7);
-      backdrop-filter: blur(8px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
-      padding: 20px;
-    }
-    .modal-overlay.active { display: flex; }
-    .modal-card {
-      background: var(--theme-surface-elevated);
-      border: 1px solid var(--theme-border);
-      border-radius: 24px;
-      max-width: 520px;
-      width: 100%;
-      padding: 1.8rem;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.7);
-      position: relative;
-    }
-    .modal-close {
-      position: absolute; top: 16px; right: 18px;
-      background: transparent; border: none;
-      color: var(--theme-text-tertiary);
-      font-size: 1.2rem;
-      cursor: pointer;
-    }
-    .modal-close:hover { color: var(--theme-text); }
-
-    /* ─── TOAST ─── */
-    .toast {
-      position: fixed;
-      bottom: 24px; right: 24px;
-      background: var(--theme-surface-elevated);
-      backdrop-filter: blur(16px);
-      border: 1px solid var(--theme-border);
-      border-radius: 14px;
-      padding: 12px 20px;
-      font-weight: 600;
-      font-size: 0.85rem;
-      color: var(--theme-text);
-      box-shadow: 0 12px 30px rgba(0,0,0,0.6);
-      z-index: 3000;
-      opacity: 0;
-      transform: translateY(16px);
-      transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
-      pointer-events: none;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
       display: flex;
       align-items: center;
       gap: 8px;
     }
-    .toast.show { opacity:1; transform:translateY(0); pointer-events:auto; }
+    .panel-title svg { width: 18px; height: 18px; stroke: var(--accent-color); fill: none; stroke-width: 2; }
+
+    /* ─── STATS GRID ─── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      backdrop-filter: var(--card-blur);
+      border: var(--glass-border);
+      border-radius: 20px;
+      padding: 1.3rem 1.3rem;
+      box-shadow: var(--glass-shadow);
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card:hover {
+      background: var(--card-bg-hover);
+      border-color: rgba(245, 152, 71, 0.3);
+      transform: translateY(-2px);
+    }
+    .stat-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .stat-card-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .stat-icon {
+      width: 36px; height: 36px;
+      border-radius: 12px;
+      background: var(--accent-light);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--accent-color);
+      border: 1px solid var(--accent-glow);
+    }
+    .stat-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+    .stat-card-val {
+      font-size: 1.9rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      letter-spacing: -0.04em;
+      color: var(--text-primary);
+      line-height: 1.1;
+      margin-top: 4px;
+    }
+    .stat-card-sub {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* ─── TABLES ─── */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      border-radius: 16px;
+      border: var(--glass-border-subtle);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      text-align: left;
+      white-space: nowrap;
+    }
+    th {
+      padding: 12px 16px;
+      background: var(--mode-bg);
+      color: var(--text-tertiary);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid var(--divider);
+    }
+    td {
+      padding: 13px 16px;
+      border-bottom: 1px solid var(--divider);
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--mode-bg); color: var(--text-primary); }
+
+    /* ─── BADGES ─── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 0.2rem 0.65rem;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .badge-success { background: var(--success-bg); color: var(--success); border: 1px solid var(--success-border); }
+    .badge-warning { background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning-border); }
+    .badge-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger-border); }
+    .badge-info { background: var(--info-bg); color: var(--info); border: 1px solid var(--info-border); }
+
+    /* ─── FORM ELEMENTS ─── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.2rem;
+    }
+    .form-group { margin-bottom: 1.1rem; }
+    .form-label {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-tertiary);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .form-control {
+      width: 100%;
+      background: var(--mode-bg);
+      border: var(--glass-border-subtle);
+      border-radius: 12px;
+      padding: 10px 14px;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 500;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    .form-control:focus {
+      border-color: var(--accent-color);
+      background: var(--mode-bg-hover);
+      box-shadow: 0 0 0 3px var(--accent-light);
+    }
+    textarea.form-control { resize: vertical; min-height: 80px; }
+
+    /* ─── SHIMMER SKELETON ─── */
+    .skeleton-box {
+      background: linear-gradient(90deg, var(--shimmer-base) 25%, var(--shimmer-highlight) 50%, var(--shimmer-base) 75%);
+      background-size: 200% 100%;
+      animation: shimmerMove 1.4s ease-in-out infinite;
+      border-radius: 8px;
+      height: 16px;
+      width: 100%;
+    }
+    @keyframes shimmerMove { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    /* ─── GLASS MODAL ─── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 6000;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+    
+    .modal-card {
+      background: var(--card-bg);
+      backdrop-filter: var(--card-blur);
+      -webkit-backdrop-filter: var(--card-blur);
+      border: var(--glass-border);
+      border-radius: 26px;
+      max-width: 520px;
+      width: 100%;
+      padding: 2rem;
+      box-shadow: var(--glass-shadow);
+      position: relative;
+      transform: scale(0.94) translateY(14px);
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .modal-overlay.active .modal-card { transform: scale(1) translateY(0); }
+
+    .modal-close {
+      position: absolute; top: 20px; right: 20px;
+      background: var(--mode-bg); border: var(--glass-border-subtle);
+      color: var(--text-secondary);
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .modal-close:hover { background: var(--mode-bg-hover); color: var(--text-primary); }
+
+    /* ─── TOAST NOTIFICATIONS ─── */
+    .toast {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      background: var(--card-bg);
+      backdrop-filter: var(--card-blur);
+      border: var(--glass-border);
+      border-radius: 16px;
+      padding: 12px 18px;
+      font-weight: 600;
+      font-size: 0.84rem;
+      color: var(--text-primary);
+      box-shadow: var(--glass-shadow);
+      z-index: 9000;
+      opacity: 0;
+      transform: translateY(16px);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
     .toast-success { border-left: 4px solid var(--success); }
     .toast-error { border-left: 4px solid var(--danger); }
 
-    /* ─── RESPONSIVE ─── */
-    @media (max-width: 640px) {
-      .app-container { padding: 0.8rem 1rem; }
+    @media (max-width: 768px) {
+      .app-container { padding: 1rem; }
       .admin-header { flex-direction: column; align-items: stretch; }
-      .key-input-wrapper input { width: 120px; }
+      .header-controls { justify-content: space-between; }
+      .key-input-wrapper { flex: 1; }
+      .key-input-wrapper input { width: 100%; }
       .stats-grid { grid-template-columns: 1fr; }
-      .panel { padding: 1rem; }
     }
   </style>
 </head>
 <body>
+
   <div class="app-container">
 
-    <!-- HEADER (settings vibe) -->
+    <!-- ─── COMMAND CENTER HEADER ─── -->
     <header class="admin-header">
       <div class="brand-group">
-        <span class="brand-logo">Kx<span>Admin</span></span>
+        <a href="/" class="brand-logo">Easy<span>Read</span></a>
         <span class="badge-admin">Command Center</span>
       </div>
+
       <div class="header-controls">
         <div class="key-input-wrapper">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-1.5 1.5L12 11l4 4 5.5-5.5a2.12 2.12 0 0 0 0-3L19.5 4.5a2.12 2.12 0 0 0-3 0z"/><path d="M12 11L3 20l2 2 4-4 2 2 4-4-2-2"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M21 2l-2 2m-1.5 1.5L12 11l4 4 5.5-5.5a2.12 2.12 0 0 0 0-3L19.5 4.5a2.12 2.12 0 0 0-3 0z"/><path d="M12 11L3 20l2 2 4-4 2 2 4-4-2-2"/></svg>
           <input type="password" id="adminKeyInput" placeholder="ADMIN_API_KEY..." />
-          <button class="btn btn-primary" style="padding:0.2rem 0.7rem; font-size:0.65rem;" onclick="saveAdminKey()">Save</button>
+          <button class="btn btn-primary" style="padding:0.25rem 0.75rem; font-size:0.72rem;" onclick="saveAdminKey()">Save</button>
         </div>
-        <button class="btn" onclick="toggleTheme()" title="Toggle theme">
+
+        <button class="btn btn-icon" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
         </button>
       </div>
     </header>
 
-    <!-- TABS -->
+    <!-- ─── NAVIGATION TABS ─── -->
     <nav class="tabs-nav">
-      <button class="tab-btn active" onclick="switchTab('overview', this)"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg> Overview</button>
-      <button class="tab-btn" onclick="switchTab('scraper', this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Scraper</button>
-      <button class="tab-btn" onclick="switchTab('articles', this)"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Articles</button>
-      <button class="tab-btn" onclick="switchTab('profiles', this)"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Personas</button>
-      <button class="tab-btn" onclick="switchTab('categories', this)"><svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg> Categories</button>
-      <button class="tab-btn" onclick="switchTab('explanations', this)"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Explanations</button>
-      <button class="tab-btn" onclick="switchTab('users', this)"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Users</button>
+      <button class="tab-btn active" onclick="switchTab('overview', this)">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+        Overview
+      </button>
+      <button class="tab-btn" onclick="switchTab('scraper', this)">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Scraper Daemon
+      </button>
+      <button class="tab-btn" onclick="switchTab('articles', this)">
+        <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        Articles
+      </button>
+      <button class="tab-btn" onclick="switchTab('profiles', this)">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Cognitive Personas
+      </button>
+      <button class="tab-btn" onclick="switchTab('categories', this)">
+        <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+        Categories
+      </button>
+      <button class="tab-btn" onclick="switchTab('explanations', this)">
+        <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        Explanations
+      </button>
+      <button class="tab-btn" onclick="switchTab('users', this)">
+        <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        Users & Credits
+      </button>
     </nav>
 
-    <!-- ======== TAB 1: OVERVIEW ======== -->
+    <!-- ════════ TAB 1: OVERVIEW ════════ -->
     <div class="tab-pane active" id="tab-overview">
       <div class="stats-grid">
-        <div class="stat-card"><div class="stat-card-header"><span class="stat-card-title">AI Engine</span><div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg></div></div><div class="stat-card-val" id="healthAiStatus">—</div><div class="stat-card-sub">OpenRouter</div></div>
-        <div class="stat-card"><div class="stat-card-header"><span class="stat-card-title">Scraper</span><div class="stat-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div></div><div class="stat-card-val" id="healthScraperStatus">—</div><div class="stat-card-sub" id="healthScraperQueue">0 pending</div></div>
-        <div class="stat-card"><div class="stat-card-header"><span class="stat-card-title">Articles</span><div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div></div><div class="stat-card-val" id="statTotalArticles">—</div><div class="stat-card-sub">Supabase</div></div>
-        <div class="stat-card"><div class="stat-card-header"><span class="stat-card-title">Explanations</span><div class="stat-icon"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div></div><div class="stat-card-val" id="statTotalViews">—</div><div class="stat-card-sub">Cognitive views</div></div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-card-title">AI Processing Engine</span>
+            <div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg></div>
+          </div>
+          <div class="stat-card-val" id="healthAiStatus">—</div>
+          <div class="stat-card-sub">OpenRouter & Claude 3.5 Sonnet</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-card-title">Scraper Status</span>
+            <div class="stat-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          </div>
+          <div class="stat-card-val" id="healthScraperStatus">—</div>
+          <div class="stat-card-sub" id="healthScraperQueue">0 pending jobs</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-card-title">Indexed Articles</span>
+            <div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          </div>
+          <div class="stat-card-val" id="statTotalArticles">—</div>
+          <div class="stat-card-sub">Supabase Knowledge Base</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-card-title">Explanations Synthesized</span>
+            <div class="stat-icon"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+          </div>
+          <div class="stat-card-val" id="statTotalViews">—</div>
+          <div class="stat-card-sub">Tailored Cognitive Views</div>
+        </div>
       </div>
 
       <div class="panel">
-        <div class="panel-header"><span class="panel-title">Microservice Operations</span><div><button class="btn btn-primary" onclick="refreshOverview()"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Refresh</button></div></div>
-        <div style="display:flex; flex-wrap:wrap; gap:8px;">
-          <button class="btn" onclick="triggerScraperRunOnce()"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg> Trigger Batch</button>
-          <button class="btn" onclick="rebuildCategoryIndex()"><svg viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg> Rebuild Categories</button>
+        <div class="panel-header">
+          <span class="panel-title">
+            <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            Microservice Operations
+          </span>
+          <button class="btn btn-primary" onclick="refreshOverview()">
+            <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Refresh Status
+          </button>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:10px;">
+          <button class="btn" onclick="triggerScraperRunOnce()"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg> Trigger Scraper Batch</button>
+          <button class="btn" onclick="rebuildCategoryIndex()"><svg viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg> Rebuild Category Index</button>
           <button class="btn" onclick="switchTab('profiles', document.querySelectorAll('.tab-btn')[3])"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Manage Personas</button>
         </div>
       </div>
     </div>
 
-    <!-- ======== TAB 2: SCRAPER ======== -->
+    <!-- ════════ TAB 2: SCRAPER ════════ -->
     <div class="tab-pane" id="tab-scraper">
       <div class="panel">
-        <div class="panel-header"><span class="panel-title">Scraper Daemon</span><div><button class="btn btn-success" onclick="startScraperService()"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg> Start</button><button class="btn btn-danger" onclick="stopScraperService()"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12"/></svg> Stop</button><button class="btn" onclick="triggerScraperRunOnce()"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Run Once</button></div></div>
+        <div class="panel-header">
+          <span class="panel-title">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Scraper Daemon Controls
+          </span>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-success" onclick="startScraperService()"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg> Start</button>
+            <button class="btn btn-danger" onclick="stopScraperService()"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12"/></svg> Stop</button>
+            <button class="btn btn-primary" onclick="triggerScraperRunOnce()"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Run Once</button>
+          </div>
+        </div>
+
         <div class="stats-grid" style="margin-bottom:0;">
           <div class="stat-card"><div class="stat-card-title">State</div><div class="stat-card-val" id="scraperState">—</div></div>
-          <div class="stat-card"><div class="stat-card-title">Pending</div><div class="stat-card-val" id="scraperPending">0</div></div>
-          <div class="stat-card"><div class="stat-card-title">Processing</div><div class="stat-card-val" id="scraperProcessing">0</div></div>
-          <div class="stat-card"><div class="stat-card-title">Completed</div><div class="stat-card-val" id="scraperCompleted">0</div></div>
+          <div class="stat-card"><div class="stat-card-title">Queue: Pending</div><div class="stat-card-val" id="scraperPending">0</div></div>
+          <div class="stat-card"><div class="stat-card-title">Queue: Processing</div><div class="stat-card-val" id="scraperProcessing">0</div></div>
+          <div class="stat-card"><div class="stat-card-title">Queue: Completed</div><div class="stat-card-val" id="scraperCompleted">0</div></div>
         </div>
       </div>
+
       <div class="form-grid">
-        <div class="panel"><span class="panel-title" style="display:block;margin-bottom:0.8rem;">Single URL</span><form onsubmit="submitSingleUrl(event)"><div class="form-group"><label class="form-label">URL</label><input type="url" class="form-control" id="scrapeSingleUrl" placeholder="https://site.com/article" required/></div><button type="submit" class="btn btn-primary">Submit</button></form></div>
-        <div class="panel"><span class="panel-title" style="display:block;margin-bottom:0.8rem;">Batch (max 50)</span><form onsubmit="submitBatchUrls(event)"><div class="form-group"><label class="form-label">URLs (one per line)</label><textarea class="form-control" id="scrapeBatchUrls" rows="3" placeholder="https://..."></textarea></div><button type="submit" class="btn btn-primary">Submit Batch</button></form></div>
+        <div class="panel">
+          <span class="panel-title" style="margin-bottom:1rem;">
+            <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            Scrape Single URL
+          </span>
+          <form onsubmit="submitSingleUrl(event)">
+            <div class="form-group">
+              <label class="form-label">Article URL</label>
+              <input type="url" class="form-control" id="scrapeSingleUrl" placeholder="https://example.com/article" required/>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;">Submit URL</button>
+          </form>
+        </div>
+
+        <div class="panel">
+          <span class="panel-title" style="margin-bottom:1rem;">
+            <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            Batch Ingest (Max 50)
+          </span>
+          <form onsubmit="submitBatchUrls(event)">
+            <div class="form-group">
+              <label class="form-label">URLs (One per line)</label>
+              <textarea class="form-control" id="scrapeBatchUrls" rows="3" placeholder="https://site.com/art-1&#10;https://site.com/art-2"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;">Submit Batch</button>
+          </form>
+        </div>
       </div>
     </div>
 
-    <!-- ======== TAB 3: ARTICLES ======== -->
+    <!-- ════════ TAB 3: ARTICLES ════════ -->
     <div class="tab-pane" id="tab-articles">
       <div class="panel">
-        <div class="panel-header"><span class="panel-title">Article Database</span><div style="display:flex; gap:8px; align-items:center;"><input type="text" class="form-control" style="width:180px;" id="articleSearchInput" oninput="debounceArticleSearch()" placeholder="Search title..."/><button class="btn btn-primary" onclick="openModal('modalCreateArticle')"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New</button></div></div>
-        <div class="table-responsive"><table><thead><tr><th>ID</th><th>Title</th><th>Domain</th><th>Categories</th><th>Words</th><th>Views</th><th>Status</th><th>Actions</th></tr></thead><tbody id="articlesTableBody"><tr><td colspan="8" style="text-align:center;padding:1.5rem;">Loading…</td></tr></tbody></table></div>
+        <div class="panel-header">
+          <span class="panel-title">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Article Database
+          </span>
+          <div style="display:flex; gap:10px; align-items:center;">
+            <input type="text" class="form-control" style="width:220px;" id="articleSearchInput" oninput="debounceArticleSearch()" placeholder="Search title..."/>
+            <button class="btn btn-primary" onclick="openModal('modalCreateArticle')">
+              <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              New Article
+            </button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Domain</th>
+                <th>Categories</th>
+                <th>Words</th>
+                <th>Views</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="articlesTableBody">
+              <tr><td colspan="8" style="padding:2rem;"><div class="skeleton-box"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <!-- ======== TAB 4: PERSONAS ======== -->
+    <!-- ════════ TAB 4: PERSONAS ════════ -->
     <div class="tab-pane" id="tab-profiles">
       <div class="panel">
-        <div class="panel-header"><span class="panel-title">Cognitive Personas</span><button class="btn btn-primary" onclick="openModal('modalCreateProfile')"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Persona</button></div>
-        <div class="table-responsive"><table><thead><tr><th>ID</th><th>Name</th><th>Description</th><th>Usage</th><th>Default</th><th>Status</th><th>Actions</th></tr></thead><tbody id="profilesTableBody"><tr><td colspan="7" style="text-align:center;padding:1.5rem;">Loading…</td></tr></tbody></table></div>
+        <div class="panel-header">
+          <span class="panel-title">
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Cognitive Personas
+          </span>
+          <button class="btn btn-primary" onclick="openModal('modalCreateProfile')">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Persona
+          </button>
+        </div>
+
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Usage</th>
+                <th>Default</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="profilesTableBody">
+              <tr><td colspan="7" style="padding:2rem;"><div class="skeleton-box"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <!-- ======== TAB 5: CATEGORIES ======== -->
+    <!-- ════════ TAB 5: CATEGORIES ════════ -->
     <div class="tab-pane" id="tab-categories">
       <div class="form-grid">
-        <div class="panel"><span class="panel-title" style="display:block;margin-bottom:0.8rem;">Create Category</span><form onsubmit="handleCategoryCreate(event)"><div class="form-group"><label class="form-label">Name</label><input type="text" class="form-control" id="catCreateName" placeholder="e.g. Finance" required/></div><div class="form-group"><label class="form-label">Description</label><input type="text" class="form-control" id="catCreateDesc" placeholder="optional"/></div><button type="submit" class="btn btn-primary">Save</button></form></div>
-        <div class="panel"><span class="panel-title" style="display:block;margin-bottom:0.8rem;">Merge Categories</span><form onsubmit="handleCategoryMerge(event)"><div class="form-group"><label class="form-label">Sources (comma)</label><input type="text" class="form-control" id="catMergeSources" placeholder="Crypto, Blockchain" required/></div><div class="form-group"><label class="form-label">Target</label><input type="text" class="form-control" id="catMergeTarget" placeholder="Crypto" required/></div><button type="submit" class="btn btn-warning" style="background:var(--warning-bg);color:var(--warning);border-color:rgba(245,158,11,0.2);">Merge</button></form></div>
+        <div class="panel">
+          <span class="panel-title" style="margin-bottom:1rem;">
+            <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            Create Category
+          </span>
+          <form onsubmit="handleCategoryCreate(event)">
+            <div class="form-group">
+              <label class="form-label">Category Name</label>
+              <input type="text" class="form-control" id="catCreateName" placeholder="e.g. Neuroscience" required/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Description (Optional)</label>
+              <input type="text" class="form-control" id="catCreateDesc" placeholder="Brain studies & cognitive science"/>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;">Save Category</button>
+          </form>
+        </div>
+
+        <div class="panel">
+          <span class="panel-title" style="margin-bottom:1rem;">
+            <svg viewBox="0 0 24 24"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+            Merge Categories
+          </span>
+          <form onsubmit="handleCategoryMerge(event)">
+            <div class="form-group">
+              <label class="form-label">Source Categories (comma-separated)</label>
+              <input type="text" class="form-control" id="catMergeSources" placeholder="Crypto, Blockchain, Web3" required/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Target Category</label>
+              <input type="text" class="form-control" id="catMergeTarget" placeholder="Cryptocurrency" required/>
+            </div>
+            <button type="submit" class="btn btn-warning" style="width:100%;">Merge Categories</button>
+          </form>
+        </div>
       </div>
-      <div class="panel"><div class="panel-header"><span class="panel-title">Active Categories</span><button class="btn" onclick="fetchCategories()"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Refresh</button></div><div class="table-responsive"><table><thead><tr><th>Name</th><th>Slug</th><th>Articles</th><th>Actions</th></tr></thead><tbody id="categoriesTableBody"><tr><td colspan="4" style="text-align:center;padding:1.5rem;">Loading…</td></tr></tbody></table></div></div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">
+            <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            Active Categories
+          </span>
+          <button class="btn" onclick="fetchCategories()">
+            <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Refresh
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Slug</th>
+                <th>Article Count</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="categoriesTableBody">
+              <tr><td colspan="4" style="padding:2rem;"><div class="skeleton-box"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
-    <!-- ======== TAB 6: EXPLANATIONS ======== -->
+    <!-- ════════ TAB 6: EXPLANATIONS ════════ -->
     <div class="tab-pane" id="tab-explanations">
       <div class="panel">
-        <div class="panel-header"><span class="panel-title">Batch Synthesis</span><button class="btn btn-primary" onclick="handleBatchExplanationGenerate(event)"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Run Batch</button></div>
-        <div class="form-grid"><div class="form-group"><label class="form-label">Article IDs (comma)</label><input type="text" class="form-control" id="batchArticleIds" placeholder="1,2,3"/></div><div class="form-group"><label class="form-label">Profile IDs</label><input type="text" class="form-control" id="batchProfileIds" placeholder="1,2"/></div></div>
+        <div class="panel-header">
+          <span class="panel-title">
+            <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Batch Synthesis Engine
+          </span>
+          <button class="btn btn-primary" onclick="handleBatchExplanationGenerate(event)">
+            <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Run Synthesis Batch
+          </button>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Article IDs (comma-separated)</label>
+            <input type="text" class="form-control" id="batchArticleIds" placeholder="101, 102, 103"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Profile IDs (comma-separated)</label>
+            <input type="text" class="form-control" id="batchProfileIds" placeholder="1, 2"/>
+          </div>
+        </div>
       </div>
-      <div class="panel"><span class="panel-title" style="display:block;margin-bottom:0.8rem;">Top Rated Explanations</span><div class="table-responsive"><table><thead><tr><th>View ID</th><th>Title</th><th>Views</th><th>Rating</th><th>Rating Count</th><th>Actions</th></tr></thead><tbody id="explanationsTableBody"><tr><td colspan="6" style="text-align:center;padding:1.5rem;">Loading…</td></tr></tbody></table></div></div>
+
+      <div class="panel">
+        <span class="panel-title" style="margin-bottom:1.2rem;">
+          <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Top Rated Explanations
+        </span>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>View ID</th>
+                <th>Title</th>
+                <th>Views</th>
+                <th>Rating</th>
+                <th>Feedback Count</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="explanationsTableBody">
+              <tr><td colspan="6" style="padding:2rem;"><div class="skeleton-box"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
-    <!-- ======== TAB 7: USERS ======== -->
+    <!-- ════════ TAB 7: USERS & CREDITS ════════ -->
     <div class="tab-pane" id="tab-users">
       <div class="form-grid">
-        <div class="panel"><span class="panel-title" style="display:block;margin-bottom:0.8rem;">Adjust Credits</span><form onsubmit="handleCreditGrant(event)"><div class="form-group"><label class="form-label">User ID</label><input type="text" class="form-control" id="creditUserId" placeholder="er01" required/></div><div class="form-group"><label class="form-label">Amount (+/-)</label><input type="number" step="0.1" class="form-control" id="creditAmount" placeholder="10" required/></div><div class="form-group"><label class="form-label">Reason</label><input type="text" class="form-control" id="creditReason" placeholder="Admin adjustment" required/></div><button type="submit" class="btn btn-primary">Update</button></form></div>
-        <div class="panel"><span class="panel-title" style="display:block;margin-bottom:0.8rem;">Reset to 50</span><form onsubmit="handleCreditReset(event)"><div class="form-group"><label class="form-label">User ID</label><input type="text" class="form-control" id="resetUserId" placeholder="er01" required/></div><button type="submit" class="btn btn-danger">Reset</button></form></div>
+        <div class="panel">
+          <span class="panel-title" style="margin-bottom:1rem;">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Adjust User Credits
+          </span>
+          <form onsubmit="handleCreditGrant(event)">
+            <div class="form-group">
+              <label class="form-label">User ID</label>
+              <input type="text" class="form-control" id="creditUserId" placeholder="er_usr_xxxx" required/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Credit Amount (+/-)</label>
+              <input type="number" step="0.1" class="form-control" id="creditAmount" placeholder="25.0" required/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Reason</label>
+              <input type="text" class="form-control" id="creditReason" placeholder="Compensation / Promotion" required/>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;">Update Credits</button>
+          </form>
+        </div>
+
+        <div class="panel">
+          <span class="panel-title" style="margin-bottom:1rem;">
+            <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            Reset Credits to Default (50)
+          </span>
+          <form onsubmit="handleCreditReset(event)">
+            <div class="form-group">
+              <label class="form-label">User ID</label>
+              <input type="text" class="form-control" id="resetUserId" placeholder="er_usr_xxxx" required/>
+            </div>
+            <p style="font-size:0.75rem; color:var(--text-tertiary); margin-bottom:1rem;">This will hard-reset the target user's credit balance to 50.0.</p>
+            <button type="submit" class="btn btn-danger" style="width:100%;">Reset Balance</button>
+          </form>
+        </div>
       </div>
     </div>
 
-    <!-- MODALS -->
-    <div class="modal-overlay" id="modalCreateArticle"><div class="modal-card"><button class="modal-close" onclick="closeModal('modalCreateArticle')">✕</button><h3 style="margin-bottom:1rem;">Create Article</h3><form onsubmit="handleCreateArticleSubmit(event)"><div class="form-group"><label class="form-label">Title</label><input type="text" class="form-control" id="manArtTitle" required/></div><div class="form-group"><label class="form-label">Content (min 200 words)</label><textarea class="form-control" id="manArtContent" rows="5" required></textarea></div><div class="form-group"><label class="form-label">Categories (comma)</label><input type="text" class="form-control" id="manArtCategories" placeholder="Tech, AI"/></div><button type="submit" class="btn btn-primary" style="width:100%;">Create</button></form></div></div>
+    <!-- ─── MODAL: CREATE ARTICLE ─── -->
+    <div class="modal-overlay" id="modalCreateArticle">
+      <div class="modal-card">
+        <button class="modal-close" onclick="closeModal('modalCreateArticle')">✕</button>
+        <h3 style="margin-bottom:1.2rem; font-size:1.2rem;">Create Knowledge Article</h3>
+        <form onsubmit="handleCreateArticleSubmit(event)">
+          <div class="form-group">
+            <label class="form-label">Canonical Title</label>
+            <input type="text" class="form-control" id="manArtTitle" placeholder="e.g. How Quantum Computers Work" required/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Content (Minimum 200 Words)</label>
+            <textarea class="form-control" id="manArtContent" rows="6" placeholder="Paste full article text..." required></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Categories (comma-separated)</label>
+            <input type="text" class="form-control" id="manArtCategories" placeholder="Technology, Quantum, Physics"/>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%; min-height:44px;">Publish Article</button>
+        </form>
+      </div>
+    </div>
 
-    <div class="modal-overlay" id="modalCreateProfile"><div class="modal-card"><button class="modal-close" onclick="closeModal('modalCreateProfile')">✕</button><h3 style="margin-bottom:1rem;">New Persona</h3><form onsubmit="handleCreateProfileSubmit(event)"><div class="form-group"><label class="form-label">Name (max 20)</label><input type="text" class="form-control" id="profName" maxlength="20" placeholder="e.g. Football Coach" required/></div><div class="form-group"><label class="form-label">Description (10–700 words)</label><textarea class="form-control" id="profDesc" rows="4" placeholder="Explains concepts using football formations..." required></textarea></div><div class="form-group"><label class="form-label">Rules (optional)</label><textarea class="form-control" id="profRules" rows="2" placeholder="Define terms simply..."></textarea></div><button type="submit" class="btn btn-primary" style="width:100%;">Create Persona</button></form></div></div>
+    <!-- ─── MODAL: CREATE PERSONA ─── -->
+    <div class="modal-overlay" id="modalCreateProfile">
+      <div class="modal-card">
+        <button class="modal-close" onclick="closeModal('modalCreateProfile')">✕</button>
+        <h3 style="margin-bottom:1.2rem; font-size:1.2rem;">Add Cognitive Persona</h3>
+        <form onsubmit="handleCreateProfileSubmit(event)">
+          <div class="form-group">
+            <label class="form-label">Persona Name (Max 20 chars)</label>
+            <input type="text" class="form-control" id="profName" maxlength="20" placeholder="e.g. Football Coach" required/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Persona Prompt Description</label>
+            <textarea class="form-control" id="profDesc" rows="4" placeholder="Explains any complex concept using tactical football plays, analogies, and locker room pep talks." required></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Pedagogical Rules (Optional)</label>
+            <textarea class="form-control" id="profRules" rows="2" placeholder="Always break technical terms down into offensive/defensive strategies."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%; min-height:44px;">Create Persona</button>
+        </form>
+      </div>
+    </div>
 
-    <!-- TOAST -->
+    <!-- ─── TOAST NOTIFICATION ─── -->
     <div class="toast" id="toast"></div>
+
   </div>
 
   <script>
-    // ─── CONFIG ───
+    // ─── CONFIG & STATE ───
     const RENDER_BASE = 'https://my-fcm-server.onrender.com/api';
     const VERCEL_BASE = 'https://easytoread.vercel.app/api';
 
@@ -555,7 +1019,7 @@
       const key = document.getElementById('adminKeyInput').value.trim();
       currentAdminKey = key;
       localStorage.setItem('easyread_admin_api_key', key);
-      showToast('Admin API Key saved');
+      showToast('Admin API Key saved successfully');
       refreshOverview();
     }
 
@@ -565,23 +1029,33 @@
 
     function showToast(msg, type = 'success') {
       const t = document.getElementById('toast');
-      t.textContent = msg;
+      const iconSvg = type === 'error'
+        ? `<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--danger);fill:none;stroke-width:2;"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`
+        : `<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--success);fill:none;stroke-width:2;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`;
+      
+      t.innerHTML = `${iconSvg} <span>${msg}</span>`;
       t.className = `toast show ${type === 'error' ? 'toast-error' : 'toast-success'}`;
       clearTimeout(t._timeout);
-      t._timeout = setTimeout(() => t.classList.remove('show'), 2800);
+      t._timeout = setTimeout(() => t.classList.remove('show'), 3000);
     }
 
     function toggleTheme() {
       const html = document.documentElement;
       const current = html.getAttribute('data-theme');
-      html.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+      const next = current === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('easyread-theme', next);
     }
+
+    const storedTheme = localStorage.getItem('easyread-theme');
+    if (storedTheme) document.documentElement.setAttribute('data-theme', storedTheme);
 
     function switchTab(tabId, btn) {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById(`tab-${tabId}`).classList.add('active');
+
       if (tabId === 'overview') refreshOverview();
       if (tabId === 'scraper') fetchScraperStatus();
       if (tabId === 'articles') fetchArticles();
@@ -593,33 +1067,56 @@
     function openModal(id) { document.getElementById(id).classList.add('active'); }
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-    // ─── OVERVIEW ───
+    // ─── OVERVIEW METRICS ───
     async function refreshOverview() {
+      // 1. AI Engine Health
       try {
         const res = await fetch(`${RENDER_BASE}/processor/health`);
         const data = await res.json();
-        document.getElementById('healthAiStatus').textContent = data.success ? 'Operational' : 'Degraded';
-        document.getElementById('healthAiStatus').style.color = data.success ? 'var(--success)' : 'var(--warning)';
-      } catch { document.getElementById('healthAiStatus').textContent = 'Offline'; }
+        const el = document.getElementById('healthAiStatus');
+        el.textContent = data.success ? 'Operational' : 'Degraded';
+        el.style.color = data.success ? 'var(--success)' : 'var(--warning)';
+      } catch {
+        const el = document.getElementById('healthAiStatus');
+        el.textContent = 'Offline';
+        el.style.color = 'var(--danger)';
+      }
+
+      // 2. Scraper Health
       try {
         const res = await fetch(`${RENDER_BASE}/scraper/status`);
         const data = await res.json();
-        document.getElementById('healthScraperStatus').textContent = data.isRunning ? 'Running' : 'Idle';
-        document.getElementById('healthScraperQueue').textContent = `${data.queue?.pending || 0} pending`;
-      } catch { document.getElementById('healthScraperStatus').textContent = 'Offline'; }
+        const el = document.getElementById('healthScraperStatus');
+        el.textContent = data.isRunning ? 'Active' : 'Idle';
+        el.style.color = data.isRunning ? 'var(--success)' : 'var(--text-primary)';
+        document.getElementById('healthScraperQueue').textContent = `${data.queue?.pending || 0} pending jobs`;
+      } catch {
+        const el = document.getElementById('healthScraperStatus');
+        el.textContent = 'Offline';
+        el.style.color = 'var(--danger)';
+      }
+
+      // 3. Articles Count
       try {
-        const res = await fetch(`${VERCEL_BASE}/articles?action=list&limit=1`);
+        const res = await fetch(`${VERCEL_BASE}/article?action=list`);
         const data = await res.json();
-        document.getElementById('statTotalArticles').textContent = data.total || 0;
-      } catch {}
+        const list = Array.isArray(data) ? data : (data.articles || []);
+        document.getElementById('statTotalArticles').textContent = list.length || 0;
+      } catch {
+        document.getElementById('statTotalArticles').textContent = '—';
+      }
+
+      // 4. Explanations Count
       try {
         const res = await fetch(`${VERCEL_BASE}/explanation?action=stats`);
         const data = await res.json();
         document.getElementById('statTotalViews').textContent = data.stats?.total_explanations || 0;
-      } catch {}
+      } catch {
+        document.getElementById('statTotalViews').textContent = '—';
+      }
     }
 
-    // ─── SCRAPER ───
+    // ─── SCRAPER MANAGEMENT ───
     async function fetchScraperStatus() {
       try {
         const res = await fetch(`${RENDER_BASE}/scraper/status`);
@@ -628,7 +1125,9 @@
         document.getElementById('scraperPending').textContent = data.queue?.pending || 0;
         document.getElementById('scraperProcessing').textContent = data.queue?.processing || 0;
         document.getElementById('scraperCompleted').textContent = data.queue?.completed || 0;
-      } catch (err) { showToast('Failed to fetch scraper status', 'error'); }
+      } catch (err) {
+        showToast('Failed to connect to scraper daemon', 'error');
+      }
     }
 
     async function startScraperService() {
@@ -654,7 +1153,7 @@
       try {
         const res = await fetch(`${RENDER_BASE}/scraper/run-once`, { method: 'POST', headers: getHeaders() });
         const data = await res.json();
-        showToast(`Run completed: ${data.jobs_processed || 0} processed`);
+        showToast(`Run complete: ${data.jobs_processed || 0} jobs processed`);
         fetchScraperStatus();
       } catch (err) { showToast(err.message, 'error'); }
     }
@@ -669,14 +1168,20 @@
           body: JSON.stringify({ url })
         });
         const data = await res.json();
-        if (data.success) { showToast('URL submitted'); document.getElementById('scrapeSingleUrl').value=''; fetchScraperStatus(); }
-        else showToast(data.error, 'error');
+        if (data.success) {
+          showToast('URL queued for indexing');
+          document.getElementById('scrapeSingleUrl').value = '';
+          fetchScraperStatus();
+        } else {
+          showToast(data.error || 'Submission failed', 'error');
+        }
       } catch (err) { showToast(err.message, 'error'); }
     }
 
     async function submitBatchUrls(e) {
       e.preventDefault();
-      const lines = document.getElementById('scrapeBatchUrls').value.split('\n').map(l=>l.trim()).filter(Boolean);
+      const lines = document.getElementById('scrapeBatchUrls').value.split('\n').map(l => l.trim()).filter(Boolean);
+      if (!lines.length) return;
       try {
         const res = await fetch(`${RENDER_BASE}/scraper/submit-batch`, {
           method: 'POST',
@@ -684,8 +1189,13 @@
           body: JSON.stringify({ urls: lines })
         });
         const data = await res.json();
-        if (data.success) { showToast(`Queued ${data.total_submitted} URLs`); document.getElementById('scrapeBatchUrls').value=''; fetchScraperStatus(); }
-        else showToast(data.error, 'error');
+        if (data.success) {
+          showToast(`Queued ${data.total_submitted} URLs`);
+          document.getElementById('scrapeBatchUrls').value = '';
+          fetchScraperStatus();
+        } else {
+          showToast(data.error || 'Batch submission failed', 'error');
+        }
       } catch (err) { showToast(err.message, 'error'); }
     }
 
@@ -699,35 +1209,57 @@
     async function fetchArticles() {
       const search = document.getElementById('articleSearchInput')?.value.trim();
       const tbody = document.getElementById('articlesTableBody');
-      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:1.5rem;">Loading…</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" style="padding:2rem;"><div class="skeleton-box"></div></td></tr>';
       try {
-        let url = `${VERCEL_BASE}/articles?action=list&limit=30`;
-        if (search) url += `&search=${encodeURIComponent(search)}`;
+        let url = `${VERCEL_BASE}/article?action=list`;
         const res = await fetch(url);
         const data = await res.json();
-        const articles = data.articles || [];
-        if (!articles.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:1.5rem;">No articles</td></tr>'; return; }
+        let articles = Array.isArray(data) ? data : (data.articles || []);
+        
+        if (search) {
+          articles = articles.filter(a => (a.canonical_title || '').toLowerCase().includes(search.toLowerCase()));
+        }
+
+        if (!articles.length) {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-tertiary);">No articles found</td></tr>';
+          return;
+        }
+
         tbody.innerHTML = articles.map(a => `
           <tr>
-            <td style="font-family:var(--font-mono);font-weight:700;">#${a.article_id}</td>
-            <td><strong>${escapeHtml(a.canonical_title)}</strong></td>
+            <td style="font-family:var(--font-mono);font-weight:700;color:var(--accent-color);">#${a.article_id}</td>
+            <td><strong>${escapeHtml(a.canonical_title || 'Untitled')}</strong></td>
             <td>${escapeHtml(a.source_domain || 'Manual')}</td>
-            <td>${(a.categories||[]).map(c => `<span class="badge badge-info" style="margin-right:3px;">${escapeHtml(c)}</span>`).join('')}</td>
-            <td>${a.word_count||0}</td>
-            <td>${a.view_count||0}</td>
-            <td><span class="badge ${a.status==='processed'?'badge-success':'badge-warning'}">${a.status}</span></td>
-            <td><div style="display:flex;gap:4px;"><button class="btn btn-danger" style="padding:2px 8px;font-size:0.7rem;" onclick="deleteArticle(${a.article_id})">Delete</button></div></td>
+            <td>${(a.categories || []).map(c => `<span class="badge badge-info" style="margin-right:4px;">${escapeHtml(c)}</span>`).join('')}</td>
+            <td>${a.word_count || 0}</td>
+            <td>${a.view_count || 0}</td>
+            <td><span class="badge ${a.status === 'processed' ? 'badge-success' : 'badge-warning'}">${a.status || 'active'}</span></td>
+            <td>
+              <button class="btn btn-danger" style="padding:4px 10px;font-size:0.72rem;" onclick="deleteArticle('${a.article_id}')">
+                Delete
+              </button>
+            </td>
           </tr>
         `).join('');
-      } catch (err) { tbody.innerHTML = `<tr><td colspan="8" style="color:var(--danger);text-align:center;">${err.message}</td></tr>`; }
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="8" style="color:var(--danger);text-align:center;padding:1.5rem;">${err.message}</td></tr>`;
+      }
     }
 
     async function deleteArticle(id) {
       if (!confirm(`Delete article #${id}?`)) return;
       try {
-        const res = await fetch(`${VERCEL_BASE}/articles?action=delete&article_id=${id}`, { method:'DELETE', headers:getHeaders() });
+        const res = await fetch(`${VERCEL_BASE}/article?action=delete&article_id=${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+          headers: getHeaders()
+        });
         const data = await res.json();
-        if (data.success) { showToast('Deleted'); fetchArticles(); } else showToast(data.error, 'error');
+        if (data.success) {
+          showToast('Article deleted');
+          fetchArticles();
+        } else {
+          showToast(data.error || 'Failed to delete', 'error');
+        }
       } catch (err) { showToast(err.message, 'error'); }
     }
 
@@ -735,51 +1267,79 @@
       e.preventDefault();
       const title = document.getElementById('manArtTitle').value.trim();
       const content = document.getElementById('manArtContent').value.trim();
-      const categories = document.getElementById('manArtCategories').value.split(',').map(c=>c.trim()).filter(Boolean);
+      const categories = document.getElementById('manArtCategories').value.split(',').map(c => c.trim()).filter(Boolean);
+
       try {
-        const res = await fetch(`${VERCEL_BASE}/articles?action=create`, { method:'POST', headers:getHeaders(), body: JSON.stringify({ title, content, categories }) });
+        const res = await fetch(`${VERCEL_BASE}/article?action=create`, {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({ title, content, categories })
+        });
         const data = await res.json();
-        if (data.success) { showToast('Article created'); closeModal('modalCreateArticle'); fetchArticles(); } else showToast(data.error, 'error');
+        if (data.success) {
+          showToast('Article created successfully');
+          closeModal('modalCreateArticle');
+          document.getElementById('manArtTitle').value = '';
+          document.getElementById('manArtContent').value = '';
+          document.getElementById('manArtCategories').value = '';
+          fetchArticles();
+        } else {
+          showToast(data.error || 'Failed to create', 'error');
+        }
       } catch (err) { showToast(err.message, 'error'); }
     }
 
-    // ─── PERSONAS ───
+    // ─── PERSONAS (PROFILES) ───
     async function fetchProfiles() {
       const tbody = document.getElementById('profilesTableBody');
-      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:1.5rem;">Loading…</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" style="padding:2rem;"><div class="skeleton-box"></div></td></tr>';
       try {
-        const res = await fetch(`${VERCEL_BASE}/profiles?action=list`);
+        const res = await fetch(`${VERCEL_BASE}/profile?action=list`);
         const data = await res.json();
-        const profiles = data.profiles || [];
-        if (!profiles.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No personas</td></tr>'; return; }
+        const profiles = Array.isArray(data) ? data : (data.profiles || []);
+        
+        if (!profiles.length) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-tertiary);">No personas defined</td></tr>';
+          return;
+        }
+
         tbody.innerHTML = profiles.map(p => `
           <tr>
-            <td style="font-family:var(--font-mono);font-weight:700;">#${p.profile_id}</td>
+            <td style="font-family:var(--font-mono);font-weight:700;color:var(--accent-color);">#${p.profile_id}</td>
             <td><strong>${escapeHtml(p.name)}</strong></td>
-            <td style="max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(p.description)}</td>
-            <td>${p.usage_count||0}</td>
-            <td>${p.is_default?'⭐ Yes':'No'}</td>
-            <td><span class="badge ${p.status==='active'?'badge-success':'badge-danger'}">${p.status}</span></td>
-            <td><div style="display:flex;gap:4px;">${!p.is_default?`<button class="btn btn-primary" style="padding:2px 8px;font-size:0.7rem;" onclick="setDefaultProfile(${p.profile_id})">Set Default</button>`:''}<button class="btn btn-danger" style="padding:2px 8px;font-size:0.7rem;" onclick="deleteProfile(${p.profile_id})">Delete</button></div></td>
+            <td style="max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(p.description)}</td>
+            <td>${p.usage_count || 0}</td>
+            <td>${p.is_default ? '<span class="badge badge-success">⭐ Primary Default</span>' : 'Standard'}</td>
+            <td><span class="badge ${p.status === 'active' ? 'badge-success' : 'badge-danger'}">${p.status || 'active'}</span></td>
+            <td>
+              <div style="display:flex;gap:6px;">
+                ${!p.is_default ? `<button class="btn btn-primary" style="padding:4px 10px;font-size:0.72rem;" onclick="setDefaultProfile(${p.profile_id})">Set Default</button>` : ''}
+                <button class="btn btn-danger" style="padding:4px 10px;font-size:0.72rem;" onclick="deleteProfile(${p.profile_id})">Delete</button>
+              </div>
+            </td>
           </tr>
         `).join('');
-      } catch (err) { tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger);">${err.message}</td></tr>`; }
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger);padding:1.5rem;">${err.message}</td></tr>`;
+      }
     }
 
     async function setDefaultProfile(id) {
       try {
-        const res = await fetch(`${VERCEL_BASE}/profiles?action=set-default&id=${id}`, { method:'PUT', headers:getHeaders() });
+        const res = await fetch(`${VERCEL_BASE}/profile?action=set-default&id=${id}`, { method: 'PUT', headers: getHeaders() });
         const data = await res.json();
-        if (data.success) { showToast(data.message); fetchProfiles(); } else showToast(data.error, 'error');
+        if (data.success) { showToast(data.message || 'Default persona updated'); fetchProfiles(); }
+        else showToast(data.error, 'error');
       } catch (err) { showToast(err.message, 'error'); }
     }
 
     async function deleteProfile(id) {
       if (!confirm(`Delete persona #${id}?`)) return;
       try {
-        const res = await fetch(`${VERCEL_BASE}/profiles?action=delete&id=${id}&force=true`, { method:'DELETE', headers:getHeaders() });
+        const res = await fetch(`${VERCEL_BASE}/profile?action=delete&id=${id}&force=true`, { method: 'DELETE', headers: getHeaders() });
         const data = await res.json();
-        if (data.success) { showToast('Deleted'); fetchProfiles(); } else showToast(data.error, 'error');
+        if (data.success) { showToast('Persona deleted'); fetchProfiles(); }
+        else showToast(data.error, 'error');
       } catch (err) { showToast(err.message, 'error'); }
     }
 
@@ -789,30 +1349,48 @@
       const description = document.getElementById('profDesc').value.trim();
       const rules = document.getElementById('profRules').value.trim();
       try {
-        const res = await fetch(`${VERCEL_BASE}/profiles?action=create`, { method:'POST', headers:getHeaders(), body: JSON.stringify({ name, description, rules }) });
+        const res = await fetch(`${VERCEL_BASE}/profile?action=create`, {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({ name, description, rules })
+        });
         const data = await res.json();
-        if (data.success) { showToast('Persona created'); closeModal('modalCreateProfile'); fetchProfiles(); } else showToast(data.error, 'error');
+        if (data.success) {
+          showToast('Persona created successfully');
+          closeModal('modalCreateProfile');
+          document.getElementById('profName').value = '';
+          document.getElementById('profDesc').value = '';
+          document.getElementById('profRules').value = '';
+          fetchProfiles();
+        } else {
+          showToast(data.error, 'error');
+        }
       } catch (err) { showToast(err.message, 'error'); }
     }
 
     // ─── CATEGORIES ───
     async function fetchCategories() {
       const tbody = document.getElementById('categoriesTableBody');
-      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:1.5rem;">Loading…</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="4" style="padding:2rem;"><div class="skeleton-box"></div></td></tr>';
       try {
         const res = await fetch(`${VERCEL_BASE}/category?action=list`);
         const data = await res.json();
-        const categories = data.categories || [];
-        if (!categories.length) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No categories</td></tr>'; return; }
+        const categories = Array.isArray(data) ? data : (data.categories || []);
+        if (!categories.length) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--text-tertiary);">No categories available</td></tr>';
+          return;
+        }
         tbody.innerHTML = categories.map(c => `
           <tr>
-            <td><strong>${escapeHtml(c.name)}</strong></td>
-            <td style="font-family:var(--font-mono);">${c.slug}</td>
-            <td>${c.count||0}</td>
-            <td><button class="btn btn-danger" style="padding:2px 8px;font-size:0.7rem;" onclick="deleteCategory('${escapeJs(c.name)}')">Delete</button></td>
+            <td><strong>${escapeHtml(typeof c === 'string' ? c : c.name)}</strong></td>
+            <td style="font-family:var(--font-mono);">${escapeHtml(c.slug || c.name || '')}</td>
+            <td>${c.count || 0}</td>
+            <td><button class="btn btn-danger" style="padding:4px 10px;font-size:0.72rem;" onclick="deleteCategory('${escapeJs(typeof c === 'string' ? c : c.name)}')">Delete</button></td>
           </tr>
         `).join('');
-      } catch (err) { tbody.innerHTML = `<tr><td colspan="4" style="color:var(--danger);">${err.message}</td></tr>`; }
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="4" style="color:var(--danger);padding:1.5rem;">${err.message}</td></tr>`;
+      }
     }
 
     async function handleCategoryCreate(e) {
@@ -820,38 +1398,58 @@
       const name = document.getElementById('catCreateName').value.trim();
       const description = document.getElementById('catCreateDesc').value.trim();
       try {
-        const res = await fetch(`${VERCEL_BASE}/category?action=create`, { method:'POST', headers:getHeaders(), body: JSON.stringify({ name, description }) });
+        const res = await fetch(`${VERCEL_BASE}/category?action=create`, {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({ name, description })
+        });
         const data = await res.json();
-        if (data.success) { showToast('Category created'); document.getElementById('catCreateName').value=''; document.getElementById('catCreateDesc').value=''; fetchCategories(); } else showToast(data.error, 'error');
+        if (data.success) {
+          showToast('Category created');
+          document.getElementById('catCreateName').value = '';
+          document.getElementById('catCreateDesc').value = '';
+          fetchCategories();
+        } else {
+          showToast(data.error, 'error');
+        }
       } catch (err) { showToast(err.message, 'error'); }
     }
 
     async function handleCategoryMerge(e) {
       e.preventDefault();
-      const sources = document.getElementById('catMergeSources').value.split(',').map(s=>s.trim()).filter(Boolean);
+      const sources = document.getElementById('catMergeSources').value.split(',').map(s => s.trim()).filter(Boolean);
       const target = document.getElementById('catMergeTarget').value.trim();
       try {
-        const res = await fetch(`${VERCEL_BASE}/category?action=merge`, { method:'POST', headers:getHeaders(), body: JSON.stringify({ source_categories: sources, target_category: target }) });
+        const res = await fetch(`${VERCEL_BASE}/category?action=merge`, {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({ source_categories: sources, target_category: target })
+        });
         const data = await res.json();
-        if (data.success) { showToast(`Merged into ${target}`); fetchCategories(); } else showToast(data.error, 'error');
+        if (data.success) {
+          showToast(`Merged into ${target}`);
+          fetchCategories();
+        } else {
+          showToast(data.error, 'error');
+        }
       } catch (err) { showToast(err.message, 'error'); }
     }
 
     async function rebuildCategoryIndex() {
-      showToast('Rebuilding index...');
+      showToast('Rebuilding category index...');
       try {
-        const res = await fetch(`${VERCEL_BASE}/category?action=rebuild-index`, { method:'POST', headers:getHeaders() });
+        const res = await fetch(`${VERCEL_BASE}/category?action=rebuild-index`, { method: 'POST', headers: getHeaders() });
         const data = await res.json();
-        showToast(data.message || 'Index rebuilt');
+        showToast(data.message || 'Category index rebuilt');
       } catch (err) { showToast(err.message, 'error'); }
     }
 
     async function deleteCategory(name) {
       if (!confirm(`Delete category "${name}"?`)) return;
       try {
-        const res = await fetch(`${VERCEL_BASE}/category?action=delete&name=${encodeURIComponent(name)}&force=true`, { method:'DELETE', headers:getHeaders() });
+        const res = await fetch(`${VERCEL_BASE}/category?action=delete&name=${encodeURIComponent(name)}&force=true`, { method: 'DELETE', headers: getHeaders() });
         const data = await res.json();
-        showToast(data.message || 'Deleted');
+        showToast(data.message || 'Category deleted');
         fetchCategories();
       } catch (err) { showToast(err.message, 'error'); }
     }
@@ -859,33 +1457,44 @@
     // ─── EXPLANATIONS ───
     async function fetchExplanations() {
       const tbody = document.getElementById('explanationsTableBody');
+      tbody.innerHTML = '<tr><td colspan="6" style="padding:2rem;"><div class="skeleton-box"></div></td></tr>';
       try {
         const res = await fetch(`${VERCEL_BASE}/explanation?action=stats`);
         const data = await res.json();
         const top = data.stats?.top_rated || [];
+        if (!top.length) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-tertiary);">No explanation feedback records yet</td></tr>';
+          return;
+        }
         tbody.innerHTML = top.map(e => `
           <tr>
-            <td style="font-family:var(--font-mono);">#${e.view_id}</td>
-            <td><strong>${escapeHtml(e.title)}</strong></td>
-            <td>${e.view_count||0}</td>
-            <td>⭐ ${e.rating_avg||0}</td>
-            <td>${e.rating_count||0}</td>
-            <td><button class="btn btn-danger" style="padding:2px 8px;font-size:0.7rem;" onclick="deleteExplanation(${e.view_id})">Delete</button></td>
+            <td style="font-family:var(--font-mono);color:var(--accent-color);">#${e.view_id}</td>
+            <td><strong>${escapeHtml(e.title || 'Custom Explanation')}</strong></td>
+            <td>${e.view_count || 0}</td>
+            <td><span class="badge badge-warning">★ ${e.rating_avg || 0}</span></td>
+            <td>${e.rating_count || 0} ratings</td>
+            <td><button class="btn btn-danger" style="padding:4px 10px;font-size:0.72rem;" onclick="deleteExplanation(${e.view_id})">Delete</button></td>
           </tr>
         `).join('');
-      } catch (err) { tbody.innerHTML = `<tr><td colspan="6" style="color:var(--danger);">Error loading</td></tr>`; }
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" style="color:var(--danger);padding:1.5rem;">Error loading explanation statistics</td></tr>`;
+      }
     }
 
     async function handleBatchExplanationGenerate(e) {
       e.preventDefault();
-      const articleIds = document.getElementById('batchArticleIds').value.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n));
-      const profileIds = document.getElementById('batchProfileIds').value.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n));
-      if (!articleIds.length) { showToast('Provide at least 1 article ID', 'error'); return; }
-      showToast('Generating batch...');
+      const articleIds = document.getElementById('batchArticleIds').value.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+      const profileIds = document.getElementById('batchProfileIds').value.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+      if (!articleIds.length) { showToast('Please provide at least 1 article ID', 'error'); return; }
+      showToast('Executing batch synthesis...');
       try {
-        const res = await fetch(`${VERCEL_BASE}/explanation?action=batch-generate`, { method:'POST', headers:getHeaders(), body: JSON.stringify({ article_ids: articleIds, profile_ids: profileIds.length?profileIds:[1] }) });
+        const res = await fetch(`${VERCEL_BASE}/explanation?action=batch-generate`, {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({ article_ids: articleIds, profile_ids: profileIds.length ? profileIds : [1] })
+        });
         const data = await res.json();
-        showToast('Batch complete!');
+        showToast('Batch synthesis complete!');
         fetchExplanations();
       } catch (err) { showToast(err.message, 'error'); }
     }
@@ -893,39 +1502,57 @@
     async function deleteExplanation(id) {
       if (!confirm(`Delete explanation #${id}?`)) return;
       try {
-        const res = await fetch(`${VERCEL_BASE}/explanation?action=delete&view_id=${id}`, { method:'DELETE', headers:getHeaders() });
+        const res = await fetch(`${VERCEL_BASE}/explanation?action=delete&view_id=${id}`, { method: 'DELETE', headers: getHeaders() });
         const data = await res.json();
-        showToast(data.message || 'Deleted');
+        showToast(data.message || 'Explanation view deleted');
         fetchExplanations();
       } catch (err) { showToast(err.message, 'error'); }
     }
 
-    // ─── USERS ───
+    // ─── USERS & CREDITS ───
     async function handleCreditGrant(e) {
       e.preventDefault();
       const userId = document.getElementById('creditUserId').value.trim();
       const amount = parseFloat(document.getElementById('creditAmount').value);
       const reason = document.getElementById('creditReason').value.trim();
       try {
-        const res = await fetch(`${VERCEL_BASE}/account?action=add-credits&user_id=${encodeURIComponent(userId)}`, { method:'POST', headers:getHeaders(), body: JSON.stringify({ amount, reason }) });
+        const res = await fetch(`${VERCEL_BASE}/account?action=add-credits&user_id=${encodeURIComponent(userId)}`, {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({ amount, reason })
+        });
         const data = await res.json();
-        if (data.success) { showToast(`Updated: ${data.new_balance} credits`); document.getElementById('creditAmount').value=''; } else showToast(data.error, 'error');
+        if (data.success) {
+          showToast(`Balance updated: ${data.new_balance} credits`);
+          document.getElementById('creditAmount').value = '';
+          document.getElementById('creditReason').value = '';
+        } else {
+          showToast(data.error || 'Credit adjustment failed', 'error');
+        }
       } catch (err) { showToast(err.message, 'error'); }
     }
 
     async function handleCreditReset(e) {
       e.preventDefault();
       const userId = document.getElementById('resetUserId').value.trim();
-      if (!confirm(`Reset ${userId} to 50?`)) return;
+      if (!confirm(`Are you sure you want to reset user "${userId}" balance to 50?`)) return;
       try {
-        const res = await fetch(`${VERCEL_BASE}/account?action=reset-credits&user_id=${encodeURIComponent(userId)}`, { method:'PUT', headers:getHeaders(), body: JSON.stringify({ amount: 50 }) });
+        const res = await fetch(`${VERCEL_BASE}/account?action=reset-credits&user_id=${encodeURIComponent(userId)}`, {
+          method: 'PUT',
+          headers: getHeaders(),
+          body: JSON.stringify({ amount: 50 })
+        });
         const data = await res.json();
-        if (data.success) showToast(`Reset ${userId} to 50`);
-        else showToast(data.error, 'error');
+        if (data.success) {
+          showToast(`User ${userId} balance reset to 50`);
+          document.getElementById('resetUserId').value = '';
+        } else {
+          showToast(data.error || 'Reset failed', 'error');
+        }
       } catch (err) { showToast(err.message, 'error'); }
     }
 
-    // ─── HELPERS ───
+    // ─── UTILS ───
     function escapeHtml(t) { if(!t) return ''; return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
     function escapeJs(t) { if(!t) return ''; return String(t).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 
