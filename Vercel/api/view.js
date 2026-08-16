@@ -1,5 +1,5 @@
 // api/view.js
-// EasyRead Article View - Full article viewer with dynamic personas, accordions, bookmarks, and read recording
+// EasyRead Article View - Full article viewer with dynamic personas, accordions, bookmarks, and deep dives
 
 import { 
   supabase,
@@ -67,6 +67,7 @@ export default async function handler(req, res) {
           return await renderArticlePage(req, res);
         }
         if (action === 'bookmark-status') return await getBookmarkStatus(req, res);
+        if (action === 'bookmarks') return await getUserBookmarks(req, res);
         return res.status(200).send(renderNotFoundPage('No Article Selected', 'Please select an article from the feed to start reading.'));
       case 'POST':
         if (action === 'rate') return await submitRating(req, res);
@@ -86,7 +87,7 @@ export default async function handler(req, res) {
 }
 
 // ============================================
-// RENDER ARTICLE PAGE & RECORD USER READS
+// RENDER ARTICLE PAGE & RECORD READS
 // ============================================
 async function recordReadingHistory(article_id, user_id) {
   try {
@@ -112,32 +113,8 @@ async function recordReadingHistory(article_id, user_id) {
         .update({ viewed_at: new Date().toISOString() })
         .eq('history_id', existing.history_id);
     }
-
-    // Update usage
-    const { data: todayUsage } = await supabase
-      .from('usage')
-      .select('usage_id, articles_read')
-      .eq('user_id', user_id)
-      .eq('date', today)
-      .maybeSingle();
-
-    if (todayUsage) {
-      await supabase
-        .from('usage')
-        .update({ articles_read: (todayUsage.articles_read || 0) + 1 })
-        .eq('usage_id', todayUsage.usage_id);
-    } else {
-      await insert('usage', {
-        user_id,
-        date: today,
-        articles_read: 1,
-        questions: 0,
-        deep_dives: 0,
-        credits_used: 0
-      });
-    }
   } catch (err) {
-    console.error('Record reading history error:', err);
+    console.error('Record read history error:', err);
   }
 }
 
@@ -164,7 +141,7 @@ async function renderArticlePage(req, res) {
     await supabase.from('articles').update({ view_count: viewCount }).eq('article_id', article.article_id);
     article.view_count = viewCount;
 
-    // Record reading history on server if authenticated
+    // Record reading history if user is authenticated
     if (user_id) {
       await recordReadingHistory(article.article_id, user_id);
     }
@@ -253,6 +230,36 @@ async function getArticleData(req, res) {
   }
 }
 
+async function getUserBookmarks(req, res) {
+  const user_id = req.headers['x-user-id'] || req.query.user_id;
+  if (!user_id) return res.status(401).json({ error: 'Authentication required', bookmarks: [] });
+
+  try {
+    const { data: bookmarks, error } = await supabase
+      .from('bookmarks')
+      .select(`
+        bookmark_id,
+        article_id,
+        created_at,
+        articles:article_id (
+          article_id,
+          canonical_title,
+          slug,
+          summary,
+          source_domain,
+          categories
+        )
+      `)
+      .eq('user_id', user_id)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return res.json({ success: true, bookmarks: bookmarks || [] });
+  } catch (err) {
+    return res.status(500).json({ error: err.message, bookmarks: [] });
+  }
+}
+
 async function toggleBookmark(req, res) {
   const { article_id } = req.body;
   const user_id = req.headers['x-user-id'] || req.query.user_id;
@@ -305,7 +312,11 @@ async function removeBookmark(req, res) {
 async function getBookmarkStatus(req, res) {
   const { article_id } = req.query;
   const user_id = req.headers['x-user-id'] || req.query.user_id;
-  if (!user_id || !article_id) return res.json({ isBookmarked: false, isAuthenticated: false });
+  if (!user_id) return res.json({ isBookmarked: false, isAuthenticated: false });
+
+  if (!article_id) {
+    return await getUserBookmarks(req, res);
+  }
 
   try {
     const { data: bm } = await supabase
@@ -427,9 +438,8 @@ function buildArticleHTML({
   const overflowProfiles = profiles.slice(VISIBLE_PROFILE_COUNT);
 
   return `<!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
-  <!-- ─── PRIMARY OPTIMIZED META TAGS ─── -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -441,7 +451,7 @@ function buildArticleHTML({
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="${canonicalUrl}">
 
-  <!-- ─── OPEN GRAPH / FACEBOOK ─── -->
+  <!-- Open Graph -->
   <meta property="og:type" content="article">
   <meta property="og:url" content="${canonicalUrl}">
   <meta property="og:title" content="${escapeHtml(title)} — EasyRead">
@@ -449,25 +459,23 @@ function buildArticleHTML({
   <meta property="og:image" content="${SITE_URL}/icons/og-image.png">
   <meta property="og:site_name" content="EasyRead">
 
-  <!-- ─── TWITTER CARD ─── -->
+  <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${escapeHtml(title)} — EasyRead">
   <meta name="twitter:description" content="${escapeHtml(cleanSummary || 'Read simplified, clear explanations tailored to your perspective.')}">
   <meta name="twitter:image" content="${SITE_URL}/icons/og-image.png">
 
-  <!-- ─── PWA & THEME ─── -->
+  <!-- Theme & PWA -->
   <meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)">
   <meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="EasyRead">
 
-  <!-- ─── ICONS ─── -->
   <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
 
-  <!-- ─── FONTS ─── -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -502,7 +510,7 @@ function buildArticleHTML({
       <div class="modal-icon-badge">
         <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       </div>
-      <h3>All Explanatory Personas</h3>
+      <h3>All Explanatory Perspectives</h3>
       <p>Choose how you would like this article's complex ideas to be broken down.</p>
       <div class="personas-grid-list">
         ${profiles.map(p => {
@@ -552,7 +560,7 @@ function buildArticleHTML({
         <div class="hub-title-group">
           <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
           <div>
-            <span class="hub-label">Explanatory Persona</span>
+            <span class="hub-label">Explanatory Perspective</span>
             <span class="hub-subtitle">Tap any perspective below to adapt the explanation to your style</span>
           </div>
         </div>
@@ -603,7 +611,7 @@ function buildArticleHTML({
       <a href="/#profile" class="guest-signin-btn">Sign In</a>
     </div>
 
-    <!-- Article Content (Collapsible Accordions Engine) -->
+    <!-- Article Content Body -->
     <article class="article-body" id="articleContent">
       <div class="content-skeleton-loader" id="contentSkeleton" style="display: none;">
         <div class="skeleton-card-pulse glass-card">
@@ -612,11 +620,8 @@ function buildArticleHTML({
           <div class="skeleton-line" style="width: 90%;"></div>
           <div class="skeleton-line" style="width: 75%;"></div>
         </div>
-        <div class="skeleton-card-pulse glass-card" style="margin-top: 12px;">
-          <div class="skeleton-line" style="width: 55%; height: 16px;"></div>
-        </div>
       </div>
-      <div id="articleText">
+      <div id="articleText" class="rich-article-text">
         ${renderParsedExplanationToHtml(defaultExplanation?.content || article.base_content || '')}
       </div>
     </article>
@@ -787,7 +792,7 @@ function buildSummaryHTML(article, defaultExplanation) {
 }
 
 // ============================================
-// PARSER & ACCORDION ENGINES
+// CLEAN MARKDOWN & ARTICLE PARSER
 // ============================================
 function renderParsedExplanationToHtml(rawText) {
   if (!rawText) return '<p>No explanation content available.</p>';
@@ -797,74 +802,39 @@ function renderParsedExplanationToHtml(rawText) {
     text = text.substring(1, text.length - 1).trim();
   }
 
+  // Split into paragraphs/blocks cleanly without aggressive accordions
   const blocks = text.split(/\n\s*\n/);
-  const sections = [];
-  let currentSection = { heading: null, content: [] };
-
-  blocks.forEach((block) => {
+  return blocks.map(block => {
     const trimmed = block.trim();
-    if (!trimmed) return;
+    if (!trimmed) return '';
 
-    const isHeading = trimmed.startsWith('#') || 
-                      (/^[A-Z0-9][\w\s,:—–-]+\?$/.test(trimmed) && trimmed.length < 90) ||
-                      (/^[A-Z][\w\s]+:\s+[A-Za-z0-9\s]+$/.test(trimmed) && trimmed.length < 80);
-
-    if (isHeading) {
-      if (currentSection.content.length > 0 || currentSection.heading) {
-        sections.push(currentSection);
-      }
-      currentSection = {
-        heading: trimmed.replace(/^#+\s*/, ''),
-        content: []
-      };
-    } else {
-      currentSection.content.push(trimmed);
+    // Main Markdown Headings
+    if (trimmed.startsWith('### ')) {
+      return `<h3 class="subheading-h3">${escapeHtml(trimmed.replace(/^###\s+/, ''))}</h3>`;
     }
-  });
-
-  if (currentSection.content.length > 0 || currentSection.heading) {
-    sections.push(currentSection);
-  }
-
-  let html = '';
-  sections.forEach((sec, idx) => {
-    const isFirst = idx === 0;
-    const bodyHtml = sec.content.map(c => formatParagraphOrList(c)).join('');
-
-    if (isFirst) {
-      html += `
-        <div class="explanation-section first-section">
-          ${sec.heading ? `<h2 class="subheading">${escapeHtml(sec.heading)}</h2>` : ''}
-          <div class="section-body">${bodyHtml}</div>
-        </div>
-      `;
-    } else {
-      html += `
-        <div class="accordion-section glass-card collapsed" id="acc-sec-${idx}">
-          <div class="accordion-header" onclick="toggleSectionAccordion('acc-sec-${idx}')">
-            <h3 class="accordion-title">${escapeHtml(sec.heading || `Part ${idx + 1}`)}</h3>
-            <span class="accordion-chevron">
-              <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-            </span>
-          </div>
-          <div class="accordion-body">
-            ${bodyHtml}
-          </div>
-        </div>
-      `;
+    if (trimmed.startsWith('## ')) {
+      return `<h2 class="subheading">${escapeHtml(trimmed.replace(/^##\s+/, ''))}</h2>`;
     }
-  });
+    if (trimmed.startsWith('# ')) {
+      return `<h2 class="subheading">${escapeHtml(trimmed.replace(/^#\s+/, ''))}</h2>`;
+    }
 
-  return html;
+    // Callout quote block
+    if (trimmed.startsWith('> ')) {
+      return `<blockquote class="article-quote">${renderMarkdownText(trimmed.replace(/^>\s*/, ''))}</blockquote>`;
+    }
+
+    return formatParagraphOrList(trimmed);
+  }).join('');
 }
 
 function formatParagraphOrList(textBlock) {
   const lines = textBlock.split('\n').map(l => l.trim()).filter(Boolean);
-  const isList = lines.every(l => l.startsWith('- ') || l.startsWith('* ') || /^\*\*[^*]+\*\*\s*—/.test(l));
+  const isList = lines.every(l => l.startsWith('- ') || l.startsWith('* ') || /^\d+\.\s+/.test(l));
 
   if (isList) {
     const listItems = lines.map(line => {
-      const formatted = renderMarkdownText(line.replace(/^[-*]\s*/, ''));
+      const formatted = renderMarkdownText(line.replace(/^[-*]\s+|\d+\.\s+/, ''));
       return `<li>${formatted}</li>`;
     }).join('');
     return `<ul class="content-list">${listItems}</ul>`;
@@ -879,6 +849,7 @@ function renderMarkdownText(text) {
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
     .replace(/__(.*?)__/g, '<u>$1</u>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
     .replace(/\n/g, '<br/>');
 }
 
@@ -930,7 +901,7 @@ function syncClientState() {
       if (display) display.textContent = currentCredits.toFixed(1);
     }
 
-    // 1. Record reading history on client load
+    // 1. Record reading history on client
     fetch('/api/articles?action=track-view', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-user-id': userId },
@@ -952,12 +923,6 @@ function syncClientState() {
 }
 
 syncClientState();
-
-// ─── ACCORDIONS ───
-window.toggleSectionAccordion = function(id) {
-  const sec = document.getElementById(id);
-  if (sec) sec.classList.toggle('collapsed');
-};
 
 window.toggleDeepDiveAccordion = function(id) {
   const sec = document.getElementById(id);
@@ -990,7 +955,6 @@ window.copyCanonicalArticleLink = function() {
   }
 };
 
-// ─── MODALS ───
 window.showLoginModal = function() {
   const modal = document.getElementById('loginOverlay');
   if (modal) modal.classList.add('active');
@@ -1125,7 +1089,7 @@ window.handleBookmarkToggle = async function() {
   }
 };
 
-// ─── PARSE & SWITCH PROFILE (ACCORDIONS PRESERVED) ───
+// ─── SWITCH PERSPECTIVES (MAINTAINS CLEAN FORMATTING) ───
 window.switchProfile = function(profileId, btnElem) {
   document.querySelectorAll('.persona-pill').forEach(p => p.classList.remove('active'));
   if (btnElem) btnElem.classList.add('active');
@@ -1152,7 +1116,7 @@ window.switchProfile = function(profileId, btnElem) {
     if (textElem) {
       if (explanation) {
         currentViewId = explanation.view_id;
-        textElem.innerHTML = parseExplanationToHtmlClient(explanation.content);
+        textElem.innerHTML = renderClientExplanationHtml(explanation.content);
         textElem.style.display = 'block';
       } else {
         textElem.innerHTML = \`
@@ -1168,7 +1132,7 @@ window.switchProfile = function(profileId, btnElem) {
         textElem.style.display = 'block';
       }
     }
-  }, 240);
+  }, 220);
 };
 
 window.generateExplanation = async function(profileId) {
@@ -1270,80 +1234,42 @@ window.submitInlineDeepDive = async function(e) {
   }
 };
 
-// ─── CLIENT-SIDE RICH PARSER ENGINE ───
-function parseExplanationToHtmlClient(rawText) {
+// ─── CLIENT MARKDOWN & FORMAT PARSER ───
+function renderClientExplanationHtml(rawText) {
   if (!rawText) return '<p>No content available.</p>';
-
   let text = rawText.trim();
   if (text.startsWith('"') && text.endsWith('"')) {
     text = text.substring(1, text.length - 1).trim();
   }
 
   const blocks = text.split(/\\n\\s*\\n/);
-  const sections = [];
-  let currentSection = { heading: null, content: [] };
-
-  blocks.forEach(block => {
+  return blocks.map(block => {
     const trimmed = block.trim();
-    if (!trimmed) return;
+    if (!trimmed) return '';
 
-    const isHeading = trimmed.startsWith('#') || 
-                      (/^[A-Z0-9][\\w\\s,:—–-]+\\?$/.test(trimmed) && trimmed.length < 90) ||
-                      (/^[A-Z][\\w\\s]+:\\s+[A-Za-z0-9\\s]+$/.test(trimmed) && trimmed.length < 80);
-
-    if (isHeading) {
-      if (currentSection.content.length > 0 || currentSection.heading) {
-        sections.push(currentSection);
-      }
-      currentSection = { heading: trimmed.replace(/^#+\\s*/, ''), content: [] };
-    } else {
-      currentSection.content.push(trimmed);
+    if (trimmed.startsWith('### ')) {
+      return '<h3 class="subheading-h3">' + escapeHtml(trimmed.replace(/^###\\s+/, '')) + '</h3>';
     }
-  });
-
-  if (currentSection.content.length > 0 || currentSection.heading) {
-    sections.push(currentSection);
-  }
-
-  let html = '';
-  sections.forEach((sec, idx) => {
-    const isFirst = idx === 0;
-    const bodyHtml = sec.content.map(c => formatParagraphOrListClient(c)).join('');
-
-    if (isFirst) {
-      html += \`
-        <div class="explanation-section first-section">
-          \${sec.heading ? '<h2 class="subheading">' + escapeHtml(sec.heading) + '</h2>' : ''}
-          <div class="section-body">\${bodyHtml}</div>
-        </div>
-      \`;
-    } else {
-      html += \`
-        <div class="accordion-section glass-card collapsed" id="acc-sec-\${idx}">
-          <div class="accordion-header" onclick="toggleSectionAccordion('acc-sec-\${idx}')">
-            <h3 class="accordion-title">\${escapeHtml(sec.heading || 'Part ' + (idx + 1))}</h3>
-            <span class="accordion-chevron">
-              <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-            </span>
-          </div>
-          <div class="accordion-body">\${bodyHtml}</div>
-        </div>
-      \`;
+    if (trimmed.startsWith('## ')) {
+      return '<h2 class="subheading">' + escapeHtml(trimmed.replace(/^##\\s+/, '')) + '</h2>';
     }
-  });
+    if (trimmed.startsWith('# ')) {
+      return '<h2 class="subheading">' + escapeHtml(trimmed.replace(/^#\\s+/, '')) + '</h2>';
+    }
+    if (trimmed.startsWith('> ')) {
+      return '<blockquote class="article-quote">' + formatMarkdownClient(trimmed.replace(/^>\\s*/, '')) + '</blockquote>';
+    }
 
-  return html;
-}
+    const lines = trimmed.split('\\n').map(l => l.trim()).filter(Boolean);
+    const isList = lines.every(l => l.startsWith('- ') || l.startsWith('* ') || /^\\d+\\.\\s+/.test(l));
 
-function formatParagraphOrListClient(textBlock) {
-  const lines = textBlock.split('\\n').map(l => l.trim()).filter(Boolean);
-  const isList = lines.every(l => l.startsWith('- ') || l.startsWith('* ') || /^\\*\\*[^*]+\\*\\*\\s*—/.test(l));
+    if (isList) {
+      const listItems = lines.map(line => '<li>' + formatMarkdownClient(line.replace(/^[-*]\\s+|\\d+\\.\\s+/, '')) + '</li>').join('');
+      return '<ul class="content-list">' + listItems + '</ul>';
+    }
 
-  if (isList) {
-    const listItems = lines.map(line => '<li>' + formatMarkdownClient(line.replace(/^[-*]\\s*/, '')) + '</li>').join('');
-    return '<ul class="content-list">' + listItems + '</ul>';
-  }
-  return '<p>' + formatMarkdownClient(textBlock) + '</p>';
+    return '<p>' + formatMarkdownClient(trimmed) + '</p>';
+  }).join('');
 }
 
 function formatMarkdownClient(text) {
@@ -1352,6 +1278,7 @@ function formatMarkdownClient(text) {
     .replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>')
     .replace(/\\*(.*?)\\*/g, '<em>$1</em>')
     .replace(/__(.*?)__/g, '<u>$1</u>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
     .replace(/\\n/g, '<br/>');
 }
 
@@ -1360,7 +1287,6 @@ function escapeHtml(t) {
   return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-// ─── SCROLL PROGRESS & AUTO-RATING TRIGGER ───
 window.addEventListener('scroll', () => {
   const scrollTop = window.scrollY;
   const docHeight = document.documentElement.scrollHeight - window.innerHeight;
@@ -1409,7 +1335,7 @@ function escapeJs(text) {
 
 function renderNotFoundPage(title, description) {
   return `<!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1417,9 +1343,10 @@ function renderNotFoundPage(title, description) {
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
   <style>
     :root { --bg:#09090b; --text:#f2f2f5; --sec:#a1a1aa; --accent:#f59847; }
+    @media(prefers-color-scheme:light){:root{--bg:#f6f7f9;--text:#111113;--sec:#5c5c63;}}
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; text-align:center; }
-    .card { background:rgba(20,20,25,0.8); border:1px solid rgba(255,255,255,0.08); border-radius:24px; padding:36px 28px; max-width:400px; width:100%; box-shadow:0 16px 40px rgba(0,0,0,0.6); }
+    .card { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:24px; padding:36px 28px; max-width:400px; width:100%; box-shadow:0 16px 40px rgba(0,0,0,0.5); backdrop-filter:blur(20px); }
     .icon-wrap { width:64px; height:64px; border-radius:20px; background:rgba(245,152,71,0.12); display:flex; align-items:center; justify-content:center; margin:0 auto 18px; border:1px solid rgba(245,152,71,0.25); }
     .icon-wrap svg { width:32px; height:32px; stroke:var(--accent); fill:none; stroke-width:2; }
     h1 { font-size:1.4rem; font-weight:800; margin-bottom:8px; }
@@ -1471,18 +1398,33 @@ function getCSSStyles() {
 }
 
 [data-theme="light"] {
-  --bg-color: #f6f7f9;
-  --bg-glow: radial-gradient(circle at 50% 0%, rgba(245, 152, 71, 0.08) 0%, transparent 65%);
-  --text-main: #111113;
-  --text-secondary: #5c5c63;
-  --text-muted: #8e8e96;
-  --card-bg: rgba(255, 255, 255, 0.85);
-  --card-bg-hover: rgba(255, 255, 255, 0.98);
-  --glass-border: 1px solid rgba(0, 0, 0, 0.08);
-  --glass-border-subtle: 1px solid rgba(0, 0, 0, 0.04);
-  --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-  --mode-bg: rgba(0, 0, 0, 0.04);
-  --mode-bg-hover: rgba(0, 0, 0, 0.08);
+  --bg-color: #f6f7f9 !important;
+  --bg-glow: radial-gradient(circle at 50% 0%, rgba(245, 152, 71, 0.08) 0%, transparent 65%) !important;
+  --text-main: #111113 !important;
+  --text-secondary: #5c5c63 !important;
+  --text-muted: #8e8e96 !important;
+  --card-bg: rgba(255, 255, 255, 0.85) !important;
+  --card-bg-hover: rgba(255, 255, 255, 0.98) !important;
+  --glass-border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  --glass-border-subtle: 1px solid rgba(0, 0, 0, 0.04) !important;
+  --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
+  --mode-bg: rgba(0, 0, 0, 0.04) !important;
+  --mode-bg-hover: rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-theme="dark"] {
+  --bg-color: #09090b !important;
+  --bg-glow: radial-gradient(circle at 50% 0%, rgba(245, 152, 71, 0.12) 0%, transparent 60%) !important;
+  --text-main: #f2f2f5 !important;
+  --text-secondary: #a1a1aa !important;
+  --text-muted: #71717a !important;
+  --card-bg: rgba(18, 18, 22, 0.78) !important;
+  --card-bg-hover: rgba(26, 26, 32, 0.9) !important;
+  --glass-border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.05) !important;
+  --glass-shadow: 0 16px 40px rgba(0, 0, 0, 0.5) !important;
+  --mode-bg: rgba(255, 255, 255, 0.06) !important;
+  --mode-bg-hover: rgba(255, 255, 255, 0.11) !important;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1606,29 +1548,60 @@ body {
 }
 .guest-signin-btn:hover { background: var(--accent-hover); }
 
-/* ─── ARTICLE TYPOGRAPHY & ACCORDIONS ─── */
-.article-body p { font-size: 0.96rem; line-height: 1.7; color: var(--text-secondary); margin-bottom: 1.1rem; }
-.subheading { font-size: 1.3rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.75rem; letter-spacing: -0.02em; }
-.content-list { padding-left: 1.3rem; margin-bottom: 1.1rem; color: var(--text-secondary); line-height: 1.68; font-size: 0.94rem; }
-.content-list li { margin-bottom: 0.45rem; }
-
-.accordion-section { margin-bottom: 12px; overflow: hidden; }
-.accordion-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 18px; cursor: pointer; user-select: none;
+/* ─── RICH ARTICLE TYPOGRAPHY ─── */
+.rich-article-text {
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--text-secondary);
 }
-.accordion-title { font-size: 1rem; font-weight: 700; color: var(--text-main); line-height: 1.35; }
-.accordion-chevron svg { width: 16px; height: 16px; stroke: var(--text-muted); fill: none; stroke-width: 2; transition: transform 0.25s ease; }
-.accordion-section.collapsed .accordion-chevron svg { transform: rotate(-90deg); }
-.accordion-body { padding: 0 18px 16px 18px; }
-.accordion-section.collapsed .accordion-body { display: none; }
+.rich-article-text p {
+  margin-bottom: 1.25rem;
+}
+.subheading {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-top: 1.6rem;
+  margin-bottom: 0.8rem;
+  letter-spacing: -0.02em;
+}
+.subheading-h3 {
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-top: 1.3rem;
+  margin-bottom: 0.6rem;
+}
+.content-list {
+  padding-left: 1.4rem;
+  margin-bottom: 1.25rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+.content-list li { margin-bottom: 0.45rem; }
+.article-quote {
+  border-left: 3px solid var(--accent-color);
+  background: var(--accent-light);
+  padding: 12px 16px;
+  border-radius: 0 12px 12px 0;
+  margin: 1.25rem 0;
+  font-style: italic;
+  color: var(--text-main);
+}
+code {
+  background: var(--mode-bg-hover);
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 0.9em;
+}
 
 /* ─── SUMMARY / KEY TAKEAWAY ─── */
 .summary-wrapper { margin: 1.8rem 0 1.4rem; padding: 16px 20px; border-left: 3px solid var(--accent-color); }
 .summary-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 .summary-header svg { width: 16px; height: 16px; stroke: var(--accent-color); fill: none; stroke-width: 2; }
 .summary-header h4 { font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-color); font-weight: 800; }
-.summary-text { font-size: 0.92rem; line-height: 1.6; color: var(--text-secondary); }
+.summary-text { font-size: 0.94rem; line-height: 1.65; color: var(--text-secondary); }
 
 /* ─── DEEP DIVES ─── */
 .deep-dives-section { margin-top: 2.2rem; margin-bottom: 1.6rem; }
@@ -1647,9 +1620,10 @@ body {
 .dd-title-row { display: flex; align-items: center; gap: 10px; }
 .dd-q-icon svg { width: 18px; height: 18px; stroke: var(--accent-color); fill: none; stroke-width: 2; flex-shrink: 0; }
 .dd-title-row h4 { font-size: 0.92rem; font-weight: 700; color: var(--text-main); }
+.accordion-chevron svg { width: 16px; height: 16px; stroke: var(--text-muted); fill: none; stroke-width: 2; transition: transform 0.25s ease; }
+.deep-dive-accordion.collapsed .accordion-chevron svg { transform: rotate(-90deg); }
 .dd-body { padding: 0 18px 16px 46px; }
 .deep-dive-accordion.collapsed .dd-body { display: none; }
-.deep-dive-accordion.collapsed .accordion-chevron svg { transform: rotate(-90deg); }
 .dd-answer-text { font-size: 0.9rem; line-height: 1.6; color: var(--text-secondary); }
 
 .deep-dive-ask-card { padding: 14px 16px; }
@@ -1668,7 +1642,7 @@ body {
 }
 .ask-submit-btn:hover { background: var(--accent-hover); }
 
-/* ─── SHIMMER SKELETON LOADERS ─── */
+/* ─── SHIMMER LOADERS ─── */
 .skeleton-card-pulse { padding: 20px; }
 .skeleton-line {
   height: 12px; border-radius: 6px; background: rgba(255,255,255,0.04);
@@ -1676,7 +1650,7 @@ body {
 }
 .skeleton-line::after {
   position: absolute; inset: 0; transform: translateX(-100%);
-  background-image: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0 100%);
+  background-image: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%);
   animation: shimmerSwipe 1.5s infinite; content: '';
 }
 @keyframes shimmerSwipe { 100% { transform: translateX(100%); } }
@@ -1783,7 +1757,7 @@ body {
 .btn-secondary { background: var(--mode-bg); color: var(--text-secondary); border: var(--glass-border-subtle); }
 .btn-secondary:hover { background: var(--mode-bg-hover); color: var(--text-main); }
 
-/* ─── PERSONAS GRID IN MODAL ─── */
+/* ─── PERSONAS MODAL GRID ─── */
 .personas-modal-card { max-width: 480px; text-align: left; max-height: 80vh; overflow-y: auto; }
 .personas-grid-list { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
 .persona-selection-card {
