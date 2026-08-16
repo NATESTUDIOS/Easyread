@@ -1,5 +1,5 @@
 // api/view.js
-// EasyRead Article View - Full article viewer with dynamic personas, timer-based generation, bookmarks, and deep dives
+// EasyRead Article View - Full article viewer with dynamic personas, accordions, bookmarks, live timer generation, and deep dives
 
 import { 
   supabase,
@@ -146,7 +146,7 @@ async function renderArticlePage(req, res) {
 
     const { data: explanations } = await supabase
       .from('explanation_views')
-      .select('view_id, title, content, summary, profile_id, view_count, rating_avg, rating_count, profiles:profile_id (profile_id, name, description)')
+      .select(`view_id, title, content, summary, profile_id, view_count, rating_avg, rating_count, profiles:profile_id (profile_id, name, description)`)
       .eq('article_id', article.article_id)
       .order('view_count', { ascending: false });
 
@@ -217,7 +217,7 @@ async function getArticleData(req, res) {
 
     const { data: explanations } = await supabase
       .from('explanation_views')
-      .select('*')
+      .select(`*`)
       .eq('article_id', article.article_id);
 
     return res.json({ success: true, article, explanations: explanations || [] });
@@ -792,7 +792,7 @@ function buildSummaryHTML(article, defaultExplanation) {
 }
 
 // ============================================
-// CLEAN MARKDOWN & ARTICLE PARSER
+// PARSER & ACCORDION ENGINES
 // ============================================
 function renderParsedExplanationToHtml(rawText) {
   if (!rawText) return '<p>No explanation content available.</p>';
@@ -803,34 +803,73 @@ function renderParsedExplanationToHtml(rawText) {
   }
 
   const blocks = text.split(/\n\s*\n/);
-  return blocks.map(block => {
+  const sections = [];
+  let currentSection = { heading: null, content: [] };
+
+  blocks.forEach((block) => {
     const trimmed = block.trim();
-    if (!trimmed) return '';
+    if (!trimmed) return;
 
-    if (trimmed.startsWith('### ')) {
-      return `<h3 class="subheading-h3">${escapeHtml(trimmed.replace(/^###\s+/, ''))}</h3>`;
-    }
-    if (trimmed.startsWith('## ')) {
-      return `<h2 class="subheading">${escapeHtml(trimmed.replace(/^##\s+/, ''))}</h2>`;
-    }
-    if (trimmed.startsWith('# ')) {
-      return `<h2 class="subheading">${escapeHtml(trimmed.replace(/^#\s+/, ''))}</h2>`;
-    }
-    if (trimmed.startsWith('> ')) {
-      return `<blockquote class="article-quote">${renderMarkdownText(trimmed.replace(/^>\s*/, ''))}</blockquote>`;
-    }
+    const isHeading = trimmed.startsWith('#') || 
+                      (/^[A-Z0-9][\w\s,:—–-]+\?$/.test(trimmed) && trimmed.length < 90) ||
+                      (/^[A-Z][\w\s]+:\s+[A-Za-z0-9\s]+$/.test(trimmed) && trimmed.length < 80);
 
-    return formatParagraphOrList(trimmed);
-  }).join('');
+    if (isHeading) {
+      if (currentSection.content.length > 0 || currentSection.heading) {
+        sections.push(currentSection);
+      }
+      currentSection = {
+        heading: trimmed.replace(/^#+\s*/, ''),
+        content: []
+      };
+    } else {
+      currentSection.content.push(trimmed);
+    }
+  });
+
+  if (currentSection.content.length > 0 || currentSection.heading) {
+    sections.push(currentSection);
+  }
+
+  let html = '';
+  sections.forEach((sec, idx) => {
+    const isFirst = idx === 0;
+    const bodyHtml = sec.content.map(c => formatParagraphOrList(c)).join('');
+
+    if (isFirst) {
+      html += `
+        <div class="explanation-section first-section">
+          ${sec.heading ? `<h2 class="subheading">${escapeHtml(sec.heading)}</h2>` : ''}
+          <div class="section-body">${bodyHtml}</div>
+        </div>
+      `;
+    } else {
+      html += `
+        <div class="accordion-section glass-card collapsed" id="acc-sec-${idx}">
+          <div class="accordion-header" onclick="toggleSectionAccordion('acc-sec-${idx}')">
+            <h3 class="accordion-title">${escapeHtml(sec.heading || `Part ${idx + 1}`)}</h3>
+            <span class="accordion-chevron">
+              <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            </span>
+          </div>
+          <div class="accordion-body">
+            ${bodyHtml}
+          </div>
+        </div>
+      `;
+    }
+  });
+
+  return html;
 }
 
 function formatParagraphOrList(textBlock) {
   const lines = textBlock.split('\n').map(l => l.trim()).filter(Boolean);
-  const isList = lines.every(l => l.startsWith('- ') || l.startsWith('* ') || /^\d+\.\s+/.test(l));
+  const isList = lines.every(l => l.startsWith('- ') || l.startsWith('* ') || /^\*\*[^*]+\*\*\s*—/.test(l));
 
   if (isList) {
     const listItems = lines.map(line => {
-      const formatted = renderMarkdownText(line.replace(/^[-*]\s+|\d+\.\s+/, ''));
+      const formatted = renderMarkdownText(line.replace(/^[-*]\s*/, ''));
       return `<li>${formatted}</li>`;
     }).join('');
     return `<ul class="content-list">${listItems}</ul>`;
@@ -916,6 +955,11 @@ function syncClientState() {
 }
 
 syncClientState();
+
+window.toggleSectionAccordion = function(id) {
+  var sec = document.getElementById(id);
+  if (sec) sec.classList.toggle('collapsed');
+};
 
 window.toggleDeepDiveAccordion = function(id) {
   var sec = document.getElementById(id);
@@ -1298,6 +1342,7 @@ window.submitInlineDeepDive = async function(e) {
   }
 };
 
+// ─── CLIENT-SIDE ACCORDION PARSER (MATCHES SERVER ENGINE) ───
 function renderClientExplanationHtml(rawText) {
   if (!rawText) return '<p>No content available.</p>';
   var text = rawText.trim();
@@ -1306,35 +1351,77 @@ function renderClientExplanationHtml(rawText) {
   }
 
   var blocks = text.split(/\\n\\s*\\n/);
-  return blocks.map(function(block) {
+  var sections = [];
+  var currentSection = { heading: null, content: [] };
+
+  blocks.forEach(function(block) {
     var trimmed = block.trim();
-    if (!trimmed) return '';
+    if (!trimmed) return;
 
-    if (trimmed.startsWith('### ')) {
-      return '<h3 class="subheading-h3">' + escapeHtml(trimmed.replace(/^###\\s+/, '')) + '</h3>';
-    }
-    if (trimmed.startsWith('## ')) {
-      return '<h2 class="subheading">' + escapeHtml(trimmed.replace(/^##\\s+/, '')) + '</h2>';
-    }
-    if (trimmed.startsWith('# ')) {
-      return '<h2 class="subheading">' + escapeHtml(trimmed.replace(/^#\\s+/, '')) + '</h2>';
-    }
-    if (trimmed.startsWith('> ')) {
-      return '<blockquote class="article-quote">' + formatMarkdownClient(trimmed.replace(/^>\\s*/, '')) + '</blockquote>';
-    }
+    var isHeading = trimmed.startsWith('#') || 
+                    (/^[A-Z0-9][\\w\\s,:—–-]+\\?$/.test(trimmed) && trimmed.length < 90) ||
+                    (/^[A-Z][\\w\\s]+:\\s+[A-Za-z0-9\\s]+$/.test(trimmed) && trimmed.length < 80);
 
-    var lines = trimmed.split('\\n').map(function(l) { return l.trim(); }).filter(Boolean);
-    var isList = lines.every(function(l) { return l.startsWith('- ') || l.startsWith('* ') || /^\\d+\\.\\s+/.test(l); });
-
-    if (isList) {
-      var listItems = lines.map(function(line) {
-        return '<li>' + formatMarkdownClient(line.replace(/^[-*]\\s+|\\d+\\.\\s+/, '')) + '</li>';
-      }).join('');
-      return '<ul class="content-list">' + listItems + '</ul>';
+    if (isHeading) {
+      if (currentSection.content.length > 0 || currentSection.heading) {
+        sections.push(currentSection);
+      }
+      currentSection = {
+        heading: trimmed.replace(/^#+\\s*/, ''),
+        content: []
+      };
+    } else {
+      currentSection.content.push(trimmed);
     }
+  });
 
-    return '<p>' + formatMarkdownClient(trimmed) + '</p>';
-  }).join('');
+  if (currentSection.content.length > 0 || currentSection.heading) {
+    sections.push(currentSection);
+  }
+
+  var html = '';
+  sections.forEach(function(sec, idx) {
+    var isFirst = idx === 0;
+    var bodyHtml = sec.content.map(function(c) { return formatParagraphOrListClient(c); }).join('');
+
+    if (isFirst) {
+      html += 
+        '<div class="explanation-section first-section">' +
+          (sec.heading ? '<h2 class="subheading">' + escapeHtml(sec.heading) + '</h2>' : '') +
+          '<div class="section-body">' + bodyHtml + '</div>' +
+        '</div>';
+    } else {
+      html += 
+        '<div class="accordion-section glass-card collapsed" id="acc-sec-' + idx + '">' +
+          '<div class="accordion-header" onclick="toggleSectionAccordion(\\'acc-sec-' + idx + '\\')">' +
+            '<h3 class="accordion-title">' + escapeHtml(sec.heading || ('Part ' + (idx + 1))) + '</h3>' +
+            '<span class="accordion-chevron">' +
+              '<svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>' +
+            '</span>' +
+          '</div>' +
+          '<div class="accordion-body">' +
+            bodyHtml +
+          '</div>' +
+        '</div>';
+    }
+  });
+
+  return html;
+}
+
+function formatParagraphOrListClient(textBlock) {
+  var lines = textBlock.split('\\n').map(function(l) { return l.trim(); }).filter(Boolean);
+  var isList = lines.every(function(l) { return l.startsWith('- ') || l.startsWith('* ') || /^\\*\\*[^*]+\\*\\*\\s*—/.test(l); });
+
+  if (isList) {
+    var listItems = lines.map(function(line) {
+      var formatted = formatMarkdownClient(line.replace(/^[-*]\\s*/, ''));
+      return '<li>' + formatted + '</li>';
+    }).join('');
+    return '<ul class="content-list">' + listItems + '</ul>';
+  }
+
+  return '<p>' + formatMarkdownClient(textBlock) + '</p>';
 }
 
 function formatMarkdownClient(text) {
@@ -1486,7 +1573,7 @@ function getCSSStyles() {
   --card-bg: rgba(18, 18, 22, 0.78) !important;
   --card-bg-hover: rgba(26, 26, 32, 0.9) !important;
   --glass-border: 1px solid rgba(255, 255, 255, 0.09) !important;
-  --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.05);
+  --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.05) !important;
   --glass-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
   --mode-bg: rgba(255, 255, 255, 0.06);
   --mode-bg-hover: rgba(255, 255, 255, 0.11);
@@ -1613,21 +1700,24 @@ body {
 }
 .guest-signin-btn:hover { background: var(--accent-hover); }
 
-/* ─── RICH ARTICLE TYPOGRAPHY ─── */
-.rich-article-text { font-size: 1rem; line-height: 1.75; color: var(--text-secondary); }
-.rich-article-text p { margin-bottom: 1.25rem; }
-.subheading { font-size: 1.35rem; font-weight: 800; color: var(--text-main); margin-top: 1.6rem; margin-bottom: 0.8rem; letter-spacing: -0.02em; }
-.subheading-h3 { font-size: 1.12rem; font-weight: 700; color: var(--text-main); margin-top: 1.3rem; margin-bottom: 0.6rem; }
-.content-list { padding-left: 1.4rem; margin-bottom: 1.25rem; color: var(--text-secondary); line-height: 1.7; }
+/* ─── ARTICLE TYPOGRAPHY & ACCORDIONS ─── */
+.article-body p { font-size: 0.96rem; line-height: 1.7; color: var(--text-secondary); margin-bottom: 1.1rem; }
+.subheading { font-size: 1.3rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.75rem; letter-spacing: -0.02em; }
+.content-list { padding-left: 1.3rem; margin-bottom: 1.1rem; color: var(--text-secondary); line-height: 1.68; font-size: 0.94rem; }
 .content-list li { margin-bottom: 0.45rem; }
-.article-quote {
-  border-left: 3px solid var(--accent-color); background: var(--accent-light);
-  padding: 12px 16px; border-radius: 0 12px 12px 0; margin: 1.25rem 0;
-  font-style: italic; color: var(--text-main);
-}
-code { background: var(--mode-bg-hover); padding: 2px 6px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.9em; }
 
-/* ─── LIVE GENERATION TIMER CARD ─── */
+.accordion-section { margin-bottom: 12px; overflow: hidden; }
+.accordion-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; cursor: pointer; user-select: none;
+}
+.accordion-title { font-size: 1rem; font-weight: 700; color: var(--text-main); line-height: 1.35; }
+.accordion-chevron svg { width: 16px; height: 16px; stroke: var(--text-muted); fill: none; stroke-width: 2; transition: transform 0.25s ease; }
+.accordion-section.collapsed .accordion-chevron svg { transform: rotate(-90deg); }
+.accordion-body { padding: 0 18px 16px 18px; }
+.accordion-section.collapsed .accordion-body { display: none; }
+
+/* ─── LIVE GENERATION TIMER CARD (ISSUE 2) ─── */
 .generation-timer-card { padding: 24px 20px; text-align: center; margin: 1.2rem 0; border: 1px solid var(--accent-glow); }
 .timer-header-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 14px; }
 .timer-spinner {
@@ -1655,7 +1745,7 @@ code { background: var(--mode-bg-hover); padding: 2px 6px; border-radius: 6px; f
 .summary-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 .summary-header svg { width: 16px; height: 16px; stroke: var(--accent-color); fill: none; stroke-width: 2; }
 .summary-header h4 { font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-color); font-weight: 800; }
-.summary-text { font-size: 0.94rem; line-height: 1.65; color: var(--text-secondary); }
+.summary-text { font-size: 0.92rem; line-height: 1.6; color: var(--text-secondary); }
 
 /* ─── DEEP DIVES ─── */
 .deep-dives-section { margin-top: 2.2rem; margin-bottom: 1.6rem; }
@@ -1674,10 +1764,9 @@ code { background: var(--mode-bg-hover); padding: 2px 6px; border-radius: 6px; f
 .dd-title-row { display: flex; align-items: center; gap: 10px; }
 .dd-q-icon svg { width: 18px; height: 18px; stroke: var(--accent-color); fill: none; stroke-width: 2; flex-shrink: 0; }
 .dd-title-row h4 { font-size: 0.92rem; font-weight: 700; color: var(--text-main); }
-.accordion-chevron svg { width: 16px; height: 16px; stroke: var(--text-muted); fill: none; stroke-width: 2; transition: transform 0.25s ease; }
-.deep-dive-accordion.collapsed .accordion-chevron svg { transform: rotate(-90deg); }
 .dd-body { padding: 0 18px 16px 46px; }
 .deep-dive-accordion.collapsed .dd-body { display: none; }
+.deep-dive-accordion.collapsed .accordion-chevron svg { transform: rotate(-90deg); }
 .dd-answer-text { font-size: 0.9rem; line-height: 1.6; color: var(--text-secondary); }
 
 .deep-dive-ask-card { padding: 14px 16px; }
@@ -1695,6 +1784,19 @@ code { background: var(--mode-bg-hover); padding: 2px 6px; border-radius: 6px; f
   border-radius: 10px; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: background 0.2s;
 }
 .ask-submit-btn:hover { background: var(--accent-hover); }
+
+/* ─── SHIMMER SKELETON LOADERS ─── */
+.skeleton-card-pulse { padding: 20px; }
+.skeleton-line {
+  height: 12px; border-radius: 6px; background: rgba(255,255,255,0.04);
+  position: relative; overflow: hidden; margin-bottom: 10px;
+}
+.skeleton-line::after {
+  position: absolute; inset: 0; transform: translateX(-100%);
+  background-image: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%);
+  animation: shimmerSwipe 1.5s infinite; content: '';
+}
+@keyframes shimmerSwipe { 100% { transform: translateX(100%); } }
 
 /* ─── METADATA ROW ─── */
 .article-metadata {
