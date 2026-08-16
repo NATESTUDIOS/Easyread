@@ -1160,7 +1160,7 @@
             info: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`
         };
 
-        // ─── GLASS DIALOG SYSTEM ───
+        // ─── GLASS DIALOG SYSTEM (PRESERVES USER GESTURE) ───
         const GlassDialog = {
             overlay: document.getElementById('glassOverlay'),
             icon: document.getElementById('dialogIcon'),
@@ -1180,6 +1180,7 @@
                     this.secondaryBtn.textContent = options.secondaryText || 'Cancel';
                     this.secondaryBtn.style.display = options.hideSecondary ? 'none' : 'inline-flex';
 
+                    // Replace elements to reset previous event listeners
                     const newPrimary = this.primaryBtn.cloneNode(true);
                     const newSecondary = this.secondaryBtn.cloneNode(true);
                     this.primaryBtn.parentNode.replaceChild(newPrimary, this.primaryBtn);
@@ -1188,8 +1189,22 @@
                     this.primaryBtn = newPrimary;
                     this.secondaryBtn = newSecondary;
 
-                    this.primaryBtn.addEventListener('click', () => { this.hide(); resolve(true); });
-                    this.secondaryBtn.addEventListener('click', () => { this.hide(); resolve(false); });
+                    // Direct click listener preserves synchronous user gesture for sensitive browser APIs
+                    this.primaryBtn.addEventListener('click', async () => {
+                        if (typeof options.onPrimary === 'function') {
+                            await options.onPrimary();
+                        }
+                        this.hide();
+                        resolve(true);
+                    });
+
+                    this.secondaryBtn.addEventListener('click', async () => {
+                        if (typeof options.onSecondary === 'function') {
+                            await options.onSecondary();
+                        }
+                        this.hide();
+                        resolve(false);
+                    });
 
                     this.overlay.classList.add('active');
                 });
@@ -1236,7 +1251,7 @@
                 offlineBanner.classList.remove('online-sync');
                 offlineBanner.classList.add('show');
                 
-                // Auto-dismiss popup banner after 3.5s so it never blocks the navigation bar
+                // Auto-dismiss popup banner after 3.5s so it never blocks navigation
                 if (offlineBannerTimeout) clearTimeout(offlineBannerTimeout);
                 offlineBannerTimeout = setTimeout(() => {
                     offlineBanner.classList.remove('show');
@@ -1307,7 +1322,7 @@
             }, 70);
         }
 
-        // ─── PROMPT TRIGGERS (Install & Push) ───
+        // ─── PROMPT TRIGGERS (INSTALL & PUSH NOTIFICATIONS) ───
         let deferredPrompt = null;
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
@@ -1319,71 +1334,63 @@
             showToast('🎉 EasyRead installed successfully!');
         });
 
-        async function requestNativeNotificationPermission() {
-            if (!('Notification' in window)) return 'unsupported';
-            try {
-                let permission = Notification.permission;
-                if (permission !== 'granted' && permission !== 'denied') {
-                    const result = await new Promise((resolve) => {
-                        const res = Notification.requestPermission(resolve);
-                        if (res && typeof res.then === 'function') {
-                            res.then(resolve);
-                        }
-                    });
-                    permission = result || Notification.permission;
-                }
-                return permission;
-            } catch (e) {
-                console.warn('Notification permission error:', e);
-                return 'error';
-            }
-        }
-
         async function checkPrompts() {
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
-            // 1. Install Prompt
-            if (!isStandalone && deferredPrompt && !sessionStorage.getItem('er_install_prompt_dismissed')) {
-                const installConfirmed = await GlassDialog.show({
+            // 1. PWA Install Prompt
+            if (!isStandalone && deferredPrompt && !sessionStorage.getItem('er_install_shown')) {
+                await GlassDialog.show({
                     icon: 'download',
                     title: 'Install EasyRead',
-                    description: 'Install EasyRead to get offline access, instant launch, and a distraction-free full screen reader.',
-                    primaryText: 'Install App',
-                    secondaryText: 'Later'
-                });
-
-                if (installConfirmed && deferredPrompt) {
-                    deferredPrompt.prompt();
-                    const choice = await deferredPrompt.userChoice;
-                    if (choice.outcome === 'accepted') {
-                        showToast('EasyRead installed!');
+                    description: 'Install EasyRead for offline access, instant launch, and a distraction-free full screen reader.',
+                    primaryText: 'Install',
+                    secondaryText: 'Later',
+                    onPrimary: async () => {
+                        sessionStorage.setItem('er_install_shown', 'true');
+                        if (deferredPrompt) {
+                            deferredPrompt.prompt();
+                            const choice = await deferredPrompt.userChoice;
+                            if (choice.outcome === 'accepted') {
+                                showToast('EasyRead installed!');
+                            }
+                            deferredPrompt = null;
+                        }
+                    },
+                    onSecondary: () => {
+                        sessionStorage.setItem('er_install_shown', 'true');
                     }
-                    deferredPrompt = null;
-                } else {
-                    sessionStorage.setItem('er_install_prompt_dismissed', 'true');
-                }
+                });
                 return;
             }
 
-            // 2. Notification Prompt
-            if ('Notification' in window && Notification.permission === 'default' && !sessionStorage.getItem('er_notif_prompt_dismissed')) {
-                const notifConfirmed = await GlassDialog.show({
+            // 2. Native Notification Permission Prompt (Triggers directly inside user click gesture)
+            if ('Notification' in window && Notification.permission === 'default' && !sessionStorage.getItem('er_notif_shown')) {
+                await GlassDialog.show({
                     icon: 'bell',
                     title: 'Stay Informed',
                     description: 'Get notified when your simplified explanations are ready and when fresh feed articles drop.',
-                    primaryText: 'Enable',
-                    secondaryText: 'Not Now'
-                });
-
-                if (notifConfirmed) {
-                    const perm = await requestNativeNotificationPermission();
-                    if (perm === 'granted') {
-                        showToast('Notifications enabled!');
-                    } else if (perm === 'denied') {
-                        showToast('Notifications disabled in browser settings');
+                    primaryText: 'Allow',
+                    secondaryText: 'Not Now',
+                    onPrimary: async () => {
+                        sessionStorage.setItem('er_notif_shown', 'true');
+                        try {
+                            const perm = await Notification.requestPermission();
+                            if (perm === 'granted') {
+                                showToast('✅ Notifications enabled!');
+                            } else if (perm === 'denied') {
+                                showToast('Notifications disabled in browser settings');
+                            }
+                        } catch (err) {
+                            // Fallback for older mobile browsers supporting callback syntax
+                            Notification.requestPermission((perm) => {
+                                if (perm === 'granted') showToast('✅ Notifications enabled!');
+                            });
+                        }
+                    },
+                    onSecondary: () => {
+                        sessionStorage.setItem('er_notif_shown', 'true');
                     }
-                }
-                sessionStorage.setItem('er_notif_prompt_dismissed', 'true');
+                });
             }
         }
 
