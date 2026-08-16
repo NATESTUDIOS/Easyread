@@ -3,484 +3,566 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>EasyRead</title>
-    
-    <!-- Fonts: Grosek (Display) + Inter (Body) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Grosek&family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
-        /* --- CSS Variables for Auto Light/Dark Theme --- */
         :root {
-            /* Light Theme (Default) */
-            --bg-color: #f7f5f0;
-            --bg-glow: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.8) 0%, transparent 70%);
-            --text-main: #1c1c1e;
-            --text-muted: #6c6c70;
-            --text-placeholder: #9a9a9e;
-            
-            /* Glass Base */
-            --card-bg: rgba(255, 255, 255, 0.65);
+            --bg-color: #f6f7f9;
+            --bg-glow: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.9) 0%, transparent 70%);
+            --text-primary: #1c1c1e;
+            --text-secondary: #5c5c60;
+            --text-tertiary: #8e8e93;
+            --text-placeholder: #c7c7cc;
+            --card-bg: rgba(242, 242, 247, 0.78);
+            --card-bg-hover: rgba(230, 230, 235, 0.9);
             --card-blur: blur(16px);
-            --glass-border: 1px solid rgba(255, 255, 255, 0.6);
-            --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.3);
-            --glass-shadow: 0 8px 32px rgba(0,0,0,0.04);
-            
-            /* Elements */
-            --mode-bg: rgba(240, 238, 234, 0.5);
-            --mode-text: #5f5f5f;
+            --glass-border: 1.5px solid rgba(0, 0, 0, 0.1);
+            --glass-border-subtle: 1px solid rgba(0, 0, 0, 0.06);
+            --glass-shadow: 0 6px 20px rgba(0,0,0,0.04);
+            --mode-bg: rgba(0, 0, 0, 0.04);
+            --mode-bg-hover: rgba(0, 0, 0, 0.07);
             --accent-color: #f59847;
             --accent-hover: #e08735;
-            --btn-glass-border: 1px solid rgba(255, 255, 255, 0.8);
-            --divider: rgba(0,0,0,0.05);
-            --list-text: #3a3a3c;
-            --tag-bg: rgba(232, 62, 140, 0.08);
-            --tag-text: #c2185b;
+            --accent-light: rgba(245, 152, 71, 0.12);
+            --divider: rgba(0,0,0,0.06);
+            --tag-bg: rgba(0, 0, 0, 0.04);
+            --tag-text: #4a4a50;
             --icon-stroke: #1c1c1e;
+            --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --splash-bg: #111113;
+            --splash-text: #ffffff;
         }
 
-        /* Dark Theme (Auto-detected) - TRUE AMOLED BLACK */
         @media (prefers-color-scheme: dark) {
             :root {
-                /* Pure AMOLED Black */
                 --bg-color: #000000;
-                /* Deep subtle glow to add depth to the black */
-                --bg-glow: radial-gradient(circle at 50% 0%, rgba(40, 40, 42, 0.4) 0%, transparent 60%);
-                --text-main: #e8e8ea;
-                --text-muted: #9a9a9e;
-                --text-placeholder: #6c6c70;
-                
-                /* Glass Base (Dark) */
-                --card-bg: rgba(18, 18, 18, 0.65);
-                --card-blur: blur(16px);
+                --bg-glow: radial-gradient(circle at 50% 0%, rgba(40, 40, 42, 0.3) 0%, transparent 60%);
+                --text-primary: #e8e8ea;
+                --text-secondary: #9a9a9e;
+                --text-tertiary: #6c6c70;
+                --text-placeholder: #5a5a5e;
+                --card-bg: rgba(22, 22, 24, 0.8);
+                --card-bg-hover: rgba(30, 30, 34, 0.9);
                 --glass-border: 1px solid rgba(255, 255, 255, 0.08);
                 --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.04);
-                --glass-shadow: 0 8px 32px rgba(0,0,0,0.6);
-                
-                /* Elements */
-                --mode-bg: rgba(44, 44, 46, 0.5);
-                --mode-text: #a0a0a4;
-                --accent-color: #f59847;
-                --accent-hover: #e08735;
-                --btn-glass-border: 1px solid rgba(255, 255, 255, 0.2);
+                --glass-shadow: 0 6px 24px rgba(0,0,0,0.5);
+                --mode-bg: rgba(255, 255, 255, 0.05);
+                --mode-bg-hover: rgba(255, 255, 255, 0.1);
                 --divider: rgba(255,255,255,0.06);
-                --list-text: #c0c0c4;
-                --tag-bg: rgba(232, 62, 140, 0.15);
-                --tag-text: #e83e8c;
+                --tag-bg: rgba(255, 255, 255, 0.06);
+                --tag-text: #9a9a9e;
                 --icon-stroke: #e8e8ea;
+                --splash-bg: #000000;
+                --splash-text: #e8e8ea;
             }
         }
 
-        /* --- Reset & Base Styles --- */
+        [data-theme="light"] {
+            --bg-color: #f6f7f9 !important;
+            --bg-glow: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.9) 0%, transparent 70%) !important;
+            --text-primary: #1c1c1e !important;
+            --text-secondary: #5c5c60 !important;
+            --text-tertiary: #8e8e93 !important;
+            --text-placeholder: #c7c7cc !important;
+            --card-bg: rgba(242, 242, 247, 0.78) !important;
+            --card-bg-hover: rgba(230, 230, 235, 0.9) !important;
+            --glass-border: 1.5px solid rgba(0, 0, 0, 0.1) !important;
+            --glass-border-subtle: 1px solid rgba(0, 0, 0, 0.06) !important;
+            --glass-shadow: 0 6px 20px rgba(0,0,0,0.04) !important;
+            --mode-bg: rgba(0, 0, 0, 0.04) !important;
+            --mode-bg-hover: rgba(0, 0, 0, 0.07) !important;
+            --divider: rgba(0,0,0,0.06) !important;
+            --tag-bg: rgba(0, 0, 0, 0.04) !important;
+            --tag-text: #4a4a50 !important;
+            --icon-stroke: #1c1c1e !important;
+            --splash-bg: #f6f7f9 !important;
+            --splash-text: #1c1c1e !important;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #000000 !important;
+            --bg-glow: radial-gradient(circle at 50% 0%, rgba(40, 40, 42, 0.3) 0%, transparent 60%) !important;
+            --text-primary: #e8e8ea !important;
+            --text-secondary: #9a9a9e !important;
+            --text-tertiary: #6c6c70 !important;
+            --text-placeholder: #5a5a5e !important;
+            --card-bg: rgba(22, 22, 24, 0.8) !important;
+            --card-bg-hover: rgba(30, 30, 34, 0.9) !important;
+            --glass-border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.04) !important;
+            --glass-shadow: 0 6px 24px rgba(0,0,0,0.5) !important;
+            --mode-bg: rgba(255, 255, 255, 0.05) !important;
+            --mode-bg-hover: rgba(255, 255, 255, 0.1) !important;
+            --divider: rgba(255,255,255,0.06) !important;
+            --tag-bg: rgba(255, 255, 255, 0.06) !important;
+            --tag-text: #9a9a9e !important;
+            --icon-stroke: #e8e8ea !important;
+            --splash-bg: #000000 !important;
+            --splash-text: #e8e8ea !important;
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
         *:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 2px; }
-        
+
         body {
-            /* Body acts purely as a flex wrapper now */
             min-height: 100vh;
+            min-height: 100dvh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 0;
-            margin: 0;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: var(--font-display);
             -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
+            background: var(--bg-color);
+            transition: background 0.3s ease;
         }
 
-        /* ========================================= */
-        /* APP FRAME (Holds the background & glow)   */
-        /* ========================================= */
+        /* ─── SPLASH SCREEN (Enhanced) ─── */
+        #splashScreen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: var(--splash-bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+            overflow: hidden;
+        }
+        #splashScreen.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .splash-content {
+            text-align: center;
+            animation: splashFadeIn 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes splashFadeIn {
+            0% { opacity: 0; transform: translateY(20px) scale(0.96); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .splash-logo {
+            font-size: 3.4rem;
+            font-weight: 800;
+            letter-spacing: -2px;
+            background: linear-gradient(135deg, #f59847 0%, #ffd700 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.2rem;
+            line-height: 1.1;
+            position: relative;
+        }
+        .splash-logo::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #f59847, transparent);
+            border-radius: 4px;
+        }
+
+        .splash-subtitle {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            margin-top: 0.6rem;
+            margin-bottom: 1.8rem;
+        }
+
+        .splash-loader-track {
+            width: 160px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+
+        .splash-loader-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #f59847, #ffd700);
+            animation: loadBar 1.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes loadBar {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        .splash-pulse-ring {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            position: absolute;
+            border: 1px solid rgba(245, 152, 71, 0.12);
+            animation: pulseRing 3s ease-in-out infinite;
+        }
+        .splash-pulse-ring:nth-child(2) {
+            width: 160px;
+            height: 160px;
+            animation-delay: 0.6s;
+            border-color: rgba(245, 152, 71, 0.06);
+        }
+        @keyframes pulseRing {
+            0% { transform: scale(0.8); opacity: 0.6; }
+            50% { transform: scale(1.1); opacity: 0.2; }
+            100% { transform: scale(0.8); opacity: 0.6; }
+        }
+
+        /* ─── OFFLINE DIALOG ─── */
+        .offline-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 5000;
+            padding: 24px;
+        }
+        .offline-overlay.active { display: flex; }
+        .offline-dialog {
+            background: var(--card-bg);
+            backdrop-filter: var(--card-blur);
+            -webkit-backdrop-filter: var(--card-blur);
+            border: var(--glass-border);
+            border-radius: 24px;
+            padding: 32px 28px;
+            max-width: 360px;
+            width: 100%;
+            text-align: center;
+        }
+        .offline-dialog .icon {
+            font-size: 2.8rem;
+            margin-bottom: 8px;
+        }
+        .offline-dialog h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        .offline-dialog p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 18px;
+        }
+        .offline-dialog .btn-retry {
+            background: var(--accent-color);
+            color: #fff;
+            border: none;
+            padding: 10px 28px;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        /* ─── APP SHELL ─── */
         .app-shell {
-            max-width: 480px;
+            max-width: 440px;
             width: 100%;
             min-height: 100vh;
             min-height: 100dvh;
             display: flex;
             flex-direction: column;
             position: relative;
-            padding-bottom: 90px; /* Space for the floating nav */
-            
-            /* MOVED BACKGROUND HERE */
+            padding-bottom: 74px;
             background-color: var(--bg-color);
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E"),
-                          var(--bg-glow); 
-            background-repeat: no-repeat, no-repeat;
-            background-size: auto, 100% 100%;
-            background-position: center, center;
-            
+            background-image: var(--bg-glow);
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
             transition: background-color 0.3s ease, color 0.3s ease;
-            color: var(--text-main);
+            color: var(--text-primary);
         }
 
-        /* --- Common Section Styles --- */
         .app-container {
-            max-width: 480px;
+            max-width: 440px;
             width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 5rem 1rem 2rem 1rem;
+            padding: 1.8rem 1rem 1rem 1rem;
         }
 
-        /* --- Brand Section --- */
-        .brand-section {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-        
-        .brand-title {
-            font-family: 'Grosek', 'Inter', sans-serif;
-            font-size: 3.2rem;
-            font-weight: 400;
-            letter-spacing: -1.5px;
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-        }
-        .brand-title .dark { color: var(--text-main); }
-        .brand-title .orange { color: var(--accent-color); }
+        .brand-section { text-align: center; margin-bottom: 1.2rem; width: 100%; }
+        .brand-title { font-size: 2.2rem; font-weight: 800; letter-spacing: -1.2px; margin-bottom: 0.15rem; line-height: 1.1; }
+        .brand-title .dark { color: var(--text-primary); }
+        .brand-title .orange { background: linear-gradient(135deg, var(--accent-color), #ffd700); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .tagline { font-size: 0.82rem; font-weight: 500; color: var(--text-tertiary); }
 
-        .tagline {
-            font-family: 'Inter', sans-serif;
-            font-size: 1rem;
-            font-weight: 500;
-            color: var(--text-muted);
-            line-height: 1.5;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-        }
-
-        /* --- Input Combo Wrapper --- */
-        .input-combo-wrapper {
-            position: relative;
-            width: 100%;
-            margin-bottom: 2.5rem;
-        }
-
-        /* --- Main Input Card (Glass Border) --- */
-        .card {
+        .glass-card {
             background: var(--card-bg);
             backdrop-filter: var(--card-blur);
             -webkit-backdrop-filter: var(--card-blur);
-            
-            /* Glass border */
             border: var(--glass-border);
-            border-bottom: var(--glass-border-subtle);
-            
-            border-radius: 24px;
-            width: 100%;
-            position: relative;
-            padding: 2rem 1.5rem 0.5rem 1.5rem;
-            z-index: 2;
-            transition: background 0.3s, border-color 0.3s;
+            border-radius: 18px;
+            transition: all 0.2s ease;
+            box-shadow: var(--glass-shadow);
         }
 
+        .login-notice-banner {
+            width: 100%;
+            padding: 12px 16px;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 1.2rem;
+        }
+
+        .input-combo-wrapper { width: 100%; margin-bottom: 1.4rem; overflow: hidden; display: flex; flex-direction: column; }
+        .input-container-inner { padding: 1.1rem 1.1rem 0.8rem 1.1rem; display: flex; flex-direction: column; width: 100%; }
         .card-textarea {
             width: 100%;
             border: none;
             outline: none;
             resize: none;
-            font-family: 'Inter', sans-serif;
-            font-size: 1.25rem;
+            font-family: inherit;
+            font-size: 0.95rem;
             font-weight: 500;
-            color: var(--text-main);
+            color: var(--text-primary);
             background: transparent;
-            min-height: 140px;
-            line-height: 1.6;
+            min-height: 76px;
+            line-height: 1.5;
             padding: 0;
         }
-        .card-textarea::placeholder {
-            color: var(--text-placeholder);
-            font-weight: 400;
+        .card-textarea::placeholder { color: var(--text-placeholder); }
+
+        .input-action-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 0.6rem;
         }
 
-        /* --- Send Button (Glass Border) --- */
-        .send-btn-wrapper {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 0.5rem;
+        .credits-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: var(--mode-bg);
+            border: var(--glass-border-subtle);
+            border-radius: 16px;
+            padding: 0.3rem 0.65rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
         }
+        .credits-badge svg { width: 12px; height: 14px; stroke: var(--accent-color); fill: none; stroke-width: 2.2; }
+        .credits-badge .credits-val { color: var(--text-primary); }
+        .credits-badge .credits-label { color: var(--text-tertiary); font-size: 0.65rem; text-transform: uppercase; }
+
+        .char-counter { font-size: 0.68rem; color: var(--text-tertiary); font-weight: 600; margin-left: auto; margin-right: 0.75rem; }
+
         .send-btn {
-            width: 44px;
-            height: 44px;
-            background-color: var(--accent-color);
-            border-radius: 14px;
-            border: var(--btn-glass-border); 
+            width: 36px;
+            height: 36px;
+            background: var(--accent-color);
+            border-radius: 11px;
+            border: none;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
-            box-shadow: none; 
-        }
-        .send-btn:hover { background-color: var(--accent-hover); transform: translateY(-2px); }
-        .send-btn:active { transform: scale(0.95); }
-        .send-btn svg {
-            width: 20px; height: 20px;
-            stroke: #ffffff; stroke-width: 2.5;
-            fill: none; stroke-linecap: round; stroke-linejoin: round;
-        }
-
-        /* --- Attached Mode Selection Box (Glass Border) --- */
-        .mode-selector-box {
-            position: relative;
-            z-index: 1;
-            margin-top: -16px;
-            background: var(--card-bg);
-            backdrop-filter: var(--card-blur);
-            -webkit-backdrop-filter: var(--card-blur);
-            
-            border: var(--glass-border);
-            border-top: none; 
-            
-            border-bottom-left-radius: 24px;
-            border-bottom-right-radius: 24px;
-            padding: 24px 1.5rem 16px 1.5rem;
-            display: flex;
-            gap: 10px;
-            width: 100%;
-            transition: background 0.3s, border-color 0.3s;
-        }
-
-        /* --- Action Pills with Icons --- */
-        .mode-pill {
-            margin-top: 8px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 0.6rem 1.2rem;
-            border-radius: 40px;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.85rem;
-            font-weight: 500;
-            border: none;
-            cursor: pointer;
             transition: all 0.2s ease;
-            background-color: var(--mode-bg);
-            color: var(--mode-text);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
+            box-shadow: 0 3px 10px rgba(245, 152, 71, 0.25);
         }
-        .mode-pill svg {
-            width: 16px; height: 16px;
-            fill: currentColor; flex-shrink: 0;
-        }
-        .mode-pill.paste { background-color: rgba(243, 227, 214, 0.7); color: #7a4a2a; }
-        @media (prefers-color-scheme: dark) {
-            .mode-pill.paste { background-color: rgba(58, 42, 30, 0.7); color: #d4b08c; }
-        }
-        .mode-pill.paste.active { background-color: var(--accent-color); color: #ffffff; }
-        
-        .mode-pill.website { background-color: rgba(214, 224, 235, 0.7); color: #2a4a5a; }
-        @media (prefers-color-scheme: dark) {
-            .mode-pill.website { background-color: rgba(30, 42, 58, 0.7); color: #8cb0d4; }
-        }
-        .mode-pill.website.active { background-color: var(--accent-color); color: #ffffff; }
-        
-        .mode-pill:hover { transform: translateY(-1px); }
+        .send-btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
+        .send-btn:active { transform: scale(0.95); }
+        .send-btn svg { width: 16px; height: 16px; stroke: #ffffff; stroke-width: 2.5; fill: none; }
 
+        .input-divider { height: 1px; background: var(--divider); margin: 0 1.1rem; }
 
-        /* --- Sliding Categories (Above Listing) --- */
-        .categories-section {
-            width: 100%;
-            margin-bottom: 1.5rem;
-        }
-        .categories-label {
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-placeholder);
-            margin-bottom: 0.75rem;
-            padding-left: 0.2rem;
-        }
-        .categories-scroll {
+        .mode-selector-inner {
+            padding: 9px 1.1rem;
             display: flex;
-            gap: 8px;
+            gap: 6px;
+            width: 100%;
             overflow-x: auto;
-            padding: 2px 0 6px 0;
-            scroll-snap-type: x mandatory;
-            -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
         }
+        .mode-selector-inner::-webkit-scrollbar { display: none; }
+
+        .mode-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0.42rem 0.85rem;
+            border-radius: 24px;
+            font-family: inherit;
+            font-size: 0.76rem;
+            font-weight: 600;
+            border: var(--glass-border-subtle);
+            cursor: pointer;
+            background-color: var(--mode-bg);
+            color: var(--text-secondary);
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+        .mode-pill:hover { background-color: var(--mode-bg-hover); color: var(--text-primary); }
+        .mode-pill svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
+        .mode-pill.active { background-color: var(--accent-color) !important; color: #ffffff !important; border-color: var(--accent-color) !important; }
+
+        .categories-section { width: 100%; margin-bottom: 1.2rem; }
+        .categories-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-tertiary); margin-bottom: 0.5rem; padding-left: 0.1rem; }
+        .categories-scroll { display: flex; gap: 6px; overflow-x: auto; padding: 1px 0 4px 0; scrollbar-width: none; }
         .categories-scroll::-webkit-scrollbar { display: none; }
+
         .category-pill {
             flex: 0 0 auto;
-            scroll-snap-align: start;
-            border-radius: 40px;
-            padding: 0.6rem 1.4rem;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.8rem;
-            font-weight: 500;
-            border: none;
+            border-radius: 20px;
+            padding: 0.42rem 0.9rem;
+            font-size: 0.75rem;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s ease;
             white-space: nowrap;
-            user-select: none;
-        }
-        .category-pill:hover { transform: translateY(-1px); }
-
-        /* ========================================= */
-        /* --- LISTING CARD (Glass Border) --- */
-        /* ========================================= */
-        .listing-container {
-            width: 100%;
-            margin-top: 0.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .listing-card {
             background: var(--card-bg);
-            backdrop-filter: var(--card-blur);
-            -webkit-backdrop-filter: var(--card-blur);
-            
             border: var(--glass-border-subtle);
-            border-radius: 24px;
-            padding: 1.5rem;
-            transition: transform 0.2s, background 0.3s, border-color 0.3s;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
         }
-        .listing-card:hover { transform: translateY(-2px); }
+        .category-pill:hover { color: var(--text-primary); border-color: var(--accent-color); }
+        .category-pill.active { background-color: var(--accent-color); color: #fff; border-color: var(--accent-color); }
 
-        /* Listing Header */
-        .listing-header {
+        .listing-container { width: 100%; margin-bottom: 1.5rem; }
+        .listing-card { border: var(--glass-border); padding: 16px 18px; margin-bottom: 12px; cursor: pointer; }
+        .listing-card:hover { background: var(--card-bg-hover); }
+
+        .listing-header { display: flex; align-items: center; gap: 10px; margin-bottom: 0.75rem; }
+        .listing-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
             display: flex;
             align-items: center;
-            gap: 14px;
-            margin-bottom: 1.2rem;
-        }
-        .listing-avatar {
-            width: 48px; height: 48px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #e83e8c, #c2185b);
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: 1.1rem; color: #ffffff;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #ffffff;
             position: relative;
+            flex-shrink: 0;
         }
         .listing-avatar .online-dot {
-            position: absolute; bottom: 0; right: 0;
-            width: 14px; height: 14px;
-            background: #28a745; border-radius: 50%;
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 10px;
+            height: 10px;
+            background: #28a745;
+            border-radius: 50%;
             border: 2px solid var(--card-bg);
         }
-        .listing-meta { flex: 1; }
-        .listing-name {
-            font-weight: 600; font-size: 1rem;
-            display: flex; align-items: center; gap: 6px;
-            color: var(--text-main);
-        }
-        .listing-name .verified { color: #e83e8c; font-size: 0.9rem; }
-        .listing-time { color: var(--text-placeholder); font-size: 0.8rem; margin-top: 2px; }
-        .listing-menu { color: var(--text-placeholder); cursor: pointer; }
 
-        /* Listing Body */
+        .listing-meta { flex: 1; min-width: 0; }
+        .listing-name { font-weight: 700; font-size: 0.88rem; color: var(--text-primary); display: flex; align-items: center; gap: 5px; }
+        .listing-name .verified { color: var(--accent-color); font-size: 0.8rem; }
+        .listing-time { color: var(--text-tertiary); font-size: 0.72rem; margin-top: 1px; font-weight: 500; }
+
         .listing-body {
-            font-size: 1rem;
-            line-height: 1.6;
-            color: var(--list-text);
-            margin-bottom: 1.2rem;
-        }
-        .listing-body .highlight { color: #e83e8c; font-weight: 600; }
-
-        /* Listing Tags */
-        .listing-tags {
-            display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.2rem;
-        }
-        .listing-tag {
-            background: var(--tag-bg);
-            color: var(--tag-text); padding: 0.3rem 0.9rem;
-            border-radius: 40px; font-size: 0.8rem; font-weight: 500;
+            font-size: 0.86rem;
+            line-height: 1.55;
+            color: var(--text-secondary);
+            margin-bottom: 0.8rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
-        /* Listing Stats (Avatars + Views) */
+        .listing-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 0.8rem; }
+        .listing-tag { background: var(--tag-bg); color: var(--tag-text); padding: 0.25rem 0.65rem; border-radius: 20px; font-size: 0.72rem; font-weight: 600; border: var(--glass-border-subtle); }
+
         .listing-stats {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 1.2rem; padding-bottom: 1.2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.8rem;
+            padding-bottom: 0.8rem;
             border-bottom: 1px solid var(--divider);
         }
         .listing-avatars { display: flex; align-items: center; }
         .listing-avatars .mini-avatar {
-            width: 30px; height: 30px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 0.6rem; font-weight: 700; color: #fff;
-            margin-right: -8px; border: 2px solid var(--card-bg);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            font-weight: 700;
+            color: #fff;
+            margin-right: -6px;
+            border: 1.5px solid var(--card-bg);
         }
         .mini-avatar.a1 { background: #e83e8c; }
         .mini-avatar.a2 { background: #0d6efd; }
         .mini-avatar.a3 { background: #20c997; }
-        
-        .listing-views {
-            color: var(--text-placeholder); font-size: 0.85rem;
-            display: flex; align-items: center; gap: 6px;
-        }
-        .listing-views strong { color: var(--text-main); font-weight: 600; }
-        .listing-views svg { width: 16px; height: 16px; fill: var(--text-placeholder); }
 
-        /* Listing Actions */
-        .listing-actions {
-            display: flex; justify-content: flex-end; align-items: center; gap: 10px;
-        }
+        .listing-views { color: var(--text-tertiary); font-size: 0.76rem; display: flex; align-items: center; gap: 5px; }
+        .listing-views strong { color: var(--text-primary); font-weight: 700; }
+        .listing-views svg { width: 14px; height: 14px; fill: currentColor; }
+
+        .listing-actions { display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
         .listing-action-btn {
-            background: transparent; border: none;
-            color: var(--text-placeholder);
-            display: flex; align-items: center; gap: 6px;
-            font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 500;
-            cursor: pointer; transition: all 0.2s;
-            padding: 6px 12px; border-radius: 12px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 10px;
+            transition: all 0.2s;
         }
-        .listing-action-btn:hover { background: var(--mode-bg); color: var(--text-main); }
-        .listing-action-btn svg { width: 18px; height: 18px; fill: currentColor; }
-        .listing-action-btn.open-btn { color: #e83e8c; }
-        .listing-action-btn.open-btn:hover { background: var(--tag-bg); }
+        .listing-action-btn:hover { background: var(--mode-bg); color: var(--text-primary); }
+        .listing-action-btn svg { width: 14px; height: 14px; fill: currentColor; }
+        .listing-action-btn.open-btn { color: var(--accent-color); }
+        .listing-action-btn.open-btn:hover { background: var(--accent-light); }
 
-        /* --- Responsive (iPhone SE / Small screens) --- */
-        @media (max-width: 420px) {
-            .app-container { padding: 4rem 0.75rem 2rem 0.75rem; }
-            .brand-title { font-size: 2.8rem; }
-            .tagline { font-size: 0.85rem; }
-            .card { padding: 1.5rem 1.2rem 0.5rem 1.2rem; }
-            .card-textarea { font-size: 1.1rem; min-height: 120px; }
-            .mode-selector-box { padding: 20px 1.2rem 14px 1.2rem; flex-wrap: wrap; }
-            .mode-pill { font-size: 0.8rem; padding: 0.5rem 1rem; }
-            .listing-card { padding: 1.2rem; }
-            .listing-actions { justify-content: space-between; }
-        }
-        
-        /* ========================================= */
-        /* BOTTOM NAVIGATION BAR (Glass Overlay)     */
-        /* ========================================= */
-        
         .bottom-nav {
             position: fixed;
-            bottom: 20px;
-            bottom: calc(20px + env(safe-area-inset-bottom));
+            bottom: 14px;
+            bottom: calc(14px + env(safe-area-inset-bottom));
             left: 50%;
             transform: translateX(-50%);
-            max-width: 480px;
-            width: calc(100% - 28px);
-            
-            background: rgba(18, 18, 18, 0.85); /* Dark glass */
+            max-width: 420px;
+            width: calc(100% - 24px);
+            background: var(--card-bg);
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
-            
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 24px;
-            padding: 6px 8px;
-            
+            border: var(--glass-border);
+            border-radius: 20px;
+            padding: 5px 6px;
             display: flex;
             justify-content: space-around;
             align-items: center;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            box-shadow: var(--glass-shadow);
             z-index: 100;
-        }
-
-        @media (prefers-color-scheme: light) {
-            .bottom-nav {
-                background: rgba(255, 255, 255, 0.75);
-                border: 1px solid rgba(0, 0, 0, 0.06);
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-            }
         }
 
         .nav-item {
@@ -488,290 +570,525 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 4px;
-            padding: 8px 12px;
-            border-radius: 16px;
+            gap: 3px;
+            padding: 6px 10px;
+            border-radius: 14px;
             border: none;
             background: transparent;
-            color: rgba(255, 255, 255, 0.4);
-            font-size: 10px;
-            font-weight: 600;
+            color: var(--text-tertiary);
             font-family: inherit;
+            font-size: 9px;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.25s ease;
-            min-width: 56px;
+            transition: all 0.2s ease;
             flex: 1;
         }
+        .nav-item.active { color: var(--accent-color); background: var(--accent-light); }
+        .nav-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
 
-        @media (prefers-color-scheme: light) {
-            .nav-item { color: rgba(0, 0, 0, 0.4); }
+        .full-screen-loader {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            display: none;
+            align-items: center; justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
-
-        .nav-item:active { transform: scale(0.92); }
-
-        .nav-item.active {
-            color: #f59847; /* Use the orange accent */
-            background: rgba(245, 152, 71, 0.12); /* Subtle orange background instead of shadow */
+        .full-screen-loader.active { display: flex; opacity: 1; }
+        .loader-blur-bg {
+            position: absolute; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.45);
+            backdrop-filter: blur(20px);
         }
-
-        .nav-icon {
-            width: 22px;
-            height: 22px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .loader-modal {
+            position: relative;
+            z-index: 10;
+            max-width: 340px; width: 90%;
+            padding: 28px 20px;
+            text-align: center;
+            border-radius: 22px;
+            border: var(--glass-border);
+            background: var(--card-bg);
+            backdrop-filter: var(--card-blur);
         }
-        .nav-icon svg {
-            width: 22px;
-            height: 22px;
-            stroke: currentColor;
-            fill: none;
-            stroke-width: 2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
+        .pipeline-spinner-ring {
+            width: 38px; height: 38px;
+            border: 3px solid rgba(0,0,0,0.1);
+            border-top-color: var(--accent-color);
+            border-radius: 50%;
+            animation: spin 0.8s infinite linear;
+            margin: 0 auto 16px auto;
         }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        .nav-label { font-size: 9px; letter-spacing: 0.3px; opacity: 0.8; }
-        .nav-item.active .nav-label { opacity: 1; }
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(50px);
+            background: var(--card-bg);
+            backdrop-filter: var(--card-blur);
+            border: var(--glass-border);
+            border-radius: 12px;
+            padding: 9px 18px;
+            color: var(--text-primary);
+            font-size: 0.82rem;
+            box-shadow: var(--glass-shadow);
+            z-index: 2000;
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            font-weight: 600;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-        /* --- Iframe Tabs --- */
         .tab-iframe {
             display: none;
             width: 100%;
             flex: 1;
             min-height: 80vh;
             border: none;
-            background: transparent; /* Let the .app-shell background shine through */
+            background: transparent;
         }
-        .tab-iframe.active {
-            display: block;
-        }
-
-        .home-content-wrapper {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            flex: 1;
-        }
-        .home-content-wrapper.hidden {
-            display: none;
-        }
+        .tab-iframe.active { display: block; }
+        .home-content-wrapper { display: flex; flex-direction: column; width: 100%; flex: 1; }
+        .home-content-wrapper.hidden { display: none; }
     </style>
 </head>
 <body>
 
+    <!-- SPLASH SCREEN (Enhanced) -->
+    <div id="splashScreen">
+        <div class="splash-pulse-ring"></div>
+        <div class="splash-pulse-ring"></div>
+        <div class="splash-content">
+            <div class="splash-logo">EasyRead</div>
+            <div class="splash-subtitle">Knowledge, Simplified</div>
+            <div class="splash-loader-track">
+                <div class="splash-loader-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- OFFLINE OVERLAY -->
+    <div class="offline-overlay" id="offlineOverlay">
+        <div class="offline-dialog glass-card">
+            <div class="icon">📡</div>
+            <h3>No Internet Connection</h3>
+            <p>Please check your connection. You can still view cached content.</p>
+            <button class="btn-retry" onclick="retryConnection()">Retry</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
 
     <div class="app-shell">
-        
-        <!-- HOME CONTENT -->
         <div class="home-content-wrapper" id="homeWrapper">
             <div class="app-container">
-        
-                <!-- Brand & Tagline -->
                 <div class="brand-section">
-                    <h1 class="brand-title">
-                        <span class="dark">EASY</span><span class="orange">READ</span>
-                    </h1>
-                    <h2 class="tagline">
-                        Explained in a way only you understand
-                    </h2>
+                    <h1 class="brand-title"><span class="dark">Easy</span><span class="orange">Read</span></h1>
+                    <p class="tagline">Explained in a way only you understand</p>
                 </div>
 
-                <!-- Input Combo Wrapper -->
-                <div class="input-combo-wrapper">
-                    
-                    <!-- Main Card (Glass Border) -->
-                    <div class="card">
-                        <textarea 
-                            class="card-textarea" 
-                            placeholder="What are we understanding today..." 
-                            rows="4"
-                        ></textarea>
-                        
-                        <div class="send-btn-wrapper">
-                            <button class="send-btn" aria-label="Send">
-                                <svg viewBox="0 0 24 24">
-                                    <line x1="12" y1="19" x2="12" y2="5"></line>
-                                    <polyline points="5 12 12 5 19 12"></polyline>
-                                </svg>
+                <div class="login-notice-banner glass-card" id="loginNotice">
+                    <div class="notice-icon">
+                        <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    </div>
+                    <div class="notice-content">
+                        <h4 class="notice-title">Sign in to EasyRead</h4>
+                        <p class="notice-desc">Sign in to ask questions, simplify notes, and save bookmarks.</p>
+                    </div>
+                    <button class="notice-btn" onclick="triggerProfileLogin()">Sign In</button>
+                </div>
+
+                <div class="input-combo-wrapper glass-card">
+                    <div class="input-container-inner">
+                        <textarea class="card-textarea" id="submitTextArea" placeholder="Ask a question about any topic..." rows="3"></textarea>
+                        <div class="input-action-bar">
+                            <div class="credits-badge" id="inputCreditsBadge" onclick="switchTab('profile')" title="Credits">
+                                <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                                <span class="credits-val" id="inputCreditsDisplay">0.0</span>
+                                <span class="credits-label">credits</span>
+                            </div>
+                            <div class="char-counter" id="charCounter">0 / 50k</div>
+                            <button class="send-btn" id="sendBtn" onclick="submitPipeline()" aria-label="Send">
+                                <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
                             </button>
                         </div>
                     </div>
-
-                    <!-- Attached Mode Selector Box (Glass Border) -->
-                    <div class="mode-selector-box">
-                        <button class="mode-pill paste" id="btnPaste" onclick="setMode('paste')">
+                    <div class="input-divider"></div>
+                    <div class="mode-selector-inner">
+                        <button class="mode-pill active" id="btnAsk" onclick="setMode('ask')">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                            Ask question
+                        </button>
+                        <button class="mode-pill" id="btnPaste" onclick="setMode('paste')">
                             <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
                             Paste note
                         </button>
-                        <button class="mode-pill website" id="btnWebsite" onclick="setMode('website')">
-                            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                        <button class="mode-pill" id="btnWebsite" onclick="setMode('website')">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
                             Read website
                         </button>
                     </div>
-
                 </div>
 
-                <!-- Sliding Categories Section -->
                 <div class="categories-section">
                     <div class="categories-label">Explore categories</div>
-                    <div class="categories-scroll" id="listingCategories">
-                        <button class="category-pill" style="background:#ffe6e6; color:#b33c3c;">Finance</button>
-                        <button class="category-pill" style="background:#e6f2ff; color:#1a6bb0;">Stock Exchange</button>
-                        <button class="category-pill" style="background:#e6ffec; color:#2b8c4a;">Investing</button>
-                        <button class="category-pill" style="background:#fff5e6; color:#b36b1a;">Economy</button>
-                        <button class="category-pill" style="background:#f0e6ff; color:#6b3cb3;">Crypto</button>
-                        <button class="category-pill" style="background:#e6fbfb; color:#1a8c8c;">Bonds</button>
-                        <button class="category-pill" style="background:#fce6f0; color:#b33c6b;">Commodities</button>
+                    <div class="categories-scroll" id="categoriesScroll">
+                        <button class="category-pill active" onclick="filterHomeCategory('All', this)">For you</button>
                     </div>
                 </div>
 
-                <!-- Listing Card (Glass Border) -->
-                <div class="listing-container">
-                    <div class="listing-card">
-                        
-                        <!-- Header -->
-                        <div class="listing-header">
-                            <div class="listing-avatar">
-                                CT
-                                <div class="online-dot"></div>
-                            </div>
-                            <div class="listing-meta">
-                                <div class="listing-name">
-                                    Campus Tech Hub
-                                    <span class="verified">✓</span>
-                                </div>
-                                <div class="listing-time">2 hours ago</div>
-                            </div>
-                            <div class="listing-menu">•••</div>
-                        </div>
-
-                        <!-- Body -->
-                        <div class="listing-body">
-                            🚀 <span class="highlight">#Hackathon2024</span> registration is NOW OPEN! Form your teams of 3-5 and get ready to build something amazing. <span class="highlight">@StudentGovt</span> is sponsoring prizes worth ₦500k!
-                        </div>
-
-                        <!-- Tags -->
-                        <div class="listing-tags">
-                            <span class="listing-tag">Tech</span>
-                            <span class="listing-tag">Hackathon</span>
-                            <span class="listing-tag">Prizes</span>
-                        </div>
-
-                        <!-- Stats (Avatars + Views) -->
-                        <div class="listing-stats">
-                            <div class="listing-avatars">
-                                <div class="mini-avatar a1">JE</div>
-                                <div class="mini-avatar a2">AK</div>
-                                <div class="mini-avatar a3">MK</div>
-                            </div>
-                            <div class="listing-views">
-                                <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
-                                <strong>143</strong> views
-                            </div>
-                        </div>
-
-                        <!-- Actions (Open & Share) -->
-                        <div class="listing-actions">
-                            <button class="listing-action-btn open-btn">
-                                <svg viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
-                                Open
-                            </button>
-                            <button class="listing-action-btn">
-                                <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
-                                Share
-                            </button>
-                        </div>
-
-                    </div>
-                </div>
-
+                <div class="listing-container" id="homeListingContainer"></div>
             </div>
         </div>
 
-        <!-- IFRAME TABS (Blog & Profile) -->
         <iframe class="tab-iframe" id="blogFrame" src="blog.html" loading="lazy"></iframe>
         <iframe class="tab-iframe" id="profileFrame" src="profile.html" loading="lazy"></iframe>
 
-        <!-- BOTTOM NAVIGATION (Overlay) -->
         <nav class="bottom-nav">
-            <!-- HOME -->
             <button class="nav-item active" data-tab="home" onclick="switchTab('home')">
-                <span class="nav-icon">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                        <polyline points="9 22 9 12 15 12 15 22"/>
-                    </svg>
-                </span>
-                <span class="nav-label">Home</span>
+                <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+                <span>Home</span>
             </button>
-
-            <!-- BLOG -->
             <button class="nav-item" data-tab="blog" onclick="switchTab('blog')">
-                <span class="nav-icon">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                        <polyline points="14 2 14 8 20 8"/>
-                        <line x1="16" y1="13" x2="8" y2="13"/>
-                        <line x1="16" y1="17" x2="8" y2="17"/>
-                        <polyline points="10 9 9 9 8 9"/>
-                    </svg>
-                </span>
-                <span class="nav-label">Blog</span>
+                <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
+                <span>Feed</span>
             </button>
-
-            <!-- PROFILE -->
             <button class="nav-item" data-tab="profile" onclick="switchTab('profile')">
-                <span class="nav-icon">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                        <circle cx="12" cy="7" r="4"/>
-                    </svg>
-                </span>
-                <span class="nav-label">Profile</span>
+                <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+                <span>Profile</span>
             </button>
         </nav>
-
     </div>
+
+    <div class="full-screen-loader" id="fullscreenLoader">
+        <div class="loader-blur-bg"></div>
+        <div class="loader-modal glass-card">
+            <div class="pipeline-spinner-ring"></div>
+            <h4 id="loaderStageTitle">Generating Explanation...</h4>
+            <p id="loaderStageSub">Delegating to explanation processing engine</p>
+        </div>
+    </div>
+
     <script>
-        // Interaction to toggle button states
-        function setMode(mode) {
-            const pasteBtn = document.getElementById('btnPaste');
-            const websiteBtn = document.getElementById('btnWebsite');
+        // ─── CONFIG ───
+        const API_BASE_URL = '/api';
+        const CACHE_VERSION = 'easyread-v1';
+        const CACHE_URLS = ['/', '/blog.html', '/profile.html'];
 
-            pasteBtn.classList.remove('active');
-            websiteBtn.classList.remove('active');
+        // ─── OFFLINE HANDLING ───
+        let isOnline = navigator.onLine;
+        const offlineOverlay = document.getElementById('offlineOverlay');
 
-            if (mode === 'paste') {
-                pasteBtn.classList.add('active');
-                document.querySelector('.card-textarea').placeholder = "Paste your long note here...";
-            } else if (mode === 'website') {
-                websiteBtn.classList.add('active');
-                document.querySelector('.card-textarea').placeholder = "Paste the article URL here...";
+        function updateOnlineStatus() {
+            isOnline = navigator.onLine;
+            if (!isOnline) {
+                offlineOverlay.classList.add('active');
+            } else {
+                offlineOverlay.classList.remove('active');
             }
         }
-        
-        // =========================================
-        // TAB SWITCHING LOGIC
-        // =========================================
-        function switchTab(tab) {
-            // 1. Update Navigation Buttons
-            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-            document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
 
-            // 2. Get Elements
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        updateOnlineStatus();
+
+        function retryConnection() {
+            if (navigator.onLine) {
+                offlineOverlay.classList.remove('active');
+                showToast('✅ Back online!');
+                fetchHomeFeed();
+            } else {
+                showToast('Still offline. Please check your connection.');
+            }
+        }
+
+        // ─── SERVICE WORKER REGISTRATION ───
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(() => console.log('[SW] Registered'))
+                .catch(() => console.log('[SW] Registration failed'));
+        }
+
+        // ─── CACHE STATIC ASSETS ───
+        async function cacheStaticAssets() {
+            try {
+                const cache = await caches.open(CACHE_VERSION);
+                await cache.addAll(CACHE_URLS);
+                console.log('[Cache] Static assets cached');
+            } catch (e) { /* ignore */ }
+        }
+        cacheStaticAssets();
+
+        // ─── SPLASH SCREEN ───
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                const splash = document.getElementById('splashScreen');
+                if (splash) splash.classList.add('hidden');
+            }, 600);
+        });
+
+        // ─── THEME (reduced obsessiveness) ───
+        let currentThemeSetting = localStorage.getItem('easyread-theme') || 'auto';
+        function applyTheme(theme) {
+            currentThemeSetting = theme;
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else if (theme === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+        }
+        applyTheme(currentThemeSetting);
+
+        // ─── STATE ───
+        let currentCredits = parseFloat(localStorage.getItem('easyread-credits')) || 0;
+        let inputMode = 'ask';
+        let homeArticles = [];
+        let activeCategory = 'All';
+
+        function updateCreditsUI() {
+            const el = document.getElementById('inputCreditsDisplay');
+            if (el) el.textContent = currentCredits.toFixed(1);
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
+        function escapeJs(text) {
+            if (!text) return '';
+            return String(text).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/'/g, "\\'").replace(/\n/g, '\\n');
+        }
+
+        function formatTimeAgo(dateString) {
+            if (!dateString) return 'Recently';
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = Math.floor((now - date) / 1000);
+            if (diff < 60) return 'Just now';
+            const mins = Math.floor(diff / 60);
+            if (mins < 60) return `${mins}m ago`;
+            const hrs = Math.floor(mins / 60);
+            if (hrs < 24) return `${hrs}h ago`;
+            const days = Math.floor(hrs / 24);
+            if (days < 7) return `${days}d ago`;
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        function updateLoginNotice() {
+            const isLoggedIn = localStorage.getItem('easyread-logged-in') === 'true';
+            const banner = document.getElementById('loginNotice');
+            if (banner) banner.style.display = isLoggedIn ? 'none' : 'flex';
+        }
+
+        function triggerProfileLogin() {
+            switchTab('profile');
+            setTimeout(() => {
+                const frame = document.getElementById('profileFrame');
+                if (frame?.contentWindow) frame.contentWindow.postMessage('triggerLogin', '*');
+            }, 100);
+        }
+
+        setInterval(() => {
+            const stored = localStorage.getItem('easyread-theme') || 'auto';
+            if (stored !== currentThemeSetting) applyTheme(stored);
+            const credits = parseFloat(localStorage.getItem('easyread-credits')) || 0;
+            if (credits !== currentCredits) { currentCredits = credits; updateCreditsUI(); }
+            updateLoginNotice();
+        }, 500);
+
+        // ─── MODE ───
+        function setMode(mode) {
+            inputMode = mode;
+            document.querySelectorAll('.mode-pill').forEach(p => p.classList.remove('active'));
+            const ta = document.getElementById('submitTextArea');
+            if (mode === 'ask') { document.getElementById('btnAsk').classList.add('active'); ta.placeholder = "Ask a question about any topic..."; }
+            else if (mode === 'paste') { document.getElementById('btnPaste').classList.add('active'); ta.placeholder = "Paste your note or text here (min 20 chars)..."; }
+            else if (mode === 'website') { document.getElementById('btnWebsite').classList.add('active'); ta.placeholder = "Paste article URL (e.g., https://example.com/article)..."; }
+        }
+
+        const textarea = document.getElementById('submitTextArea');
+        const charCounter = document.getElementById('charCounter');
+        textarea.addEventListener('input', () => {
+            const len = textarea.value.length;
+            charCounter.textContent = `${len.toLocaleString()} / 50k`;
+            charCounter.style.color = len > 50000 ? '#ff3b30' : 'var(--text-tertiary)';
+        });
+
+        // ─── SUBMIT ───
+        async function submitPipeline() {
+            if (!isOnline) {
+                showToast('📡 No internet connection. Please try again later.');
+                return;
+            }
+
+            const isLoggedIn = localStorage.getItem('easyread-logged-in') === 'true';
+            const userId = localStorage.getItem('easyread_user_id');
+            const sessionToken = localStorage.getItem('easyread_session_token') || '';
+            const profileId = parseInt(localStorage.getItem('easyread-profile-id') || '1');
+
+            if (!isLoggedIn || !userId) {
+                showToast('Please sign in to generate explanations ⚡');
+                triggerProfileLogin();
+                return;
+            }
+
+            const userInput = textarea.value.trim();
+            if (!userInput) { showToast('Please enter text first'); return; }
+            if (inputMode === 'ask' && userInput.length < 5) { showToast('Question is too short (min 5 chars)'); return; }
+            if (inputMode === 'paste' && userInput.length < 20) { showToast('Paste requires at least 20 characters'); return; }
+            if (inputMode === 'website' && !userInput.startsWith('http')) { showToast('Please enter a valid URL'); return; }
+
+            const loader = document.getElementById('fullscreenLoader');
+            loader.classList.add('active');
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/explanation?action=generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-user-id': userId, 'x-session-token': sessionToken },
+                    body: JSON.stringify({ content: userInput, prompt: userInput, mode: inputMode, profile_id: profileId, force: false })
+                });
+                const data = await res.json();
+                if (!res.ok || !data.success) throw new Error(data.error || 'Generation failed');
+
+                loader.classList.remove('active');
+                textarea.value = '';
+                charCounter.textContent = "0 / 50k";
+                showToast('✅ Explanation ready!');
+
+                const slug = data.slug || data.explanation?.slug || data.explanation?.article_id || data.article_id;
+                openArticleInReader(slug, data.explanation?.article_id || data.article_id);
+
+            } catch (err) {
+                loader.classList.remove('active');
+                showToast(err.message || 'Submission error');
+            }
+        }
+
+        // ─── FEED ───
+        async function fetchHomeCategories() {
+            const container = document.getElementById('categoriesScroll');
+            if (!container) return;
+            try {
+                const res = await fetch(`${API_BASE_URL}/category?action=list`);
+                if (!res.ok) throw new Error();
+                const data = await res.json();
+                const categories = Array.isArray(data) ? data : (data.categories || []);
+                let html = `<button class="category-pill ${activeCategory === 'All' ? 'active' : ''}" onclick="filterHomeCategory('All', this)">For you</button>`;
+                categories.forEach(cat => {
+                    const name = typeof cat === 'string' ? cat : (cat.name || cat.canonical_name);
+                    if (name) {
+                        const isActive = activeCategory.toLowerCase() === name.toLowerCase();
+                        html += `<button class="category-pill ${isActive ? 'active' : ''}" onclick="filterHomeCategory('${escapeHtml(name)}', this)">${escapeHtml(name)}</button>`;
+                    }
+                });
+                container.innerHTML = html;
+            } catch { /* ignore */ }
+        }
+
+        function filterHomeCategory(cat, elem) {
+            activeCategory = cat;
+            document.querySelectorAll('#categoriesScroll .category-pill').forEach(p => p.classList.remove('active'));
+            if (elem) elem.classList.add('active');
+            renderFeed();
+        }
+
+        async function fetchHomeFeed() {
+            const container = document.getElementById('homeListingContainer');
+            try {
+                const response = await fetch(`${API_BASE_URL}/article?action=list`);
+                if (!response.ok) throw new Error();
+                const data = await response.json();
+                homeArticles = Array.isArray(data) ? data : (data.articles || []);
+                renderFeed();
+            } catch (err) {
+                container.innerHTML = `<div style="text-align:center; color:var(--text-secondary); padding:2rem 0; font-size:0.85rem;">No articles available.</div>`;
+            }
+        }
+
+        function renderFeed() {
+            const container = document.getElementById('homeListingContainer');
+            const filtered = activeCategory === 'All' ? homeArticles : homeArticles.filter(a => Array.isArray(a.categories) && a.categories.includes(activeCategory));
+            if (filtered.length === 0) {
+                container.innerHTML = `<div style="text-align:center; color:var(--text-secondary); padding:2rem 0; font-size:0.85rem;">No articles found in this category.</div>`;
+                return;
+            }
+            container.innerHTML = '';
+            filtered.forEach(art => {
+                const source = art.source_domain || 'EasyRead';
+                const targetIdentifier = art.slug || art.article_id;
+                const views = art.view_count || 0;
+                const readTime = art.reading_time || Math.max(1, Math.ceil((art.word_count || 300) / 200));
+                const cats = Array.isArray(art.categories) && art.categories.length > 0 ? art.categories : ['General'];
+                let tagsHtml = '';
+                cats.slice(0, 3).forEach(c => { tagsHtml += `<span class="listing-tag">${escapeHtml(c)}</span>`; });
+                const timeStr = art.created_at ? formatTimeAgo(art.created_at) : `${readTime} min read`;
+
+                container.innerHTML += `
+                    <div class="listing-card glass-card" onclick="openArticleInReader('${escapeJs(art.slug || '')}', '${art.article_id}')">
+                        <div class="listing-header">
+                            <div class="listing-avatar">${escapeHtml(source.slice(0, 2).toUpperCase())}<div class="online-dot"></div></div>
+                            <div class="listing-meta">
+                                <div class="listing-name">${escapeHtml(source)} <span class="verified">✓</span></div>
+                                <div class="listing-time">${escapeHtml(timeStr)}</div>
+                            </div>
+                        </div>
+                        <div class="listing-body">${escapeHtml(art.canonical_title ? art.canonical_title + ' — ' : '')}${escapeHtml(art.summary || 'Tap to read tailored explanations.')}</div>
+                        <div class="listing-tags">${tagsHtml}</div>
+                        <div class="listing-stats">
+                            <div class="listing-avatars"><div class="mini-avatar a1">ER</div><div class="mini-avatar a2">AI</div><div class="mini-avatar a3">⚡</div></div>
+                            <div class="listing-views"><svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg><strong>${views}</strong> views</div>
+                        </div>
+                        <div class="listing-actions">
+                            <button class="listing-action-btn open-btn" onclick="event.stopPropagation(); openArticleInReader('${escapeJs(art.slug || '')}', '${art.article_id}')"><svg viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg> Open</button>
+                            <button class="listing-action-btn" onclick="event.stopPropagation(); shareArticleLink('${escapeJs(art.canonical_title || '')}', '${escapeJs(targetIdentifier)}')"><svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg> Share</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function shareArticleLink(title, identifier) {
+            const url = window.location.origin + '/article/' + encodeURIComponent(identifier);
+            if (navigator.share) {
+                navigator.share({ title: title || 'EasyRead Article', text: 'Read this simplified article on EasyRead!', url }).catch(() => {});
+            } else {
+                navigator.clipboard.writeText(url).then(() => showToast('Link copied!')).catch(() => showToast('Failed to copy'));
+            }
+        }
+
+        function openArticleInReader(slug, id) {
+            const target = slug || id;
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: 'openArticle', article_id: id, slug: slug }, '*');
+            } else {
+                window.location.href = `/article/${encodeURIComponent(target)}`;
+            }
+        }
+
+        // ─── TAB SWITCHING ───
+        function switchTab(tab) {
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            const activeNav = document.querySelector(`[data-tab="${tab}"]`);
+            if (activeNav) activeNav.classList.add('active');
+
             const homeWrapper = document.getElementById('homeWrapper');
             const blogFrame = document.getElementById('blogFrame');
             const profileFrame = document.getElementById('profileFrame');
 
-            // 3. Hide everything initially
             homeWrapper.classList.add('hidden');
             blogFrame.classList.remove('active');
             profileFrame.classList.remove('active');
 
-            // 4. Show the selected tab
             if (tab === 'home') {
                 homeWrapper.classList.remove('hidden');
+                fetchHomeFeed();
             } else if (tab === 'blog') {
                 blogFrame.classList.add('active');
             } else if (tab === 'profile') {
@@ -779,9 +1096,31 @@
             }
         }
 
-        // 5. Ensure Home is visible on page load
+        // ─── MESSAGE HANDLING ───
+        window.addEventListener('message', (event) => {
+            if (!event.data) return;
+            if (event.data.type === 'switchTab') switchTab(event.data.tab);
+            else if (event.data.type === 'themeChanged') applyTheme(event.data.theme);
+            else if (event.data.type === 'authChanged') updateLoginNotice();
+            else if (event.data.type === 'openArticle') openArticleInReader(event.data.slug, event.data.article_id);
+        });
+
+        // ─── TOAST ───
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
+            toast.textContent = message;
+            toast.classList.add('show');
+            clearTimeout(toast._timeout);
+            toast._timeout = setTimeout(() => toast.classList.remove('show'), 2200);
+        }
+
+        // ─── INIT ───
         document.addEventListener('DOMContentLoaded', function() {
-            switchTab('home');
+            updateCreditsUI();
+            updateLoginNotice();
+            fetchHomeCategories();
+            fetchHomeFeed();
         });
     </script>
 </body>
