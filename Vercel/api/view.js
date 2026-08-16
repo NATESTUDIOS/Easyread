@@ -146,7 +146,7 @@ async function renderArticlePage(req, res) {
 
     const { data: explanations } = await supabase
       .from('explanation_views')
-      .select(`view_id, title, content, summary, profile_id, view_count, rating_avg, rating_count, profiles:profile_id (profile_id, name, description)`)
+      .select('view_id, title, content, summary, profile_id, view_count, rating_avg, rating_count, profiles:profile_id (profile_id, name, description)')
       .eq('article_id', article.article_id)
       .order('view_count', { ascending: false });
 
@@ -217,7 +217,7 @@ async function getArticleData(req, res) {
 
     const { data: explanations } = await supabase
       .from('explanation_views')
-      .select(`*`)
+      .select('*')
       .eq('article_id', article.article_id);
 
     return res.json({ success: true, article, explanations: explanations || [] });
@@ -845,7 +845,7 @@ function renderMarkdownText(text) {
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
     .replace(/__(.*?)__/g, '<u>$1</u>')
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\x60([^\x60]+)\x60/g, '<code>$1</code>')
     .replace(/\n/g, '<br/>');
 }
 
@@ -856,30 +856,29 @@ function getJavaScript(article, explanations, profiles, deepDives, userRating, u
   const activeExp = explanations?.find(e => e.profile_id === 1) || explanations?.[0];
 
   return `
-let currentCredits = ${userCredits || 0};
-let currentViewId = ${activeExp?.view_id || 'null'};
-let currentProfileId = ${activeExp?.profile_id || 1};
-const currentArticleId = ${article.article_id};
-const currentArticleSlug = "${escapeJs(article.slug || '')}";
-let isAuthenticated = ${!!user_id};
-let isBookmarked = ${isBookmarked};
-let hasUserRated = ${!!userRating};
-let userId = "${escapeJs(user_id || '')}";
-let sessionToken = "${escapeJs(sessionToken || '')}";
+var currentCredits = ${userCredits || 0};
+var currentViewId = ${activeExp?.view_id || 'null'};
+var currentProfileId = ${activeExp?.profile_id || 1};
+var currentArticleId = ${article.article_id};
+var currentArticleSlug = "${escapeJs(article.slug || '')}";
+var isAuthenticated = ${!!user_id};
+var isBookmarked = ${isBookmarked};
+var hasUserRated = ${!!userRating};
+var userId = "${escapeJs(user_id || '')}";
+var sessionToken = "${escapeJs(sessionToken || '')}";
 
-const explanationsData = ${JSON.stringify(explanations || [])};
-const profilesData = ${JSON.stringify(profiles || [])};
+var explanationsData = ${JSON.stringify(explanations || [])};
+var profilesData = ${JSON.stringify(profiles || [])};
 
-// ─── SYNC USER STATE & THEME ───
 function syncClientState() {
-  const localTheme = localStorage.getItem('easyread-theme') || 'auto';
+  var localTheme = localStorage.getItem('easyread-theme') || 'auto';
   if (localTheme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
   else if (localTheme === 'light') document.documentElement.setAttribute('data-theme', 'light');
 
-  const localLoggedIn = localStorage.getItem('easyread-logged-in') === 'true';
-  const localUserId = localStorage.getItem('easyread_user_id');
-  const localToken = localStorage.getItem('easyread_session_token');
-  const localCredits = parseFloat(localStorage.getItem('easyread-credits'));
+  var localLoggedIn = localStorage.getItem('easyread-logged-in') === 'true';
+  var localUserId = localStorage.getItem('easyread_user_id');
+  var localToken = localStorage.getItem('easyread_session_token');
+  var localCredits = parseFloat(localStorage.getItem('easyread-credits'));
 
   if (localLoggedIn && localUserId) {
     isAuthenticated = true;
@@ -887,116 +886,113 @@ function syncClientState() {
     sessionToken = localToken || '';
     if (!isNaN(localCredits)) currentCredits = localCredits;
 
-    const guestCard = document.getElementById('guestLoginCard');
+    var guestCard = document.getElementById('guestLoginCard');
     if (guestCard) guestCard.style.display = 'none';
 
-    const creditsBadge = document.getElementById('userCreditsBadge');
+    var creditsBadge = document.getElementById('userCreditsBadge');
     if (creditsBadge) {
       creditsBadge.style.display = 'inline-flex';
-      const display = document.getElementById('creditsValueDisplay');
+      var display = document.getElementById('creditsValueDisplay');
       if (display) display.textContent = currentCredits.toFixed(1);
     }
 
-    // 1. Record reading history on client
     fetch('/api/articles?action=track-view', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-user-id': userId },
       body: JSON.stringify({ article_id: currentArticleId, user_id: userId })
-    }).catch(() => {});
+    }).catch(function(){});
 
-    // 2. Sync live bookmark status
     fetch('/api/view?action=bookmark-status&article_id=' + currentArticleId, {
       headers: { 'x-user-id': userId }
     })
-    .then(r => r.json())
-    .then(data => {
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
       if (data && typeof data.isBookmarked === 'boolean') {
         isBookmarked = data.isBookmarked;
         updateBookmarkUI();
       }
-    }).catch(() => {});
+    }).catch(function(){});
   }
 }
 
 syncClientState();
 
 window.toggleDeepDiveAccordion = function(id) {
-  const sec = document.getElementById(id);
+  var sec = document.getElementById(id);
   if (sec) sec.classList.toggle('collapsed');
 };
 
 function showToast(msg) {
-  const t = document.getElementById('toast');
+  var t = document.getElementById('toast');
   if (!t) return;
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(t._timeout);
-  t._timeout = setTimeout(() => t.classList.remove('show'), 2400);
+  t._timeout = setTimeout(function() { t.classList.remove('show'); }, 2400);
 }
 
 window.copyCanonicalArticleLink = function() {
-  const canonicalUrl = window.location.origin + '/article/' + (currentArticleSlug || currentArticleId);
+  var canonicalUrl = window.location.origin + '/article/' + (currentArticleSlug || currentArticleId);
   if (navigator.share) {
     navigator.share({
       title: "${escapeJs(article.canonical_title || 'EasyRead Article')}",
       text: "Read this simplified explanation on EasyRead",
       url: canonicalUrl
-    }).catch(() => {});
+    }).catch(function(){});
   } else {
-    navigator.clipboard.writeText(canonicalUrl).then(() => {
+    navigator.clipboard.writeText(canonicalUrl).then(function() {
       showToast('Article link copied to clipboard!');
-    }).catch(() => {
+    }).catch(function() {
       showToast('Failed to copy link');
     });
   }
 };
 
 window.showLoginModal = function() {
-  const modal = document.getElementById('loginOverlay');
+  var modal = document.getElementById('loginOverlay');
   if (modal) modal.classList.add('active');
 };
 
 window.closeLoginModal = function() {
-  const modal = document.getElementById('loginOverlay');
+  var modal = document.getElementById('loginOverlay');
   if (modal) modal.classList.remove('active');
 };
 
 window.openPersonasModal = function() {
-  const modal = document.getElementById('personasModal');
+  var modal = document.getElementById('personasModal');
   if (modal) modal.classList.add('active');
 };
 
 window.closePersonasModal = function() {
-  const modal = document.getElementById('personasModal');
+  var modal = document.getElementById('personasModal');
   if (modal) modal.classList.remove('active');
 };
 
 window.selectPersonaFromModal = function(profileId) {
   closePersonasModal();
-  const targetPill = document.querySelector('.persona-pill[data-profile-id="' + profileId + '"]');
+  var targetPill = document.querySelector('.persona-pill[data-profile-id="' + profileId + '"]');
   switchProfile(profileId, targetPill);
 };
 
-// ─── RATING ENGINE & AUTO POPUP ───
-let hasShownAutoRating = sessionStorage.getItem('rated_prompt_' + currentArticleId) === 'true';
-let autoRatingTimer = null;
+var hasShownAutoRating = sessionStorage.getItem('rated_prompt_' + currentArticleId) === 'true';
+var autoRatingTimer = null;
 
 window.openRatingModal = function() {
   if (!isAuthenticated) {
     showLoginModal();
     return;
   }
-  const modal = document.getElementById('reviewModal');
+  var modal = document.getElementById('reviewModal');
   if (modal) modal.classList.add('active');
 };
 
 window.closeRatingModal = function() {
-  const modal = document.getElementById('reviewModal');
+  var modal = document.getElementById('reviewModal');
   if (modal) modal.classList.remove('active');
 };
 
 window.handleRatingSelection = function(rating) {
-  const lowRatingBox = document.getElementById('lowRatingFeedback');
+  var lowRatingBox = document.getElementById('lowRatingFeedback');
   if (lowRatingBox) {
     lowRatingBox.style.display = rating <= 3 ? 'block' : 'none';
   }
@@ -1007,17 +1003,17 @@ window.submitUserRating = async function() {
     showToast('You have already rated this explanation.');
     return;
   }
-  const selected = document.querySelector('input[name="rating"]:checked');
+  var selected = document.querySelector('input[name="rating"]:checked');
   if (!selected) {
     showToast('Please choose an emoji rating');
     return;
   }
-  const rating = parseInt(selected.value);
-  const checkedReasons = Array.from(document.querySelectorAll('input[name="rateReason"]:checked')).map(c => c.value);
-  const feedbackText = document.getElementById('ratingFeedbackText')?.value.trim();
+  var rating = parseInt(selected.value);
+  var checkedReasons = Array.from(document.querySelectorAll('input[name="rateReason"]:checked')).map(function(c) { return c.value; });
+  var feedbackText = document.getElementById('ratingFeedbackText')?.value.trim();
 
   try {
-    const res = await fetch('/api/view?action=rate', {
+    var res = await fetch('/api/view?action=rate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-user-id': userId, 'x-session-token': sessionToken },
       body: JSON.stringify({
@@ -1027,7 +1023,7 @@ window.submitUserRating = async function() {
         feedback: feedbackText
       })
     });
-    const data = await res.json();
+    var data = await res.json();
     if (res.status === 201) {
       hasUserRated = true;
       sessionStorage.setItem('rated_prompt_' + currentArticleId, 'true');
@@ -1045,7 +1041,7 @@ window.submitUserRating = async function() {
       if (data.bonus_earned) {
         currentCredits += data.bonus_earned;
         localStorage.setItem('easyread-credits', currentCredits.toString());
-        const display = document.getElementById('creditsValueDisplay');
+        var display = document.getElementById('creditsValueDisplay');
         if (display) display.textContent = currentCredits.toFixed(1);
       }
     } else {
@@ -1056,9 +1052,8 @@ window.submitUserRating = async function() {
   }
 };
 
-// ─── BOOKMARK TOGGLE ───
 function updateBookmarkUI() {
-  const btn = document.getElementById('bookmarkBtn');
+  var btn = document.getElementById('bookmarkBtn');
   if (btn) btn.classList.toggle('bookmarked', isBookmarked);
 }
 
@@ -1068,12 +1063,12 @@ window.handleBookmarkToggle = async function() {
     return;
   }
   try {
-    const res = await fetch('/api/view?action=bookmark', {
+    var res = await fetch('/api/view?action=bookmark', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-user-id': userId, 'x-session-token': sessionToken },
       body: JSON.stringify({ article_id: currentArticleId })
     });
-    const data = await res.json();
+    var data = await res.json();
     if (data.success) {
       isBookmarked = data.bookmarked;
       updateBookmarkUI();
@@ -1084,87 +1079,82 @@ window.handleBookmarkToggle = async function() {
   }
 };
 
-// ─── DYNAMIC PROGRESS TIMER CONTROLLER (Issue 2) ───
-class GenerationTimer {
-  constructor(digitsId, statusId, subId, fillId) {
-    this.digitsEl = document.getElementById(digitsId);
-    this.statusEl = document.getElementById(statusId);
-    this.subEl = document.getElementById(subId);
-    this.fillEl = document.getElementById(fillId);
-    this.seconds = 0;
-    this.interval = null;
-  }
-
-  start() {
-    this.seconds = 0;
-    this.updateUI();
-    if (this.interval) clearInterval(this.interval);
-    this.interval = setInterval(() => {
-      this.seconds++;
-      this.updateUI();
-    }, 1000);
-  }
-
-  stop() {
-    if (this.interval) clearInterval(this.interval);
-  }
-
-  updateUI() {
-    const mins = Math.floor(this.seconds / 60);
-    const secs = this.seconds % 60;
-    const padSecs = secs.toString().padStart(2, '0');
-    
-    if (this.digitsEl) {
-      this.digitsEl.textContent = mins + 'min : ' + padSecs + 'secs / 2mins';
-    }
-
-    if (this.fillEl) {
-      const pct = Math.min(100, (this.seconds / 120) * 100);
-      this.fillEl.style.width = pct + '%';
-    }
-
-    // Dynamic phase transitions
-    if (this.seconds < 15) {
-      if (this.statusEl) this.statusEl.textContent = 'Synthesizing Perspective...';
-      if (this.subEl) this.subEl.textContent = 'Analyzing core concepts and context...';
-    } else if (this.seconds < 35) {
-      if (this.statusEl) this.statusEl.textContent = 'Adapting Persona Tone...';
-      if (this.subEl) this.subEl.textContent = 'Translating technical jargon into intuitive language...';
-    } else if (this.seconds < 60) {
-      if (this.statusEl) this.statusEl.textContent = 'Drafting Analogies & Insights...';
-      if (this.subEl) this.subEl.textContent = 'Formulating clear real-world takeaways...';
-    } else if (this.seconds < 90) {
-      if (this.statusEl) this.statusEl.textContent = 'Polishing Perspective Layout...';
-      if (this.subEl) this.subEl.textContent = 'Structuring headings, lists, and key points...';
-    } else if (this.seconds < 120) {
-      if (this.statusEl) this.statusEl.textContent = 'Finalizing Generation...';
-      if (this.subEl) this.subEl.textContent = 'Wrapping up response and verifying quality...';
-    } else {
-      // Exceeded 2 minutes
-      if (this.statusEl) this.statusEl.textContent = 'Processing High-Density Content';
-      if (this.subEl) this.subEl.innerHTML = '<span style="color:#f59e0b;font-weight:700;">Please wait, this is taking a bit longer than expected, we are fixing it...</span>';
-    }
-  }
+function GenerationTimer(digitsId, statusId, subId, fillId) {
+  this.digitsEl = document.getElementById(digitsId);
+  this.statusEl = document.getElementById(statusId);
+  this.subEl = document.getElementById(subId);
+  this.fillEl = document.getElementById(fillId);
+  this.seconds = 0;
+  this.interval = null;
 }
 
-// ─── SWITCH PERSPECTIVES (MAINTAINS CLEAN FORMATTING) ───
+GenerationTimer.prototype.start = function() {
+  var self = this;
+  self.seconds = 0;
+  self.updateUI();
+  if (self.interval) clearInterval(self.interval);
+  self.interval = setInterval(function() {
+    self.seconds++;
+    self.updateUI();
+  }, 1000);
+};
+
+GenerationTimer.prototype.stop = function() {
+  if (this.interval) clearInterval(this.interval);
+};
+
+GenerationTimer.prototype.updateUI = function() {
+  var mins = Math.floor(this.seconds / 60);
+  var secs = this.seconds % 60;
+  var padSecs = secs < 10 ? '0' + secs : secs;
+  
+  if (this.digitsEl) {
+    this.digitsEl.textContent = mins + 'min : ' + padSecs + 'secs / 2mins';
+  }
+
+  if (this.fillEl) {
+    var pct = Math.min(100, (this.seconds / 120) * 100);
+    this.fillEl.style.width = pct + '%';
+  }
+
+  if (this.seconds < 15) {
+    if (this.statusEl) this.statusEl.textContent = 'Synthesizing Perspective...';
+    if (this.subEl) this.subEl.textContent = 'Analyzing core concepts and context...';
+  } else if (this.seconds < 35) {
+    if (this.statusEl) this.statusEl.textContent = 'Adapting Persona Tone...';
+    if (this.subEl) this.subEl.textContent = 'Translating technical jargon into intuitive language...';
+  } else if (this.seconds < 60) {
+    if (this.statusEl) this.statusEl.textContent = 'Drafting Analogies & Insights...';
+    if (this.subEl) this.subEl.textContent = 'Formulating clear real-world takeaways...';
+  } else if (this.seconds < 90) {
+    if (this.statusEl) this.statusEl.textContent = 'Polishing Perspective Layout...';
+    if (this.subEl) this.subEl.textContent = 'Structuring headings, lists, and key points...';
+  } else if (this.seconds < 120) {
+    if (this.statusEl) this.statusEl.textContent = 'Finalizing Generation...';
+    if (this.subEl) this.subEl.textContent = 'Wrapping up response and verifying quality...';
+  } else {
+    if (this.statusEl) this.statusEl.textContent = 'Processing High-Density Content';
+    if (this.subEl) this.subEl.innerHTML = '<span style="color:#f59e0b;font-weight:700;">Please wait, this is taking a bit longer than expected, we are fixing it...</span>';
+  }
+};
+
 window.switchProfile = function(profileId, btnElem) {
-  document.querySelectorAll('.persona-pill').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.persona-pill').forEach(function(p) { p.classList.remove('active'); });
   if (btnElem) btnElem.classList.add('active');
 
   currentProfileId = profileId;
-  const profile = profilesData.find(p => p.profile_id === profileId);
-  const explanation = explanationsData.find(e => e.profile_id === profileId);
+  var profile = profilesData.find(function(p) { return p.profile_id === profileId; });
+  var explanation = explanationsData.find(function(e) { return e.profile_id === profileId; });
 
-  const badge = document.getElementById('heroPerspectiveBadge');
-  const ddBadge = document.getElementById('deepDivePersonaBadge');
+  var badge = document.getElementById('heroPerspectiveBadge');
+  var ddBadge = document.getElementById('deepDivePersonaBadge');
   if (profile) {
     if (badge) badge.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>' + profile.name + ' Perspective';
     if (ddBadge) ddBadge.textContent = profile.name;
   }
 
-  const textElem = document.getElementById('articleText');
-  const timerLoader = document.getElementById('contentTimerLoader');
+  var textElem = document.getElementById('articleText');
+  var timerLoader = document.getElementById('contentTimerLoader');
 
   if (textElem) textElem.style.display = 'none';
   if (timerLoader) timerLoader.style.display = 'none';
@@ -1192,26 +1182,26 @@ window.generateExplanation = async function(profileId) {
     showLoginModal();
     return;
   }
-  const timerLoader = document.getElementById('contentTimerLoader');
-  const textElem = document.getElementById('articleText');
+  var timerLoader = document.getElementById('contentTimerLoader');
+  var textElem = document.getElementById('articleText');
   if (textElem) textElem.style.display = 'none';
   if (timerLoader) timerLoader.style.display = 'block';
 
-  const timer = new GenerationTimer('genTimerDigits', 'genTimerStatus', 'genTimerSub', 'genTimerFill');
+  var timer = new GenerationTimer('genTimerDigits', 'genTimerStatus', 'genTimerSub', 'genTimerFill');
   timer.start();
 
   showToast('Generating tailored perspective...');
   try {
-    const res = await fetch('/api/explanation?action=generate', {
+    var res = await fetch('/api/explanation?action=generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-user-id': userId, 'x-session-token': sessionToken },
       body: JSON.stringify({ article_id: currentArticleId, profile_id: profileId, force: false })
     });
-    const data = await res.json();
+    var data = await res.json();
     timer.stop();
     if (data.success) {
       showToast('Explanation ready!');
-      setTimeout(() => window.location.reload(), 450);
+      setTimeout(function() { window.location.reload(); }, 450);
     } else {
       if (timerLoader) timerLoader.style.display = 'none';
       if (textElem) textElem.style.display = 'block';
@@ -1225,7 +1215,6 @@ window.generateExplanation = async function(profileId) {
   }
 };
 
-// ─── DEEP DIVE ENGINE WITH LIVE TIMER ───
 window.submitInlineDeepDive = async function(e) {
   e.preventDefault();
   if (!isAuthenticated) {
@@ -1233,18 +1222,18 @@ window.submitInlineDeepDive = async function(e) {
     return;
   }
 
-  const input = document.getElementById('inlineDeepDiveInput');
-  const question = input?.value.trim();
+  var input = document.getElementById('inlineDeepDiveInput');
+  var question = input ? input.value.trim() : '';
   if (!question || question.length < 4) {
     showToast('Please enter a specific question');
     return;
   }
 
   input.value = '';
-  const list = document.getElementById('deepDivesList');
-  const cardId = 'dd-' + Date.now();
+  var list = document.getElementById('deepDivesList');
+  var cardId = 'dd-' + Date.now();
 
-  const card = document.createElement('div');
+  var card = document.createElement('div');
   card.className = 'deep-dive-accordion glass-card';
   card.id = cardId;
   card.innerHTML = 
@@ -1267,15 +1256,15 @@ window.submitInlineDeepDive = async function(e) {
 
   list.appendChild(card);
 
-  // Live timer for deep dive
-  let ddSeconds = 0;
-  const ddTimerDigits = document.getElementById(cardId + '-timer');
-  const ddStatus = document.getElementById(cardId + '-status');
-  const ddInterval = setInterval(() => {
+  var ddSeconds = 0;
+  var ddTimerDigits = document.getElementById(cardId + '-timer');
+  var ddStatus = document.getElementById(cardId + '-status');
+  var ddInterval = setInterval(function() {
     ddSeconds++;
-    const mins = Math.floor(ddSeconds / 60);
-    const secs = (ddSeconds % 60).toString().padStart(2, '0');
-    if (ddTimerDigits) ddTimerDigits.textContent = mins + 'min : ' + secs + 'secs / 2mins';
+    var mins = Math.floor(ddSeconds / 60);
+    var secs = ddSeconds % 60;
+    var padSecs = secs < 10 ? '0' + secs : secs;
+    if (ddTimerDigits) ddTimerDigits.textContent = mins + 'min : ' + padSecs + 'secs / 2mins';
     
     if (ddSeconds > 120 && ddStatus) {
       ddStatus.innerHTML = '<span style="color:#f59e0b;font-weight:700;">Please wait, this is taking a bit longer than expected, we are fixing it...</span>';
@@ -1283,43 +1272,42 @@ window.submitInlineDeepDive = async function(e) {
   }, 1000);
 
   try {
-    const res = await fetch('/api/view?action=deep-dive', {
+    var res = await fetch('/api/view?action=deep-dive', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-user-id': userId, 'x-session-token': sessionToken },
-      body: JSON.stringify({ article_id: currentArticleId, profile_id: currentProfileId, question })
+      body: JSON.stringify({ article_id: currentArticleId, profile_id: currentProfileId, question: question })
     });
-    const data = await res.json();
+    var data = await res.json();
     clearInterval(ddInterval);
-    const ansContainer = document.getElementById(cardId + '-ans');
+    var ansContainer = document.getElementById(cardId + '-ans');
 
     if (data.success && data.deep_dive) {
       ansContainer.innerHTML = formatMarkdownClient(data.deep_dive.answer || 'Answer generated.');
       showToast('Deep dive ready!');
       currentCredits = Math.max(0, currentCredits - 0.5);
       localStorage.setItem('easyread-credits', currentCredits.toString());
-      const display = document.getElementById('creditsValueDisplay');
+      var display = document.getElementById('creditsValueDisplay');
       if (display) display.textContent = currentCredits.toFixed(1);
     } else {
       ansContainer.innerHTML = '<p style="color:var(--danger);">' + (data.error || 'Failed to generate deep dive') + '</p>';
     }
   } catch (err) {
     clearInterval(ddInterval);
-    const ansContainer = document.getElementById(cardId + '-ans');
+    var ansContainer = document.getElementById(cardId + '-ans');
     if (ansContainer) ansContainer.innerHTML = '<p style="color:var(--danger);">Network error generating answer.</p>';
   }
 };
 
-// ─── CLIENT MARKDOWN & FORMAT PARSER ───
 function renderClientExplanationHtml(rawText) {
   if (!rawText) return '<p>No content available.</p>';
-  let text = rawText.trim();
+  var text = rawText.trim();
   if (text.startsWith('"') && text.endsWith('"')) {
     text = text.substring(1, text.length - 1).trim();
   }
 
-  const blocks = text.split(/\\n\\s*\\n/);
-  return blocks.map(block => {
-    const trimmed = block.trim();
+  var blocks = text.split(/\\n\\s*\\n/);
+  return blocks.map(function(block) {
+    var trimmed = block.trim();
     if (!trimmed) return '';
 
     if (trimmed.startsWith('### ')) {
@@ -1335,11 +1323,13 @@ function renderClientExplanationHtml(rawText) {
       return '<blockquote class="article-quote">' + formatMarkdownClient(trimmed.replace(/^>\\s*/, '')) + '</blockquote>';
     }
 
-    const lines = trimmed.split('\\n').map(l => l.trim()).filter(Boolean);
-    const isList = lines.every(l => l.startsWith('- ') || l.startsWith('* ') || /^\\d+\\.\\s+/.test(l));
+    var lines = trimmed.split('\\n').map(function(l) { return l.trim(); }).filter(Boolean);
+    var isList = lines.every(function(l) { return l.startsWith('- ') || l.startsWith('* ') || /^\\d+\\.\\s+/.test(l); });
 
     if (isList) {
-      const listItems = lines.map(line => '<li>' + formatMarkdownClient(line.replace(/^[-*]\\s+|\\d+\\.\\s+/, '')) + '</li>').join('');
+      var listItems = lines.map(function(line) {
+        return '<li>' + formatMarkdownClient(line.replace(/^[-*]\\s+|\\d+\\.\\s+/, '')) + '</li>';
+      }).join('');
       return '<ul class="content-list">' + listItems + '</ul>';
     }
 
@@ -1353,7 +1343,7 @@ function formatMarkdownClient(text) {
     .replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>')
     .replace(/\\*(.*?)\\*/g, '<em>$1</em>')
     .replace(/__(.*?)__/g, '<u>$1</u>')
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\\x60([^\\x60]+)\\x60/g, '<code>$1</code>')
     .replace(/\\n/g, '<br/>');
 }
 
@@ -1362,17 +1352,17 @@ function escapeHtml(t) {
   return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-window.addEventListener('scroll', () => {
-  const scrollTop = window.scrollY;
-  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-  const bar = document.getElementById('progressBar');
+window.addEventListener('scroll', function() {
+  var scrollTop = window.scrollY;
+  var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  var bar = document.getElementById('progressBar');
   if (bar && docHeight > 0) {
-    const progress = (scrollTop / docHeight) * 100;
+    var progress = (scrollTop / docHeight) * 100;
     bar.style.width = progress + '%';
 
     if (progress >= 85 && !hasUserRated && !hasShownAutoRating && isAuthenticated) {
       if (!autoRatingTimer) {
-        autoRatingTimer = setTimeout(() => {
+        autoRatingTimer = setTimeout(function() {
           hasShownAutoRating = true;
           sessionStorage.setItem('rated_prompt_' + currentArticleId, 'true');
           openRatingModal();
@@ -1496,10 +1486,10 @@ function getCSSStyles() {
   --card-bg: rgba(18, 18, 22, 0.78) !important;
   --card-bg-hover: rgba(26, 26, 32, 0.9) !important;
   --glass-border: 1px solid rgba(255, 255, 255, 0.09) !important;
-  --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.05) !important;
-  --glass-shadow: 0 16px 40px rgba(0, 0, 0, 0.5) !important;
-  --mode-bg: rgba(255, 255, 255, 0.06) !important;
-  --mode-bg-hover: rgba(255, 255, 255, 0.11) !important;
+  --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.05);
+  --glass-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  --mode-bg: rgba(255, 255, 255, 0.06);
+  --mode-bg-hover: rgba(255, 255, 255, 0.11);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1637,7 +1627,7 @@ body {
 }
 code { background: var(--mode-bg-hover); padding: 2px 6px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.9em; }
 
-/* ─── LIVE GENERATION TIMER CARD (Issue 2) ─── */
+/* ─── LIVE GENERATION TIMER CARD ─── */
 .generation-timer-card { padding: 24px 20px; text-align: center; margin: 1.2rem 0; border: 1px solid var(--accent-glow); }
 .timer-header-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 14px; }
 .timer-spinner {
