@@ -79,6 +79,8 @@ import processorRouter from "./api/processor.js";
 // Scraper - Scraping routes
 import scraperRouter from "./api/scraper.js";
 
+import nytRouter from "./api/nyt.js";
+
 // ============================================
 // MOUNT ROUTES
 // ============================================
@@ -88,6 +90,9 @@ app.use("/api/processor", processorRouter);
 
 // Mount scraper routes at /api/scraper
 app.use("/api/scraper", scraperRouter);
+
+
+app.use("/api/nyt", nytRouter);
 
 // ============================================
 // HEALTH CHECK
