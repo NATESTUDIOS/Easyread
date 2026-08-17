@@ -480,6 +480,7 @@
             overflow-y: auto;
             padding-right: 4px;
             flex: 1;
+            max-height: calc(85vh - 80px);
         }
 
         /* ─── FULL-WIDTH EXPANDABLE PERSONA ACCORDION CARD ─── */
@@ -487,7 +488,7 @@
             background: var(--mode-bg);
             border: var(--glass-border-subtle);
             border-radius: 18px;
-            overflow: hidden;
+            overflow: visible;
             transition: border-color 0.25s ease, background 0.25s ease;
             margin-bottom: 4px;
         }
@@ -565,6 +566,8 @@
             word-break: break-word;
             background: rgba(0, 0, 0, 0.02);
             animation: fadeIn 0.2s ease;
+            max-height: none;
+            overflow: visible;
         }
         .persona-collapsible-item.collapsed .persona-item-desc-wrap { display: none; }
 
@@ -829,7 +832,7 @@
     </div>
 
     <script>
-        const API_BASE_URL = '/api';
+        const API_BASE_URL = 'https://easytoread.vercel.app/api';
 
         const AVATAR_GRADIENTS = [
             'linear-gradient(135deg, #ff416c, #ff4b2b)',
@@ -1243,85 +1246,69 @@
             }
         }
 
-        // ─── FETCH USER DATA (HISTORY & BOOKMARKS) ───
-        async function fetchUserData() {
-            const userId = localStorage.getItem('easyread_user_id');
-            const sessionToken = localStorage.getItem('easyread_session_token');
-            if (!userId) return;
+// ─── FETCH USER DATA (HISTORY & BOOKMARKS) ───
+async function fetchUserData() {
+    const userId = localStorage.getItem('easyread_user_id');
+    const sessionToken = localStorage.getItem('easyread_session_token');
+    if (!userId) return;
 
-            showHistoryShimmers();
-            showBookmarksShimmers();
+    showHistoryShimmers();
+    showBookmarksShimmers();
 
-            try {
-                // 1. Sync credits & preferred profile
-                fetch(`${API_BASE_URL}/account?action=profile&user_id=${encodeURIComponent(userId)}`, {
-                    headers: { 'x-user-id': userId, 'x-session-token': sessionToken || '' }
-                })
-                .then(r => r.json())
-                .then(profData => {
-                    if (profData && profData.credits !== undefined) {
-                        localStorage.setItem('easyread-credits', profData.credits);
-                        document.getElementById('userCreditsValue').textContent = parseFloat(profData.credits).toFixed(1);
-                    }
-                    if (profData && profData.preferred_profile_id) {
-                        applyProfile(profData.preferred_profile_id);
-                    }
-                }).catch(() => {});
-
-                // 2. Fetch Reading History (with multi-route fallback)
-                let historyData = [];
-                try {
-                    const histRes = await fetch(`${API_BASE_URL}/articles?action=history&user_id=${encodeURIComponent(userId)}`, {
-                        headers: { 'x-user-id': userId, 'x-session-token': sessionToken || '' }
-                    });
-                    if (histRes.ok) {
-                        const hJson = await histRes.json();
-                        historyData = hJson.history || [];
-                    }
-                } catch {
-                    try {
-                        const histRes2 = await fetch(`${API_BASE_URL}/article?action=history&user_id=${encodeURIComponent(userId)}`, {
-                            headers: { 'x-user-id': userId, 'x-session-token': sessionToken || '' }
-                        });
-                        if (histRes2.ok) {
-                            const hJson2 = await histRes2.json();
-                            historyData = hJson2.history || [];
-                        }
-                    } catch {}
-                }
-
-                renderHistory(historyData);
-
-                // 3. Fetch Saved Bookmarks (with multi-route fallback)
-                let bookmarksData = [];
-                try {
-                    const bmRes = await fetch(`${API_BASE_URL}/articles?action=bookmarks&user_id=${encodeURIComponent(userId)}`, {
-                        headers: { 'x-user-id': userId, 'x-session-token': sessionToken || '' }
-                    });
-                    if (bmRes.ok) {
-                        const bJson = await bmRes.json();
-                        bookmarksData = bJson.bookmarks || [];
-                    }
-                } catch {
-                    try {
-                        const bmRes2 = await fetch(`${API_BASE_URL}/view?action=bookmarks&user_id=${encodeURIComponent(userId)}`, {
-                            headers: { 'x-user-id': userId, 'x-session-token': sessionToken || '' }
-                        });
-                        if (bmRes2.ok) {
-                            const bJson2 = await bmRes2.json();
-                            bookmarksData = bJson2.bookmarks || [];
-                        }
-                    } catch {}
-                }
-
-                renderBookmarks(bookmarksData);
-
-            } catch (err) {
-                console.error('Failed to sync profile data:', err);
-                renderHistory([]);
-                renderBookmarks([]);
+    try {
+        // 1. Sync credits & preferred profile
+        fetch(`${API_BASE_URL}/account?action=profile&user_id=${encodeURIComponent(userId)}`, {
+            headers: { 'x-user-id': userId, 'x-session-token': sessionToken || '' }
+        })
+        .then(r => r.json())
+        .then(profData => {
+            if (profData && profData.credits !== undefined) {
+                localStorage.setItem('easyread-credits', profData.credits);
+                document.getElementById('userCreditsValue').textContent = parseFloat(profData.credits).toFixed(1);
             }
+            if (profData && profData.preferred_profile_id) {
+                applyProfile(profData.preferred_profile_id);
+            }
+        }).catch(() => {});
+
+        // 2. Fetch Reading History - CORRECTED ENDPOINT
+        let historyData = [];
+        try {
+            const histRes = await fetch(`${API_BASE_URL}/article?action=history`, {
+                headers: { 'x-user-id': userId, 'x-session-token': sessionToken || '' }
+            });
+            if (histRes.ok) {
+                const hJson = await histRes.json();
+                historyData = hJson.history || [];
+            }
+        } catch (err) {
+            console.warn('Failed to fetch history from primary endpoint:', err);
         }
+
+        renderHistory(historyData);
+
+        // 3. Fetch Saved Bookmarks - CORRECTED ENDPOINT
+        let bookmarksData = [];
+        try {
+            const bmRes = await fetch(`${API_BASE_URL}/article?action=bookmarks`, {
+                headers: { 'x-user-id': userId, 'x-session-token': sessionToken || '' }
+            });
+            if (bmRes.ok) {
+                const bJson = await bmRes.json();
+                bookmarksData = bJson.bookmarks || [];
+            }
+        } catch (err) {
+            console.warn('Failed to fetch bookmarks from primary endpoint:', err);
+        }
+
+        renderBookmarks(bookmarksData);
+
+    } catch (err) {
+        console.error('Failed to sync profile data:', err);
+        renderHistory([]);
+        renderBookmarks([]);
+    }
+}
 
         function renderHistory(history) {
             const list = document.getElementById('historyList');
