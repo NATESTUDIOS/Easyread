@@ -599,9 +599,6 @@ function buildArticleHTML({
     <!-- ─── ANDROID / CHROME ─── -->
     <link rel="manifest" href="/manifest.json" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <!-- ─── ANDROID / CHROME ─── -->
-    <link rel="manifest" href="/manifest.json" />
-    <meta name="mobile-web-app-capable" content="yes" />
     <!-- ─── FAVICON ─── -->
     <link
       rel="icon"
