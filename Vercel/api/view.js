@@ -486,14 +486,14 @@ function buildArticleHTML({
   <!-- Sign In Prompt Modal -->
   <div class="modal-overlay" id="loginOverlay">
     <div class="glass-modal">
-      <button class="modal-close-btn" onclick="closeLoginModal()">✕</button>
+      <button type="button" class="modal-close-btn" onclick="closeLoginModal()">✕</button>
       <div class="modal-icon-badge">
         <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
       </div>
       <h3>Sign in to EasyRead</h3>
       <p>Unlock custom cognitive personas, generate deep dives, save bookmarks, and earn credit rewards.</p>
       <div class="modal-actions-row">
-        <button class="btn btn-secondary" onclick="closeLoginModal()">Dismiss</button>
+        <button type="button" class="btn btn-secondary" onclick="closeLoginModal()">Dismiss</button>
         <a href="/#profile" class="btn btn-primary">Sign In</a>
       </div>
     </div>
@@ -502,7 +502,7 @@ function buildArticleHTML({
   <!-- Persona Selection Modal (When > 4 profiles exist) -->
   <div class="modal-overlay" id="personasModal">
     <div class="glass-modal personas-modal-card">
-      <button class="modal-close-btn" onclick="closePersonasModal()">✕</button>
+      <button type="button" class="modal-close-btn" onclick="closePersonasModal()">✕</button>
       <div class="modal-icon-badge">
         <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       </div>
@@ -512,7 +512,7 @@ function buildArticleHTML({
         ${profiles.map(p => {
           const isSelected = p.profile_id === (defaultExplanation?.profile_id || 1);
           return `
-            <div class="persona-selection-card ${isSelected ? 'selected' : ''}" onclick="selectPersonaFromModal(${p.profile_id})">
+            <div class="persona-selection-card ${isSelected ? 'selected' : ''}" data-target-id="${p.profile_id}" onclick="selectPersonaFromModal(this.dataset.targetId)">
               <div class="persona-card-top">
                 <div class="persona-badge-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
                 <h4>${escapeHtml(p.name)}</h4>
@@ -567,13 +567,13 @@ function buildArticleHTML({
           ${visibleProfiles.map(p => {
             const isActive = p.profile_id === (defaultExplanation?.profile_id || 1);
             return `
-              <button class="persona-pill ${isActive ? 'active' : ''}" data-profile-id="${p.profile_id}" onclick="switchProfile(${p.profile_id}, this)">
+              <button type="button" class="persona-pill ${isActive ? 'active' : ''}" data-profile-id="${p.profile_id}" onclick="switchProfile(${p.profile_id}, this)">
                 <span>${escapeHtml(p.name)}</span>
               </button>
             `;
           }).join('')}
           ${overflowProfiles.length > 0 ? `
-            <button class="persona-pill more-pill" onclick="openPersonasModal()">
+            <button type="button" class="persona-pill more-pill" onclick="openPersonasModal()">
               <span>+${overflowProfiles.length} More...</span>
             </button>
           ` : ''}
@@ -607,7 +607,7 @@ function buildArticleHTML({
       <a href="/#profile" class="guest-signin-btn">Sign In</a>
     </div>
 
-    <!-- Article Content Body (With Live Generation Timer Progress Card) -->
+    <!-- Article Content Body -->
     <article class="article-body" id="articleContent">
       <div class="generation-timer-card glass-card" id="contentTimerLoader" style="display: none;">
         <div class="timer-header-row">
@@ -642,7 +642,7 @@ function buildArticleHTML({
       <div class="deep-dives-list" id="deepDivesList">
         ${deepDives.map((dd, index) => `
           <div class="deep-dive-accordion glass-card collapsed" id="dd-item-${index}">
-            <div class="dd-header" onclick="toggleDeepDiveAccordion('dd-item-${index}')">
+            <div class="dd-header" data-target="dd-item-${index}" onclick="toggleDeepDiveAccordion(this.dataset.target)">
               <div class="dd-title-row">
                 <span class="dd-q-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
                 <h4>${escapeHtml(dd.question)}</h4>
@@ -699,13 +699,13 @@ function buildArticleHTML({
         </a>
 
         <div class="dock-actions">
-          <button class="dock-icon-btn" onclick="copyCanonicalArticleLink()" title="Share / Copy Link" aria-label="Copy link">
+          <button type="button" class="dock-icon-btn" onclick="copyCanonicalArticleLink()" title="Share / Copy Link" aria-label="Copy link">
             <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
           </button>
-          <button class="dock-icon-btn bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" id="bookmarkBtn" onclick="handleBookmarkToggle()" title="Save Bookmark" aria-label="Bookmark">
+          <button type="button" class="dock-icon-btn bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" id="bookmarkBtn" onclick="handleBookmarkToggle()" title="Save Bookmark" aria-label="Bookmark">
             <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
           </button>
-          <button class="dock-icon-btn rate-btn ${userRating ? 'rated' : ''}" id="rateBtn" onclick="openRatingModal()" title="Rate Explanation" aria-label="Rate article">
+          <button type="button" class="dock-icon-btn rate-btn ${userRating ? 'rated' : ''}" id="rateBtn" onclick="openRatingModal()" title="Rate Explanation" aria-label="Rate article">
             <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
           </button>
         </div>
@@ -715,7 +715,7 @@ function buildArticleHTML({
     <!-- Rating Modal -->
     <div class="modal-overlay" id="reviewModal">
       <div class="glass-modal">
-        <button class="modal-close-btn" onclick="closeRatingModal()">✕</button>
+        <button type="button" class="modal-close-btn" onclick="closeRatingModal()">✕</button>
         <div id="ratingModalContent">
           ${userRating ? `
             <div class="review-submitted-state">
@@ -724,7 +724,7 @@ function buildArticleHTML({
               </div>
               <h3>Rating Recorded</h3>
               <p>You rated this explanation ${userRating.rating} / 5 stars.</p>
-              <button class="btn btn-primary" style="margin-top: 16px; width: 100%;" onclick="closeRatingModal()">Done</button>
+              <button type="button" class="btn btn-primary" style="margin-top: 16px; width: 100%;" onclick="closeRatingModal()">Done</button>
             </div>
           ` : `
             <div class="modal-icon-badge">
@@ -758,8 +758,8 @@ function buildArticleHTML({
             </div>
 
             <div class="modal-actions-row" style="margin-top: 1.2rem;">
-              <button class="btn btn-secondary" onclick="closeRatingModal()">Cancel</button>
-              <button class="btn btn-primary" onclick="submitUserRating()">Submit Rating</button>
+              <button type="button" class="btn btn-secondary" onclick="closeRatingModal()">Cancel</button>
+              <button type="button" class="btn btn-primary" onclick="submitUserRating()">Submit Rating</button>
             </div>
           `}
         </div>
@@ -792,7 +792,7 @@ function buildSummaryHTML(article, defaultExplanation) {
 }
 
 // ============================================
-// PARSER & ACCORDION ENGINES
+// CLEAN MARKDOWN & ARTICLE PARSER
 // ============================================
 function renderParsedExplanationToHtml(rawText) {
   if (!rawText) return '<p>No explanation content available.</p>';
@@ -803,73 +803,35 @@ function renderParsedExplanationToHtml(rawText) {
   }
 
   const blocks = text.split(/\n\s*\n/);
-  const sections = [];
-  let currentSection = { heading: null, content: [] };
-
-  blocks.forEach((block) => {
+  return blocks.map(block => {
     const trimmed = block.trim();
-    if (!trimmed) return;
+    if (!trimmed) return '';
 
-    const isHeading = trimmed.startsWith('#') || 
-                      (/^[A-Z0-9][\w\s,:—–-]+\?$/.test(trimmed) && trimmed.length < 90) ||
-                      (/^[A-Z][\w\s]+:\s+[A-Za-z0-9\s]+$/.test(trimmed) && trimmed.length < 80);
-
-    if (isHeading) {
-      if (currentSection.content.length > 0 || currentSection.heading) {
-        sections.push(currentSection);
-      }
-      currentSection = {
-        heading: trimmed.replace(/^#+\s*/, ''),
-        content: []
-      };
-    } else {
-      currentSection.content.push(trimmed);
+    if (trimmed.startsWith('### ')) {
+      return `<h3 class="subheading-h3">${escapeHtml(trimmed.replace(/^###\s+/, ''))}</h3>`;
     }
-  });
-
-  if (currentSection.content.length > 0 || currentSection.heading) {
-    sections.push(currentSection);
-  }
-
-  let html = '';
-  sections.forEach((sec, idx) => {
-    const isFirst = idx === 0;
-    const bodyHtml = sec.content.map(c => formatParagraphOrList(c)).join('');
-
-    if (isFirst) {
-      html += `
-        <div class="explanation-section first-section">
-          ${sec.heading ? `<h2 class="subheading">${escapeHtml(sec.heading)}</h2>` : ''}
-          <div class="section-body">${bodyHtml}</div>
-        </div>
-      `;
-    } else {
-      html += `
-        <div class="accordion-section glass-card collapsed" id="acc-sec-${idx}">
-          <div class="accordion-header" onclick="toggleSectionAccordion('acc-sec-${idx}')">
-            <h3 class="accordion-title">${escapeHtml(sec.heading || `Part ${idx + 1}`)}</h3>
-            <span class="accordion-chevron">
-              <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-            </span>
-          </div>
-          <div class="accordion-body">
-            ${bodyHtml}
-          </div>
-        </div>
-      `;
+    if (trimmed.startsWith('## ')) {
+      return `<h2 class="subheading">${escapeHtml(trimmed.replace(/^##\s+/, ''))}</h2>`;
     }
-  });
+    if (trimmed.startsWith('# ')) {
+      return `<h2 class="subheading">${escapeHtml(trimmed.replace(/^#\s+/, ''))}</h2>`;
+    }
 
-  return html;
+    if (trimmed.startsWith('> ')) {
+      return `<blockquote class="article-quote">${renderMarkdownText(trimmed.replace(/^>\s*/, ''))}</blockquote>`;
+    }
+
+    return formatParagraphOrList(trimmed);
+  }).join('');
 }
 
 function formatParagraphOrList(textBlock) {
   const lines = textBlock.split('\n').map(l => l.trim()).filter(Boolean);
-  const isList = lines.every(l => l.startsWith('- ') || l.startsWith('* ') || /^\*\*[^*]+\*\*\s*—/.test(l));
+  const isList = lines.every(l => l.startsWith('- ') || l.startsWith('* ') || /^\d+\.\s+/.test(l));
 
   if (isList) {
     const listItems = lines.map(line => {
-      const formatted = renderMarkdownText(line.replace(/^[-*]\s*/, ''));
+      const formatted = renderMarkdownText(line.replace(/^[-*]\s+|\d+\.\s+/, ''));
       return `<li>${formatted}</li>`;
     }).join('');
     return `<ul class="content-list">${listItems}</ul>`;
@@ -884,7 +846,7 @@ function renderMarkdownText(text) {
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
     .replace(/__(.*?)__/g, '<u>$1</u>')
-    .replace(/\x60([^\x60]+)\x60/g, '<code>$1</code>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
     .replace(/\n/g, '<br/>');
 }
 
@@ -893,6 +855,9 @@ function renderMarkdownText(text) {
 // ============================================
 function getJavaScript(article, explanations, profiles, deepDives, userRating, user_id, sessionToken, isBookmarked, userCredits) {
   const activeExp = explanations?.find(e => e.profile_id === 1) || explanations?.[0];
+
+  const safeExplanationsJson = JSON.stringify(explanations || []).replace(/<\/script/gi, '<\\/script');
+  const safeProfilesJson = JSON.stringify(profiles || []).replace(/<\/script/gi, '<\\/script');
 
   return `
 var currentCredits = ${userCredits || 0};
@@ -906,9 +871,10 @@ var hasUserRated = ${!!userRating};
 var userId = "${escapeJs(user_id || '')}";
 var sessionToken = "${escapeJs(sessionToken || '')}";
 
-var explanationsData = ${JSON.stringify(explanations || [])};
-var profilesData = ${JSON.stringify(profiles || [])};
+var explanationsData = ${safeExplanationsJson};
+var profilesData = ${safeProfilesJson};
 
+// ─── SYNC USER STATE & THEME ───
 function syncClientState() {
   var localTheme = localStorage.getItem('easyread-theme') || 'auto';
   if (localTheme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
@@ -935,12 +901,14 @@ function syncClientState() {
       if (display) display.textContent = currentCredits.toFixed(1);
     }
 
+    // 1. Record reading history on client load
     fetch('/api/articles?action=track-view', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-user-id': userId },
       body: JSON.stringify({ article_id: currentArticleId, user_id: userId })
     }).catch(function(){});
 
+    // 2. Sync live bookmark status
     fetch('/api/view?action=bookmark-status&article_id=' + currentArticleId, {
       headers: { 'x-user-id': userId }
     })
@@ -955,11 +923,6 @@ function syncClientState() {
 }
 
 syncClientState();
-
-window.toggleSectionAccordion = function(id) {
-  var sec = document.getElementById(id);
-  if (sec) sec.classList.toggle('collapsed');
-};
 
 window.toggleDeepDiveAccordion = function(id) {
   var sec = document.getElementById(id);
@@ -1018,6 +981,7 @@ window.selectPersonaFromModal = function(profileId) {
   switchProfile(profileId, targetPill);
 };
 
+// ─── RATING ENGINE & AUTO POPUP ───
 var hasShownAutoRating = sessionStorage.getItem('rated_prompt_' + currentArticleId) === 'true';
 var autoRatingTimer = null;
 
@@ -1080,7 +1044,7 @@ window.submitUserRating = async function() {
           '</div>' +
           '<h3>Thank You!</h3>' +
           '<p>Your feedback helps improve our explanation algorithms.</p>' +
-          '<button class="btn btn-primary" style="margin-top:16px; width:100%;" onclick="closeRatingModal()">Done</button>' +
+          '<button type="button" class="btn btn-primary" style="margin-top:16px; width:100%;" onclick="closeRatingModal()">Done</button>' +
         '</div>';
       if (data.bonus_earned) {
         currentCredits += data.bonus_earned;
@@ -1096,6 +1060,7 @@ window.submitUserRating = async function() {
   }
 };
 
+// ─── BOOKMARK TOGGLE ───
 function updateBookmarkUI() {
   var btn = document.getElementById('bookmarkBtn');
   if (btn) btn.classList.toggle('bookmarked', isBookmarked);
@@ -1123,6 +1088,7 @@ window.handleBookmarkToggle = async function() {
   }
 };
 
+// ─── LIVE GENERATION TIMER ───
 function GenerationTimer(digitsId, statusId, subId, fillId) {
   this.digitsEl = document.getElementById(digitsId);
   this.statusEl = document.getElementById(statusId);
@@ -1182,9 +1148,15 @@ GenerationTimer.prototype.updateUI = function() {
   }
 };
 
+// ─── SWITCH PERSPECTIVES ───
 window.switchProfile = function(profileId, btnElem) {
   document.querySelectorAll('.persona-pill').forEach(function(p) { p.classList.remove('active'); });
-  if (btnElem) btnElem.classList.add('active');
+  if (btnElem) {
+    btnElem.classList.add('active');
+  } else {
+    var match = document.querySelector('.persona-pill[data-profile-id="' + profileId + '"]');
+    if (match) match.classList.add('active');
+  }
 
   currentProfileId = profileId;
   var profile = profilesData.find(function(p) { return p.profile_id === profileId; });
@@ -1214,8 +1186,8 @@ window.switchProfile = function(profileId, btnElem) {
         '<h4>No ' + escapeHtml(profile ? profile.name : 'Custom') + ' Explanation Yet</h4>' +
         '<p>Generate a tailored breakdown tailored to this persona with one tap.</p>' +
         (isAuthenticated 
-          ? '<button onclick="generateExplanation(' + profileId + ')" class="btn btn-primary" style="margin-top:14px;">Generate Explanation</button>' 
-          : '<button onclick="showLoginModal()" class="btn btn-primary" style="margin-top:14px;">Sign In to Generate</button>') +
+          ? '<button type="button" onclick="generateExplanation(' + profileId + ')" class="btn btn-primary" style="margin-top:14px;">Generate Explanation</button>' 
+          : '<button type="button" onclick="showLoginModal()" class="btn btn-primary" style="margin-top:14px;">Sign In to Generate</button>') +
       '</div>';
     textElem.style.display = 'block';
   }
@@ -1259,6 +1231,7 @@ window.generateExplanation = async function(profileId) {
   }
 };
 
+// ─── DEEP DIVE ENGINE ───
 window.submitInlineDeepDive = async function(e) {
   e.preventDefault();
   if (!isAuthenticated) {
@@ -1281,7 +1254,7 @@ window.submitInlineDeepDive = async function(e) {
   card.className = 'deep-dive-accordion glass-card';
   card.id = cardId;
   card.innerHTML = 
-    '<div class="dd-header" onclick="toggleDeepDiveAccordion(\'' + cardId + '\')">' +
+    '<div class="dd-header" data-target="' + cardId + '" onclick="toggleDeepDiveAccordion(this.dataset.target)">' +
       '<div class="dd-title-row">' +
         '<span class="dd-q-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>' +
         '<h4>' + escapeHtml(question) + '</h4>' +
@@ -1342,7 +1315,7 @@ window.submitInlineDeepDive = async function(e) {
   }
 };
 
-// ─── CLIENT-SIDE ACCORDION PARSER (MATCHES SERVER ENGINE) ───
+// ─── CLIENT-SIDE ARTICLE FORMATTER ───
 function renderClientExplanationHtml(rawText) {
   if (!rawText) return '<p>No content available.</p>';
   var text = rawText.trim();
@@ -1350,88 +1323,46 @@ function renderClientExplanationHtml(rawText) {
     text = text.substring(1, text.length - 1).trim();
   }
 
-  var blocks = text.split(/\\n\\s*\\n/);
-  var sections = [];
-  var currentSection = { heading: null, content: [] };
-
-  blocks.forEach(function(block) {
+  var blocks = text.split(/\n\s*\n/);
+  return blocks.map(function(block) {
     var trimmed = block.trim();
-    if (!trimmed) return;
+    if (!trimmed) return '';
 
-    var isHeading = trimmed.startsWith('#') || 
-                    (/^[A-Z0-9][\\w\\s,:—–-]+\\?$/.test(trimmed) && trimmed.length < 90) ||
-                    (/^[A-Z][\\w\\s]+:\\s+[A-Za-z0-9\\s]+$/.test(trimmed) && trimmed.length < 80);
-
-    if (isHeading) {
-      if (currentSection.content.length > 0 || currentSection.heading) {
-        sections.push(currentSection);
-      }
-      currentSection = {
-        heading: trimmed.replace(/^#+\\s*/, ''),
-        content: []
-      };
-    } else {
-      currentSection.content.push(trimmed);
+    if (trimmed.startsWith('### ')) {
+      return '<h3 class="subheading-h3">' + escapeHtml(trimmed.replace(/^###\s+/, '')) + '</h3>';
     }
-  });
-
-  if (currentSection.content.length > 0 || currentSection.heading) {
-    sections.push(currentSection);
-  }
-
-  var html = '';
-  sections.forEach(function(sec, idx) {
-    var isFirst = idx === 0;
-    var bodyHtml = sec.content.map(function(c) { return formatParagraphOrListClient(c); }).join('');
-
-    if (isFirst) {
-      html += 
-        '<div class="explanation-section first-section">' +
-          (sec.heading ? '<h2 class="subheading">' + escapeHtml(sec.heading) + '</h2>' : '') +
-          '<div class="section-body">' + bodyHtml + '</div>' +
-        '</div>';
-    } else {
-      html += 
-        '<div class="accordion-section glass-card collapsed" id="acc-sec-' + idx + '">' +
-          '<div class="accordion-header" onclick="toggleSectionAccordion(\\'acc-sec-' + idx + '\\')">' +
-            '<h3 class="accordion-title">' + escapeHtml(sec.heading || ('Part ' + (idx + 1))) + '</h3>' +
-            '<span class="accordion-chevron">' +
-              '<svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>' +
-            '</span>' +
-          '</div>' +
-          '<div class="accordion-body">' +
-            bodyHtml +
-          '</div>' +
-        '</div>';
+    if (trimmed.startsWith('## ')) {
+      return '<h2 class="subheading">' + escapeHtml(trimmed.replace(/^##\s+/, '')) + '</h2>';
     }
-  });
+    if (trimmed.startsWith('# ')) {
+      return '<h2 class="subheading">' + escapeHtml(trimmed.replace(/^#\s+/, '')) + '</h2>';
+    }
+    if (trimmed.startsWith('> ')) {
+      return '<blockquote class="article-quote">' + formatMarkdownClient(trimmed.replace(/^>\s*/, '')) + '</blockquote>';
+    }
 
-  return html;
-}
+    var lines = trimmed.split('\n').map(function(l) { return l.trim(); }).filter(Boolean);
+    var isList = lines.every(function(l) { return l.startsWith('- ') || l.startsWith('* ') || /^\d+\.\s+/.test(l); });
 
-function formatParagraphOrListClient(textBlock) {
-  var lines = textBlock.split('\\n').map(function(l) { return l.trim(); }).filter(Boolean);
-  var isList = lines.every(function(l) { return l.startsWith('- ') || l.startsWith('* ') || /^\\*\\*[^*]+\\*\\*\\s*—/.test(l); });
+    if (isList) {
+      var listItems = lines.map(function(line) {
+        return '<li>' + formatMarkdownClient(line.replace(/^[-*]\s+|\d+\.\s+/, '')) + '</li>';
+      }).join('');
+      return '<ul class="content-list">' + listItems + '</ul>';
+    }
 
-  if (isList) {
-    var listItems = lines.map(function(line) {
-      var formatted = formatMarkdownClient(line.replace(/^[-*]\\s*/, ''));
-      return '<li>' + formatted + '</li>';
-    }).join('');
-    return '<ul class="content-list">' + listItems + '</ul>';
-  }
-
-  return '<p>' + formatMarkdownClient(textBlock) + '</p>';
+    return '<p>' + formatMarkdownClient(trimmed) + '</p>';
+  }).join('');
 }
 
 function formatMarkdownClient(text) {
   if (!text) return '';
   return escapeHtml(text)
-    .replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>')
-    .replace(/\\*(.*?)\\*/g, '<em>$1</em>')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
     .replace(/__(.*?)__/g, '<u>$1</u>')
-    .replace(/\\x60([^\\x60]+)\\x60/g, '<code>$1</code>')
-    .replace(/\\n/g, '<br/>');
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\n/g, '<br/>');
 }
 
 function escapeHtml(t) {
@@ -1604,6 +1535,7 @@ body {
   background: linear-gradient(90deg, var(--accent-color), #ffbd59);
   width: 0%; z-index: 999;
   transition: width 0.1s linear;
+  pointer-events: none;
 }
 
 .glass-card {
@@ -1671,7 +1603,7 @@ body {
   overflow: hidden; border: var(--glass-border-subtle); display: flex;
   align-items: center; padding: 1.4rem; margin-bottom: 1.4rem;
 }
-.hero-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(2px); }
+.hero-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(2px); pointer-events: none; }
 .hero-card-content { position: relative; z-index: 2; width: 100%; }
 .hero-badge {
   display: inline-flex; align-items: center; gap: 5px; font-size: 0.68rem; font-weight: 700;
@@ -1700,24 +1632,21 @@ body {
 }
 .guest-signin-btn:hover { background: var(--accent-hover); }
 
-/* ─── ARTICLE TYPOGRAPHY & ACCORDIONS ─── */
-.article-body p { font-size: 0.96rem; line-height: 1.7; color: var(--text-secondary); margin-bottom: 1.1rem; }
-.subheading { font-size: 1.3rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.75rem; letter-spacing: -0.02em; }
-.content-list { padding-left: 1.3rem; margin-bottom: 1.1rem; color: var(--text-secondary); line-height: 1.68; font-size: 0.94rem; }
+/* ─── ARTICLE TYPOGRAPHY ─── */
+.rich-article-text { font-size: 1rem; line-height: 1.75; color: var(--text-secondary); }
+.rich-article-text p { margin-bottom: 1.25rem; }
+.subheading { font-size: 1.35rem; font-weight: 800; color: var(--text-main); margin-top: 1.6rem; margin-bottom: 0.8rem; letter-spacing: -0.02em; }
+.subheading-h3 { font-size: 1.12rem; font-weight: 700; color: var(--text-main); margin-top: 1.3rem; margin-bottom: 0.6rem; }
+.content-list { padding-left: 1.4rem; margin-bottom: 1.25rem; color: var(--text-secondary); line-height: 1.7; }
 .content-list li { margin-bottom: 0.45rem; }
-
-.accordion-section { margin-bottom: 12px; overflow: hidden; }
-.accordion-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 18px; cursor: pointer; user-select: none;
+.article-quote {
+  border-left: 3px solid var(--accent-color); background: var(--accent-light);
+  padding: 12px 16px; border-radius: 0 12px 12px 0; margin: 1.25rem 0;
+  font-style: italic; color: var(--text-main);
 }
-.accordion-title { font-size: 1rem; font-weight: 700; color: var(--text-main); line-height: 1.35; }
-.accordion-chevron svg { width: 16px; height: 16px; stroke: var(--text-muted); fill: none; stroke-width: 2; transition: transform 0.25s ease; }
-.accordion-section.collapsed .accordion-chevron svg { transform: rotate(-90deg); }
-.accordion-body { padding: 0 18px 16px 18px; }
-.accordion-section.collapsed .accordion-body { display: none; }
+code { background: var(--mode-bg-hover); padding: 2px 6px; border-radius: 6px; font-family: monospace; font-size: 0.9em; }
 
-/* ─── LIVE GENERATION TIMER CARD (ISSUE 2) ─── */
+/* ─── LIVE GENERATION TIMER CARD ─── */
 .generation-timer-card { padding: 24px 20px; text-align: center; margin: 1.2rem 0; border: 1px solid var(--accent-glow); }
 .timer-header-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 14px; }
 .timer-spinner {
@@ -1728,16 +1657,14 @@ body {
 @keyframes spin { 100% { transform: rotate(360deg); } }
 
 .timer-digits-badge {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.85rem; font-weight: 700; color: var(--accent-color);
-  background: var(--accent-light); padding: 4px 12px; border-radius: 12px;
-  border: 1px solid var(--accent-glow); letter-spacing: 0.5px;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 700;
+  color: var(--accent-color); background: var(--accent-light); padding: 4px 12px;
+  border-radius: 12px; border: 1px solid var(--accent-glow); letter-spacing: 0.5px;
 }
 .timer-status-title { font-size: 1.05rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px; }
 .timer-status-sub { font-size: 0.84rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 16px; min-height: 24px; }
 .timer-progress-track { width: 100%; max-width: 320px; height: 4px; background: var(--mode-bg-hover); border-radius: 4px; margin: 0 auto; overflow: hidden; }
 .timer-progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent-color), #ffbd59); border-radius: 4px; transition: width 0.4s ease; }
-
 .dd-live-timer-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 
 /* ─── SUMMARY / KEY TAKEAWAY ─── */
@@ -1745,7 +1672,7 @@ body {
 .summary-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 .summary-header svg { width: 16px; height: 16px; stroke: var(--accent-color); fill: none; stroke-width: 2; }
 .summary-header h4 { font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-color); font-weight: 800; }
-.summary-text { font-size: 0.92rem; line-height: 1.6; color: var(--text-secondary); }
+.summary-text { font-size: 0.94rem; line-height: 1.65; color: var(--text-secondary); }
 
 /* ─── DEEP DIVES ─── */
 .deep-dives-section { margin-top: 2.2rem; margin-bottom: 1.6rem; }
@@ -1764,9 +1691,10 @@ body {
 .dd-title-row { display: flex; align-items: center; gap: 10px; }
 .dd-q-icon svg { width: 18px; height: 18px; stroke: var(--accent-color); fill: none; stroke-width: 2; flex-shrink: 0; }
 .dd-title-row h4 { font-size: 0.92rem; font-weight: 700; color: var(--text-main); }
+.accordion-chevron svg { width: 16px; height: 16px; stroke: var(--text-muted); fill: none; stroke-width: 2; transition: transform 0.25s ease; }
+.deep-dive-accordion.collapsed .accordion-chevron svg { transform: rotate(-90deg); }
 .dd-body { padding: 0 18px 16px 46px; }
 .deep-dive-accordion.collapsed .dd-body { display: none; }
-.deep-dive-accordion.collapsed .accordion-chevron svg { transform: rotate(-90deg); }
 .dd-answer-text { font-size: 0.9rem; line-height: 1.6; color: var(--text-secondary); }
 
 .deep-dive-ask-card { padding: 14px 16px; }
@@ -1784,19 +1712,6 @@ body {
   border-radius: 10px; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: background 0.2s;
 }
 .ask-submit-btn:hover { background: var(--accent-hover); }
-
-/* ─── SHIMMER SKELETON LOADERS ─── */
-.skeleton-card-pulse { padding: 20px; }
-.skeleton-line {
-  height: 12px; border-radius: 6px; background: rgba(255,255,255,0.04);
-  position: relative; overflow: hidden; margin-bottom: 10px;
-}
-.skeleton-line::after {
-  position: absolute; inset: 0; transform: translateX(-100%);
-  background-image: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%);
-  animation: shimmerSwipe 1.5s infinite; content: '';
-}
-@keyframes shimmerSwipe { 100% { transform: translateX(100%); } }
 
 /* ─── METADATA ROW ─── */
 .article-metadata {
@@ -1851,15 +1766,15 @@ body {
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-/* ─── GLASS MODALS ─── */
+/* ─── GLASS MODALS (STRICT display: none WHEN INACTIVE) ─── */
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,0.65);
   backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 3000; padding: 20px; opacity: 0; pointer-events: none;
-  transition: opacity 0.3s ease;
+  display: none !important; align-items: center; justify-content: center;
+  z-index: 9000; padding: 20px; opacity: 0; pointer-events: none;
+  transition: opacity 0.25s ease;
 }
-.modal-overlay.active { opacity: 1; pointer-events: auto; }
+.modal-overlay.active { display: flex !important; opacity: 1; pointer-events: auto; }
 
 .glass-modal {
   background: var(--card-bg); backdrop-filter: var(--card-blur);
@@ -1867,7 +1782,7 @@ body {
   border-radius: 26px; padding: 28px 24px; max-width: 380px; width: 100%;
   text-align: center; position: relative; box-shadow: var(--glass-shadow);
   transform: scale(0.94) translateY(12px);
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .modal-overlay.active .glass-modal { transform: scale(1) translateY(0); }
 
