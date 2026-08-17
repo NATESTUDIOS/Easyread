@@ -1,38 +1,40 @@
 // api/view.js
 // EasyRead Article View - Full article viewer with dynamic personas, accordions, bookmarks, live timer generation, and deep dives
 
-import { 
+import {
   supabase,
   getById,
   getByColumn,
   insert,
   update,
-  deleteRecord
-} from '../utils/supabase.js';
-import crypto from 'crypto';
+  deleteRecord,
+} from "../utils/supabase.js";
+import crypto from "crypto";
 
 // ============================================
 // CONSTANTS & CONFIG
 // ============================================
-const PROCESSOR_URL = process.env.PROCESSOR_URL || 'https://my-fcm-server.onrender.com/api/processor';
+const PROCESSOR_URL =
+  process.env.PROCESSOR_URL ||
+  "https://my-fcm-server.onrender.com/api/processor";
 const ADMIN_API_KEY = process.env.ADMIN_API_KEY;
-const SITE_URL = process.env.SITE_URL || 'https://easytoread.vercel.app';
+const SITE_URL = process.env.SITE_URL || "https://easytoread.vercel.app";
 
 const CREDIT_COSTS = {
   ASK_QUESTION: 1,
   DEEP_DIVE: 0.5,
   CONTEXT_SUBMIT: 1,
   MAKE_PRIVATE: 2,
-  RATING_BONUS: 0.2
+  RATING_BONUS: 0.2,
 };
 
 const HERO_GRADIENTS = [
-  'linear-gradient(135deg, #1e293b, #0f172a)',
-  'linear-gradient(135deg, #2c1a1a, #1a1a2e)',
-  'linear-gradient(135deg, #1b2838, #101820)',
-  'linear-gradient(135deg, #1e3a2a, #0f2017)',
-  'linear-gradient(135deg, #2d1b2e, #170d18)',
-  'linear-gradient(135deg, #2a2015, #140f0a)'
+  "linear-gradient(135deg, #1e293b, #0f172a)",
+  "linear-gradient(135deg, #2c1a1a, #1a1a2e)",
+  "linear-gradient(135deg, #1b2838, #101820)",
+  "linear-gradient(135deg, #1e3a2a, #0f2017)",
+  "linear-gradient(135deg, #2d1b2e, #170d18)",
+  "linear-gradient(135deg, #2a2015, #140f0a)",
 ];
 
 function getGradientForArticle(id) {
@@ -44,15 +46,15 @@ function getGradientForArticle(id) {
 // MAIN HANDLER
 // ============================================
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST,PUT,DELETE');
+  res.setHeader("Access-Control-Allow-Credentials", true);
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS,POST,PUT,DELETE");
   res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, x-user-id, x-session-token, x-guest-id'
+    "Access-Control-Allow-Headers",
+    "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, x-user-id, x-session-token, x-guest-id",
   );
 
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
 
@@ -61,27 +63,35 @@ export default async function handler(req, res) {
 
   try {
     switch (method) {
-      case 'GET':
+      case "GET":
         if (id || slug) {
-          if (action === 'data') return await getArticleData(req, res);
+          if (action === "data") return await getArticleData(req, res);
           return await renderArticlePage(req, res);
         }
-        if (action === 'bookmark-status') return await getBookmarkStatus(req, res);
-        if (action === 'bookmarks') return await getUserBookmarks(req, res);
-        return res.status(200).send(renderNotFoundPage('No Article Selected', 'Please select an article from the feed to start reading.'));
-      case 'POST':
-        if (action === 'rate') return await submitRating(req, res);
-        if (action === 'deep-dive') return await handleDeepDive(req, res);
-        if (action === 'bookmark') return await toggleBookmark(req, res);
-        return res.status(400).json({ error: 'Invalid action' });
-      case 'DELETE':
-        if (action === 'bookmark') return await removeBookmark(req, res);
-        return res.status(400).json({ error: 'Invalid action' });
+        if (action === "bookmark-status")
+          return await getBookmarkStatus(req, res);
+        if (action === "bookmarks") return await getUserBookmarks(req, res);
+        return res
+          .status(200)
+          .send(
+            renderNotFoundPage(
+              "No Article Selected",
+              "Please select an article from the feed to start reading.",
+            ),
+          );
+      case "POST":
+        if (action === "rate") return await submitRating(req, res);
+        if (action === "deep-dive") return await handleDeepDive(req, res);
+        if (action === "bookmark") return await toggleBookmark(req, res);
+        return res.status(400).json({ error: "Invalid action" });
+      case "DELETE":
+        if (action === "bookmark") return await removeBookmark(req, res);
+        return res.status(400).json({ error: "Invalid action" });
       default:
-        return res.status(405).json({ error: 'Method not allowed' });
+        return res.status(405).json({ error: "Method not allowed" });
     }
   } catch (error) {
-    console.error('View API Error:', error);
+    console.error("View API Error:", error);
     return res.status(500).send(renderErrorPage(error.message));
   }
 }
@@ -91,53 +101,64 @@ export default async function handler(req, res) {
 // ============================================
 async function recordReadingHistory(article_id, user_id) {
   try {
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
     const { data: existing } = await supabase
-      .from('reading_history')
-      .select('history_id')
-      .eq('user_id', user_id)
-      .eq('article_id', parseInt(article_id))
-      .eq('date', today)
+      .from("reading_history")
+      .select("history_id")
+      .eq("user_id", user_id)
+      .eq("article_id", parseInt(article_id))
+      .eq("date", today)
       .maybeSingle();
 
     if (!existing) {
-      await insert('reading_history', {
+      await insert("reading_history", {
         user_id,
         article_id: parseInt(article_id),
         date: today,
-        viewed_at: new Date().toISOString()
+        viewed_at: new Date().toISOString(),
       });
     } else {
       await supabase
-        .from('reading_history')
+        .from("reading_history")
         .update({ viewed_at: new Date().toISOString() })
-        .eq('history_id', existing.history_id);
+        .eq("history_id", existing.history_id);
     }
   } catch (err) {
-    console.error('Record read history error:', err);
+    console.error("Record read history error:", err);
   }
 }
 
 async function renderArticlePage(req, res) {
   const { id, slug } = req.query;
-  const user_id = req.headers['x-user-id'] || req.query.user_id;
-  const sessionToken = req.headers['x-session-token'] || req.query.session_token;
+  const user_id = req.headers["x-user-id"] || req.query.user_id;
+  const sessionToken =
+    req.headers["x-session-token"] || req.query.session_token;
 
   try {
     let article;
     if (id) {
-      article = await getById('articles', id);
+      article = await getById("articles", id);
     } else if (slug) {
-      const articles = await getByColumn('articles', 'slug', slug);
+      const articles = await getByColumn("articles", "slug", slug);
       article = articles[0] || null;
     }
 
     if (!article) {
-      return res.status(404).send(renderNotFoundPage('Article Not Found', "The explanation you're looking for doesn't exist, has been removed, or the link is incorrect."));
+      return res
+        .status(404)
+        .send(
+          renderNotFoundPage(
+            "Article Not Found",
+            "The explanation you're looking for doesn't exist, has been removed, or the link is incorrect.",
+          ),
+        );
     }
 
     const viewCount = (article.view_count || 0) + 1;
-    await supabase.from('articles').update({ view_count: viewCount }).eq('article_id', article.article_id);
+    await supabase
+      .from("articles")
+      .update({ view_count: viewCount })
+      .eq("article_id", article.article_id);
     article.view_count = viewCount;
 
     if (user_id) {
@@ -145,16 +166,18 @@ async function renderArticlePage(req, res) {
     }
 
     const { data: explanations } = await supabase
-      .from('explanation_views')
-      .select(`view_id, title, content, summary, profile_id, view_count, rating_avg, rating_count, profiles:profile_id (profile_id, name, description)`)
-      .eq('article_id', article.article_id)
-      .order('view_count', { ascending: false });
+      .from("explanation_views")
+      .select(
+        `view_id, title, content, summary, profile_id, view_count, rating_avg, rating_count, profiles:profile_id (profile_id, name, description)`,
+      )
+      .eq("article_id", article.article_id)
+      .order("view_count", { ascending: false });
 
     const { data: deepDives } = await supabase
-      .from('deep_dives')
-      .select('*')
-      .eq('article_id', article.article_id)
-      .order('created_at', { ascending: true });
+      .from("deep_dives")
+      .select("*")
+      .eq("article_id", article.article_id)
+      .order("created_at", { ascending: true });
 
     let userRating = null;
     let isBookmarked = false;
@@ -162,30 +185,30 @@ async function renderArticlePage(req, res) {
 
     if (user_id) {
       const { data: ur } = await supabase
-        .from('ratings')
-        .select('rating, feedback, view_id')
-        .eq('user_id', user_id)
-        .in('view_id', explanations?.map(e => e.view_id) || [])
+        .from("ratings")
+        .select("rating, feedback, view_id")
+        .eq("user_id", user_id)
+        .in("view_id", explanations?.map((e) => e.view_id) || [])
         .maybeSingle();
       userRating = ur;
 
       const { data: bm } = await supabase
-        .from('bookmarks')
-        .select('bookmark_id')
-        .eq('user_id', user_id)
-        .eq('article_id', article.article_id)
+        .from("bookmarks")
+        .select("bookmark_id")
+        .eq("user_id", user_id)
+        .eq("article_id", article.article_id)
         .maybeSingle();
       isBookmarked = !!bm;
 
-      const users = await getByColumn('users', 'user_id', user_id);
+      const users = await getByColumn("users", "user_id", user_id);
       if (users.length > 0) userCredits = users[0].credits;
     }
 
     const { data: profiles } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('status', 'active')
-      .order('profile_id', { ascending: true });
+      .from("profiles")
+      .select("*")
+      .eq("status", "active")
+      .order("profile_id", { ascending: true });
 
     const html = buildArticleHTML({
       article,
@@ -196,10 +219,10 @@ async function renderArticlePage(req, res) {
       profiles: profiles || [],
       user_id,
       sessionToken,
-      isBookmarked
+      isBookmarked,
     });
 
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
     return res.status(200).send(html);
   } catch (err) {
     return res.status(500).send(renderErrorPage(err.message));
@@ -212,28 +235,38 @@ async function renderArticlePage(req, res) {
 async function getArticleData(req, res) {
   const { id, slug } = req.query;
   try {
-    let article = id ? await getById('articles', id) : (await getByColumn('articles', 'slug', slug))[0];
-    if (!article) return res.status(404).json({ error: 'Article not found' });
+    let article = id
+      ? await getById("articles", id)
+      : (await getByColumn("articles", "slug", slug))[0];
+    if (!article) return res.status(404).json({ error: "Article not found" });
 
     const { data: explanations } = await supabase
-      .from('explanation_views')
+      .from("explanation_views")
       .select(`*`)
-      .eq('article_id', article.article_id);
+      .eq("article_id", article.article_id);
 
-    return res.json({ success: true, article, explanations: explanations || [] });
+    return res.json({
+      success: true,
+      article,
+      explanations: explanations || [],
+    });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
 }
 
 async function getUserBookmarks(req, res) {
-  const user_id = req.headers['x-user-id'] || req.query.user_id;
-  if (!user_id) return res.status(401).json({ error: 'Authentication required', bookmarks: [] });
+  const user_id = req.headers["x-user-id"] || req.query.user_id;
+  if (!user_id)
+    return res
+      .status(401)
+      .json({ error: "Authentication required", bookmarks: [] });
 
   try {
     const { data: bookmarks, error } = await supabase
-      .from('bookmarks')
-      .select(`
+      .from("bookmarks")
+      .select(
+        `
         bookmark_id,
         article_id,
         created_at,
@@ -245,9 +278,10 @@ async function getUserBookmarks(req, res) {
           source_domain,
           categories
         )
-      `)
-      .eq('user_id', user_id)
-      .order('created_at', { ascending: false });
+      `,
+      )
+      .eq("user_id", user_id)
+      .order("created_at", { ascending: false });
 
     if (error) throw error;
     return res.json({ success: true, bookmarks: bookmarks || [] });
@@ -258,27 +292,39 @@ async function getUserBookmarks(req, res) {
 
 async function toggleBookmark(req, res) {
   const { article_id } = req.body;
-  const user_id = req.headers['x-user-id'] || req.query.user_id;
-  if (!user_id) return res.status(401).json({ error: 'Authentication required' });
+  const user_id = req.headers["x-user-id"] || req.query.user_id;
+  if (!user_id)
+    return res.status(401).json({ error: "Authentication required" });
 
   try {
     const { data: existing } = await supabase
-      .from('bookmarks')
-      .select('bookmark_id')
-      .eq('user_id', user_id)
-      .eq('article_id', parseInt(article_id))
+      .from("bookmarks")
+      .select("bookmark_id")
+      .eq("user_id", user_id)
+      .eq("article_id", parseInt(article_id))
       .maybeSingle();
 
     if (existing) {
-      await deleteRecord('bookmarks', existing.bookmark_id);
-      return res.json({ success: true, bookmarked: false, message: 'Bookmark removed' });
+      await deleteRecord("bookmarks", existing.bookmark_id);
+      return res.json({
+        success: true,
+        bookmarked: false,
+        message: "Bookmark removed",
+      });
     } else {
-      const bookmark = await insert('bookmarks', {
+      const bookmark = await insert("bookmarks", {
         user_id,
         article_id: parseInt(article_id),
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
       });
-      return res.status(201).json({ success: true, bookmarked: true, bookmark, message: 'Article saved to bookmarks' });
+      return res
+        .status(201)
+        .json({
+          success: true,
+          bookmarked: true,
+          bookmark,
+          message: "Article saved to bookmarks",
+        });
     }
   } catch (err) {
     return res.status(500).json({ error: err.message });
@@ -287,19 +333,20 @@ async function toggleBookmark(req, res) {
 
 async function removeBookmark(req, res) {
   const { article_id } = req.query;
-  const user_id = req.headers['x-user-id'] || req.query.user_id;
-  if (!user_id) return res.status(401).json({ error: 'Authentication required' });
+  const user_id = req.headers["x-user-id"] || req.query.user_id;
+  if (!user_id)
+    return res.status(401).json({ error: "Authentication required" });
 
   try {
     const { data: existing } = await supabase
-      .from('bookmarks')
-      .select('bookmark_id')
-      .eq('user_id', user_id)
-      .eq('article_id', parseInt(article_id))
+      .from("bookmarks")
+      .select("bookmark_id")
+      .eq("user_id", user_id)
+      .eq("article_id", parseInt(article_id))
       .maybeSingle();
 
-    if (existing) await deleteRecord('bookmarks', existing.bookmark_id);
-    return res.json({ success: true, message: 'Bookmark removed' });
+    if (existing) await deleteRecord("bookmarks", existing.bookmark_id);
+    return res.json({ success: true, message: "Bookmark removed" });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
@@ -307,8 +354,9 @@ async function removeBookmark(req, res) {
 
 async function getBookmarkStatus(req, res) {
   const { article_id } = req.query;
-  const user_id = req.headers['x-user-id'] || req.query.user_id;
-  if (!user_id) return res.json({ isBookmarked: false, isAuthenticated: false });
+  const user_id = req.headers["x-user-id"] || req.query.user_id;
+  if (!user_id)
+    return res.json({ isBookmarked: false, isAuthenticated: false });
 
   if (!article_id) {
     return await getUserBookmarks(req, res);
@@ -316,10 +364,10 @@ async function getBookmarkStatus(req, res) {
 
   try {
     const { data: bm } = await supabase
-      .from('bookmarks')
-      .select('bookmark_id')
-      .eq('user_id', user_id)
-      .eq('article_id', parseInt(article_id))
+      .from("bookmarks")
+      .select("bookmark_id")
+      .eq("user_id", user_id)
+      .eq("article_id", parseInt(article_id))
       .maybeSingle();
 
     return res.json({ isBookmarked: !!bm, isAuthenticated: true });
@@ -330,54 +378,73 @@ async function getBookmarkStatus(req, res) {
 
 async function submitRating(req, res) {
   const { view_id, rating, feedback, reasons } = req.body;
-  const user_id = req.headers['x-user-id'] || req.query.user_id;
-  if (!user_id) return res.status(401).json({ error: 'Authentication required' });
+  const user_id = req.headers["x-user-id"] || req.query.user_id;
+  if (!user_id)
+    return res.status(401).json({ error: "Authentication required" });
 
   try {
     const { data: existing } = await supabase
-      .from('ratings')
-      .select('rating_id')
-      .eq('user_id', user_id)
-      .eq('view_id', parseInt(view_id))
+      .from("ratings")
+      .select("rating_id")
+      .eq("user_id", user_id)
+      .eq("view_id", parseInt(view_id))
       .maybeSingle();
 
     if (existing) {
-      return res.status(409).json({ error: 'You have already rated this explanation view.' });
+      return res
+        .status(409)
+        .json({ error: "You have already rated this explanation view." });
     }
 
     const fullFeedback = [
-      Array.isArray(reasons) && reasons.length ? `[Tags: ${reasons.join(', ')}]` : '',
-      feedback || ''
-    ].filter(Boolean).join(' ');
+      Array.isArray(reasons) && reasons.length
+        ? `[Tags: ${reasons.join(", ")}]`
+        : "",
+      feedback || "",
+    ]
+      .filter(Boolean)
+      .join(" ");
 
-    await insert('ratings', {
+    await insert("ratings", {
       user_id,
       view_id: parseInt(view_id),
       rating,
       feedback: fullFeedback || null,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
     });
 
     const { data: viewData } = await supabase
-      .from('explanation_views')
-      .select('rating_avg, rating_count')
-      .eq('view_id', view_id)
+      .from("explanation_views")
+      .select("rating_avg, rating_count")
+      .eq("view_id", view_id)
       .single();
 
     const newCount = (viewData?.rating_count || 0) + 1;
-    const newAvg = ((viewData?.rating_avg || 0) * (viewData?.rating_count || 0) + rating) / newCount;
+    const newAvg =
+      ((viewData?.rating_avg || 0) * (viewData?.rating_count || 0) + rating) /
+      newCount;
 
-    await supabase.from('explanation_views').update({
-      rating_avg: Math.round(newAvg * 100) / 100,
-      rating_count: newCount
-    }).eq('view_id', view_id);
+    await supabase
+      .from("explanation_views")
+      .update({
+        rating_avg: Math.round(newAvg * 100) / 100,
+        rating_count: newCount,
+      })
+      .eq("view_id", view_id);
 
-    const users = await getByColumn('users', 'user_id', user_id);
+    const users = await getByColumn("users", "user_id", user_id);
     if (users.length > 0) {
-      await supabase.from('users').update({ credits: (users[0].credits || 0) + CREDIT_COSTS.RATING_BONUS }).eq('user_id', user_id);
+      await supabase
+        .from("users")
+        .update({
+          credits: (users[0].credits || 0) + CREDIT_COSTS.RATING_BONUS,
+        })
+        .eq("user_id", user_id);
     }
 
-    return res.status(201).json({ success: true, bonus_earned: CREDIT_COSTS.RATING_BONUS });
+    return res
+      .status(201)
+      .json({ success: true, bonus_earned: CREDIT_COSTS.RATING_BONUS });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
@@ -385,20 +452,24 @@ async function submitRating(req, res) {
 
 async function handleDeepDive(req, res) {
   const { article_id, profile_id, question } = req.body;
-  const user_id = req.headers['x-user-id'] || req.query.user_id;
-  if (!user_id) return res.status(401).json({ error: 'Authentication required' });
+  const user_id = req.headers["x-user-id"] || req.query.user_id;
+  if (!user_id)
+    return res.status(401).json({ error: "Authentication required" });
 
   try {
     const response = await fetch(`${PROCESSOR_URL}/generate-deep-dive`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-admin-key': ADMIN_API_KEY },
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-admin-key": ADMIN_API_KEY,
+      },
       body: JSON.stringify({
         article_id: parseInt(article_id),
         profile_id: parseInt(profile_id),
         question,
-        parent_section: 'General',
-        user_id
-      })
+        parent_section: "General",
+        user_id,
+      }),
     });
     const data = await response.json();
     return res.json(data);
@@ -410,24 +481,34 @@ async function handleDeepDive(req, res) {
 // ============================================
 // HTML BUILDER
 // ============================================
-function buildArticleHTML({ 
-  article, 
-  explanations, 
+function buildArticleHTML({
+  article,
+  explanations,
   deepDives,
-  userRating, 
-  userCredits, 
-  profiles, 
+  userRating,
+  userCredits,
+  profiles,
   user_id,
   sessionToken,
-  isBookmarked
+  isBookmarked,
 }) {
-  const title = article.canonical_title || 'Simplified Article';
-  const defaultExplanation = explanations?.find(e => e.profile_id === 1) || explanations?.[0];
-  const activeProfile = profiles?.find(p => p.profile_id === (defaultExplanation?.profile_id || 1)) || profiles?.[0];
-  const readingTime = calculateReadingTime(defaultExplanation?.content || article.base_content);
+  const title = article.canonical_title || "Simplified Article";
+  const defaultExplanation =
+    explanations?.find((e) => e.profile_id === 1) || explanations?.[0];
+  const activeProfile =
+    profiles?.find(
+      (p) => p.profile_id === (defaultExplanation?.profile_id || 1),
+    ) || profiles?.[0];
+  const readingTime = calculateReadingTime(
+    defaultExplanation?.content || article.base_content,
+  );
   const heroGradient = getGradientForArticle(article.article_id);
   const canonicalUrl = `${SITE_URL}/article/${encodeURIComponent(article.slug || article.article_id)}`;
-  const cleanSummary = (defaultExplanation?.summary || article.summary || '').replace(/"/g, '&quot;');
+  const cleanSummary = (
+    defaultExplanation?.summary ||
+    article.summary ||
+    ""
+  ).replace(/"/g, "&quot;");
 
   const VISIBLE_PROFILE_COUNT = 4;
   const visibleProfiles = profiles.slice(0, VISIBLE_PROFILE_COUNT);
@@ -441,8 +522,8 @@ function buildArticleHTML({
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   
   <title>${escapeHtml(title)} — EasyRead</title>
-  <meta name="description" content="${escapeHtml(cleanSummary || 'Read a simplified explanation tailored for intuitive understanding.')}">
-  <meta name="keywords" content="${(article.categories || ['reading', 'learning', 'education', 'AI']).join(', ')}">
+  <meta name="description" content="${escapeHtml(cleanSummary || "Read a simplified explanation tailored for intuitive understanding.")}">
+  <meta name="keywords" content="${(article.categories || ["reading", "learning", "education", "AI"]).join(", ")}">
   <meta name="author" content="EasyRead">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="${canonicalUrl}">
@@ -451,12 +532,12 @@ function buildArticleHTML({
   <!-- ALL IMAGES GENERATED BY OG-IMAGE API         -->
   <!-- ============================================ -->
 
-  <!-- Open Graph (Social Cards) -->
+  <!-- Open Graph (Social Cards - 1200x630) -->
   <meta property="og:type" content="article">
   <meta property="og:url" content="${canonicalUrl}">
   <meta property="og:title" content="${escapeHtml(title)} — EasyRead">
-  <meta property="og:description" content="${escapeHtml(cleanSummary || 'Read simplified, clear explanations tailored to your perspective.')}">
-  <meta property="og:image" content="${SITE_URL}/api/og-image?title=${encodeURIComponent(title)}&description=${encodeURIComponent(cleanSummary || article.summary || '')}&domain=${encodeURIComponent(article.source_domain || 'easytoread.vercel.app')}&category=${encodeURIComponent((article.categories || ['General'])[0])}&readTime=${readingTime}&views=${article.view_count || 0}&perspectives=${explanations?.length || 0}">
+  <meta property="og:description" content="${escapeHtml(cleanSummary || "Read simplified, clear explanations tailored to your perspective.")}">
+  <meta property="og:image" content="${SITE_URL}/api/og-image?title=${encodeURIComponent(title)}&description=${encodeURIComponent(cleanSummary || article.summary || "")}&domain=${encodeURIComponent(article.source_domain || "easytoread.vercel.app")}&category=${encodeURIComponent((article.categories || ["General"])[0])}&readTime=${readingTime}&views=${article.view_count || 0}&perspectives=${explanations?.length || 0}">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:type" content="image/svg+xml">
@@ -466,25 +547,25 @@ function buildArticleHTML({
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${escapeHtml(title)} — EasyRead">
-  <meta name="twitter:description" content="${escapeHtml(cleanSummary || 'Read simplified, clear explanations tailored to your perspective.')}">
-  <meta name="twitter:image" content="${SITE_URL}/api/og-image?title=${encodeURIComponent(title)}&description=${encodeURIComponent(cleanSummary || article.summary || '')}&domain=${encodeURIComponent(article.source_domain || 'easytoread.vercel.app')}&category=${encodeURIComponent((article.categories || ['General'])[0])}&readTime=${readingTime}&views=${article.view_count || 0}&perspectives=${explanations?.length || 0}">
+  <meta name="twitter:description" content="${escapeHtml(cleanSummary || "Read simplified, clear explanations tailored to your perspective.")}">
+  <meta name="twitter:image" content="${SITE_URL}/api/og-image?title=${encodeURIComponent(title)}&description=${encodeURIComponent(cleanSummary || article.summary || "")}&domain=${encodeURIComponent(article.source_domain || "easytoread.vercel.app")}&category=${encodeURIComponent((article.categories || ["General"])[0])}&readTime=${readingTime}&views=${article.view_count || 0}&perspectives=${explanations?.length || 0}">
 
   <!-- Favicon - SVG (Modern browsers) -->
-  <link rel="icon" type="image/svg+xml" href="${SITE_URL}/api/og-image?title=${encodeURIComponent('ER')}&description=EasyRead&domain=easytoread.vercel.app&category=icon&readTime=1&views=0&perspectives=1&theme=dark&icon=true&size=64">
+  <link rel="icon" type="image/svg+xml" href="${SITE_URL}/api/og-image?icon=true&title=${encodeURIComponent(title)}&description=${encodeURIComponent(cleanSummary || article.summary || "")}&domain=${encodeURIComponent(article.source_domain || "easytoread.vercel.app")}&category=${encodeURIComponent((article.categories || ["General"])[0])}&readTime=${readingTime}&views=${article.view_count || 0}&perspectives=${explanations?.length || 0}&size=64">
 
   <!-- Favicon - PNG (Legacy browsers) -->
-  <link rel="icon" type="image/png" sizes="192x192" href="${SITE_URL}/api/og-image?title=${encodeURIComponent('ER')}&description=EasyRead&domain=easytoread.vercel.app&category=icon&readTime=1&views=0&perspectives=1&theme=dark&icon=true&size=192">
-  <link rel="icon" type="image/png" sizes="32x32" href="${SITE_URL}/api/og-image?title=${encodeURIComponent('ER')}&description=EasyRead&domain=easytoread.vercel.app&category=icon&readTime=1&views=0&perspectives=1&theme=dark&icon=true&size=32">
-  <link rel="icon" type="image/png" sizes="16x16" href="${SITE_URL}/api/og-image?title=${encodeURIComponent('ER')}&description=EasyRead&domain=easytoread.vercel.app&category=icon&readTime=1&views=0&perspectives=1&theme=dark&icon=true&size=16">
+  <link rel="icon" type="image/png" sizes="192x192" href="${SITE_URL}/api/og-image?icon=true&title=${encodeURIComponent(title)}&description=${encodeURIComponent(cleanSummary || article.summary || "")}&domain=${encodeURIComponent(article.source_domain || "easytoread.vercel.app")}&category=${encodeURIComponent((article.categories || ["General"])[0])}&readTime=${readingTime}&views=${article.view_count || 0}&perspectives=${explanations?.length || 0}&size=192">
+  <link rel="icon" type="image/png" sizes="32x32" href="${SITE_URL}/api/og-image?icon=true&title=${encodeURIComponent(title)}&description=${encodeURIComponent(cleanSummary || article.summary || "")}&domain=${encodeURIComponent(article.source_domain || "easytoread.vercel.app")}&category=${encodeURIComponent((article.categories || ["General"])[0])}&readTime=${readingTime}&views=${article.view_count || 0}&perspectives=${explanations?.length || 0}&size=32">
+  <link rel="icon" type="image/png" sizes="16x16" href="${SITE_URL}/api/og-image?icon=true&title=${encodeURIComponent(title)}&description=${encodeURIComponent(cleanSummary || article.summary || "")}&domain=${encodeURIComponent(article.source_domain || "easytoread.vercel.app")}&category=${encodeURIComponent((article.categories || ["General"])[0])}&readTime=${readingTime}&views=${article.view_count || 0}&perspectives=${explanations?.length || 0}&size=16">
 
-  <!-- Apple Touch Icon (iOS) -->
-  <link rel="apple-touch-icon" href="${SITE_URL}/api/og-image?title=${encodeURIComponent('ER')}&description=EasyRead&domain=easytoread.vercel.app&category=icon&readTime=1&views=0&perspectives=1&theme=dark&icon=true&size=180">
-  <link rel="apple-touch-icon" sizes="152x152" href="${SITE_URL}/api/og-image?title=${encodeURIComponent('ER')}&description=EasyRead&domain=easytoread.vercel.app&category=icon&readTime=1&views=0&perspectives=1&theme=dark&icon=true&size=152">
-  <link rel="apple-touch-icon" sizes="120x120" href="${SITE_URL}/api/og-image?title=${encodeURIComponent('ER')}&description=EasyRead&domain=easytoread.vercel.app&category=icon&readTime=1&views=0&perspectives=1&theme=dark&icon=true&size=120">
+  <!-- Apple Touch Icons (iOS) -->
+  <link rel="apple-touch-icon" href="${SITE_URL}/api/og-image?icon=true&title=${encodeURIComponent(title)}&description=${encodeURIComponent(cleanSummary || article.summary || "")}&domain=${encodeURIComponent(article.source_domain || "easytoread.vercel.app")}&category=${encodeURIComponent((article.categories || ["General"])[0])}&readTime=${readingTime}&views=${article.view_count || 0}&perspectives=${explanations?.length || 0}&size=180">
+  <link rel="apple-touch-icon" sizes="152x152" href="${SITE_URL}/api/og-image?icon=true&title=${encodeURIComponent(title)}&description=${encodeURIComponent(cleanSummary || article.summary || "")}&domain=${encodeURIComponent(article.source_domain || "easytoread.vercel.app")}&category=${encodeURIComponent((article.categories || ["General"])[0])}&readTime=${readingTime}&views=${article.view_count || 0}&perspectives=${explanations?.length || 0}&size=152">
+  <link rel="apple-touch-icon" sizes="120x120" href="${SITE_URL}/api/og-image?icon=true&title=${encodeURIComponent(title)}&description=${encodeURIComponent(cleanSummary || article.summary || "")}&domain=${encodeURIComponent(article.source_domain || "easytoread.vercel.app")}&category=${encodeURIComponent((article.categories || ["General"])[0])}&readTime=${readingTime}&views=${article.view_count || 0}&perspectives=${explanations?.length || 0}&size=120">
 
   <!-- Microsoft Tiles (Windows) -->
   <meta name="msapplication-TileColor" content="#f59847">
-  <meta name="msapplication-TileImage" content="${SITE_URL}/api/og-image?title=${encodeURIComponent('ER')}&description=EasyRead&domain=easytoread.vercel.app&category=icon&readTime=1&views=0&perspectives=1&theme=dark&icon=true&size=144">
+  <meta name="msapplication-TileImage" content="${SITE_URL}/api/og-image?icon=true&title=${encodeURIComponent(title)}&description=${encodeURIComponent(cleanSummary || article.summary || "")}&domain=${encodeURIComponent(article.source_domain || "easytoread.vercel.app")}&category=${encodeURIComponent((article.categories || ["General"])[0])}&readTime=${readingTime}&views=${article.view_count || 0}&perspectives=${explanations?.length || 0}&size=144">
 
   <!-- PWA Manifest -->
   <link rel="manifest" href="/manifest.json">
@@ -504,7 +585,7 @@ function buildArticleHTML({
   <style>${getCSSStyles()}</style>
 </head>
 <body>
-
+  
 
   <!-- Reading Progress Bar -->
   <div class="progress-bar" id="progressBar"></div>
@@ -536,19 +617,22 @@ function buildArticleHTML({
       <h3>All Explanatory Perspectives</h3>
       <p>Choose how you would like this article's complex ideas to be broken down.</p>
       <div class="personas-grid-list">
-        ${profiles.map(p => {
-          const isSelected = p.profile_id === (defaultExplanation?.profile_id || 1);
-          return `
-            <div class="persona-selection-card ${isSelected ? 'selected' : ''}" data-target-id="${p.profile_id}" onclick="selectPersonaFromModal(this.dataset.targetId)">
+        ${profiles
+          .map((p) => {
+            const isSelected =
+              p.profile_id === (defaultExplanation?.profile_id || 1);
+            return `
+            <div class="persona-selection-card ${isSelected ? "selected" : ""}" data-target-id="${p.profile_id}" onclick="selectPersonaFromModal(this.dataset.targetId)">
               <div class="persona-card-top">
                 <div class="persona-badge-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
                 <h4>${escapeHtml(p.name)}</h4>
-                ${isSelected ? '<span class="selected-pill">Active</span>' : ''}
+                ${isSelected ? '<span class="selected-pill">Active</span>' : ""}
               </div>
-              <p>${escapeHtml(p.description || 'Simplifies concepts into plain language.')}</p>
+              <p>${escapeHtml(p.description || "Simplifies concepts into plain language.")}</p>
             </div>
           `;
-        }).join('')}
+          })
+          .join("")}
       </div>
     </div>
   </div>
@@ -562,7 +646,7 @@ function buildArticleHTML({
         <span class="header-breadcrumb">Reader</span>
       </div>
       <div class="header-right">
-        <div class="credits-badge" id="userCreditsBadge" style="${user_id ? 'display: inline-flex;' : 'display: none;'}" title="Credits Balance">
+        <div class="credits-badge" id="userCreditsBadge" style="${user_id ? "display: inline-flex;" : "display: none;"}" title="Credits Balance">
           <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
           <span class="credits-val" id="creditsValueDisplay">${(userCredits || 0).toFixed(1)}</span>
         </div>
@@ -572,7 +656,7 @@ function buildArticleHTML({
     <!-- Categories & Title -->
     <div class="hero-section">
       <div class="category-tags-list">
-        ${(article.categories || ['General']).map(cat => `<span class="category-tag">${escapeHtml(cat)}</span>`).join('')}
+        ${(article.categories || ["General"]).map((cat) => `<span class="category-tag">${escapeHtml(cat)}</span>`).join("")}
       </div>
       <h1 class="hero-title">${escapeHtml(title)}</h1>
     </div>
@@ -591,19 +675,26 @@ function buildArticleHTML({
 
       <div class="persona-pills-row">
         <div class="persona-pills-scroll" id="profilePills">
-          ${visibleProfiles.map(p => {
-            const isActive = p.profile_id === (defaultExplanation?.profile_id || 1);
-            return `
-              <button type="button" class="persona-pill ${isActive ? 'active' : ''}" data-profile-id="${p.profile_id}" onclick="switchProfile(${p.profile_id}, this)">
+          ${visibleProfiles
+            .map((p) => {
+              const isActive =
+                p.profile_id === (defaultExplanation?.profile_id || 1);
+              return `
+              <button type="button" class="persona-pill ${isActive ? "active" : ""}" data-profile-id="${p.profile_id}" onclick="switchProfile(${p.profile_id}, this)">
                 <span>${escapeHtml(p.name)}</span>
               </button>
             `;
-          }).join('')}
-          ${overflowProfiles.length > 0 ? `
+            })
+            .join("")}
+          ${
+            overflowProfiles.length > 0
+              ? `
             <button type="button" class="persona-pill more-pill" onclick="openPersonasModal()">
               <span>+${overflowProfiles.length} More...</span>
             </button>
-          ` : ''}
+          `
+              : ""
+          }
         </div>
       </div>
     </div>
@@ -615,7 +706,7 @@ function buildArticleHTML({
         <div class="hero-badge-wrap">
           <span class="hero-badge" id="heroPerspectiveBadge">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-            ${escapeHtml(activeProfile?.name || 'Everyday')} Perspective
+            ${escapeHtml(activeProfile?.name || "Everyday")} Perspective
           </span>
         </div>
         <h2 class="hero-card-heading" id="heroCardHeading">${escapeHtml(title)}</h2>
@@ -623,7 +714,7 @@ function buildArticleHTML({
     </div>
 
     <!-- Sign In Callout for Guests -->
-    <div class="guest-login-card glass-card" id="guestLoginCard" style="${user_id ? 'display: none;' : 'display: flex;'}">
+    <div class="guest-login-card glass-card" id="guestLoginCard" style="${user_id ? "display: none;" : "display: flex;"}">
       <div class="guest-card-icon">
         <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
       </div>
@@ -649,7 +740,7 @@ function buildArticleHTML({
       </div>
       
       <div id="articleText" class="rich-article-text">
-        ${renderParsedExplanationToHtml(defaultExplanation?.content || article.base_content || '')}
+        ${renderParsedExplanationToHtml(defaultExplanation?.content || article.base_content || "")}
       </div>
     </article>
 
@@ -663,11 +754,13 @@ function buildArticleHTML({
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
           <h3>Explore Further & Deep Dives</h3>
         </div>
-        <span class="persona-tag" id="deepDivePersonaBadge">${escapeHtml(activeProfile?.name || 'Everyday')}</span>
+        <span class="persona-tag" id="deepDivePersonaBadge">${escapeHtml(activeProfile?.name || "Everyday")}</span>
       </div>
 
       <div class="deep-dives-list" id="deepDivesList">
-        ${deepDives.map((dd, index) => `
+        ${deepDives
+          .map(
+            (dd, index) => `
           <div class="deep-dive-accordion glass-card collapsed" id="dd-item-${index}">
             <div class="dd-header" data-target="dd-item-${index}" onclick="toggleDeepDiveAccordion(this.dataset.target)">
               <div class="dd-title-row">
@@ -680,7 +773,9 @@ function buildArticleHTML({
               <div class="dd-answer-text">${renderMarkdownText(dd.answer)}</div>
             </div>
           </div>
-        `).join('')}
+        `,
+          )
+          .join("")}
       </div>
 
       <div class="deep-dive-ask-card glass-card">
@@ -701,11 +796,11 @@ function buildArticleHTML({
     <div class="article-metadata">
       <div class="meta-item">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-        <span class="source-badge">${escapeHtml(article.source_domain || 'EasyRead')}</span>
+        <span class="source-badge">${escapeHtml(article.source_domain || "EasyRead")}</span>
       </div>
       <div class="meta-item">
         <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        <span>${article.created_at ? new Date(article.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recently'}</span>
+        <span>${article.created_at ? new Date(article.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Recently"}</span>
       </div>
       <div class="meta-item">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -720,19 +815,19 @@ function buildArticleHTML({
     <!-- Floating Glass Action Dock (Footer) -->
     <div class="floating-action-dock">
       <div class="dock-content glass-card">
-        <a href="${escapeHtml(article.source_url || '#')}" target="_blank" rel="noopener noreferrer" class="dock-source-pill" title="${escapeHtml(article.source_url || '')}">
+        <a href="${escapeHtml(article.source_url || "#")}" target="_blank" rel="noopener noreferrer" class="dock-source-pill" title="${escapeHtml(article.source_url || "")}">
           <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-          <span>${escapeHtml(article.source_domain || 'easytoread.vercel.app')}</span>
+          <span>${escapeHtml(article.source_domain || "easytoread.vercel.app")}</span>
         </a>
 
         <div class="dock-actions">
           <button type="button" class="dock-icon-btn" onclick="copyCanonicalArticleLink()" title="Share / Copy Link" aria-label="Copy link">
             <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
           </button>
-          <button type="button" class="dock-icon-btn bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" id="bookmarkBtn" onclick="handleBookmarkToggle()" title="Save Bookmark" aria-label="Bookmark">
+          <button type="button" class="dock-icon-btn bookmark-btn ${isBookmarked ? "bookmarked" : ""}" id="bookmarkBtn" onclick="handleBookmarkToggle()" title="Save Bookmark" aria-label="Bookmark">
             <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
           </button>
-          <button type="button" class="dock-icon-btn rate-btn ${userRating ? 'rated' : ''}" id="rateBtn" onclick="openRatingModal()" title="Rate Explanation" aria-label="Rate article">
+          <button type="button" class="dock-icon-btn rate-btn ${userRating ? "rated" : ""}" id="rateBtn" onclick="openRatingModal()" title="Rate Explanation" aria-label="Rate article">
             <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
           </button>
         </div>
@@ -744,7 +839,9 @@ function buildArticleHTML({
       <div class="glass-modal">
         <button type="button" class="modal-close-btn" onclick="closeRatingModal()">✕</button>
         <div id="ratingModalContent">
-          ${userRating ? `
+          ${
+            userRating
+              ? `
             <div class="review-submitted-state">
               <div class="modal-icon-badge" style="background:rgba(245,152,71,0.15);">
                 <svg viewBox="0 0 24 24" style="stroke:var(--accent-color);"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -753,7 +850,8 @@ function buildArticleHTML({
               <p>You rated this explanation ${userRating.rating} / 5 stars.</p>
               <button type="button" class="btn btn-primary" style="margin-top: 16px; width: 100%;" onclick="closeRatingModal()">Done</button>
             </div>
-          ` : `
+          `
+              : `
             <div class="modal-icon-badge">
               <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
             </div>
@@ -788,7 +886,8 @@ function buildArticleHTML({
               <button type="button" class="btn btn-secondary" onclick="closeRatingModal()">Cancel</button>
               <button type="button" class="btn btn-primary" onclick="submitUserRating()">Submit Rating</button>
             </div>
-          `}
+          `
+          }
         </div>
       </div>
     </div>
@@ -803,7 +902,7 @@ function buildArticleHTML({
 
 function buildSummaryHTML(article, defaultExplanation) {
   const summary = defaultExplanation?.summary || article.summary;
-  if (!summary) return '';
+  if (!summary) return "";
 
   return `
     <div class="summary-wrapper glass-card">
@@ -822,7 +921,7 @@ function buildSummaryHTML(article, defaultExplanation) {
 // CLEAN ACCORDION & ARTICLE PARSER
 // ============================================
 function renderParsedExplanationToHtml(rawText) {
-  if (!rawText) return '<p>No explanation content available.</p>';
+  if (!rawText) return "<p>No explanation content available.</p>";
 
   let text = rawText.trim();
   if (text.startsWith('"') && text.endsWith('"')) {
@@ -837,15 +936,18 @@ function renderParsedExplanationToHtml(rawText) {
     const trimmed = block.trim();
     if (!trimmed) return;
 
-    const isHeading = trimmed.startsWith('## ') || trimmed.startsWith('# ') || trimmed.startsWith('### ');
+    const isHeading =
+      trimmed.startsWith("## ") ||
+      trimmed.startsWith("# ") ||
+      trimmed.startsWith("### ");
 
     if (isHeading) {
       if (currentSection.content.length > 0 || currentSection.heading) {
         sections.push(currentSection);
       }
       currentSection = {
-        heading: trimmed.replace(/^#+\s*/, ''),
-        content: []
+        heading: trimmed.replace(/^#+\s*/, ""),
+        content: [],
       };
     } else {
       currentSection.content.push(trimmed);
@@ -856,20 +958,23 @@ function renderParsedExplanationToHtml(rawText) {
     sections.push(currentSection);
   }
 
-  return sections.map((sec, idx) => {
-    const isFirst = idx === 0;
-    const bodyHtml = sec.content.map(c => formatParagraphOrList(c)).join('');
+  return sections
+    .map((sec, idx) => {
+      const isFirst = idx === 0;
+      const bodyHtml = sec.content
+        .map((c) => formatParagraphOrList(c))
+        .join("");
 
-    if (isFirst) {
-      return `
+      if (isFirst) {
+        return `
         <div class="explanation-section first-section">
-          ${sec.heading ? `<h2 class="subheading">${escapeHtml(sec.heading)}</h2>` : ''}
+          ${sec.heading ? `<h2 class="subheading">${escapeHtml(sec.heading)}</h2>` : ""}
           <div class="section-body">${bodyHtml}</div>
         </div>
       `;
-    }
+      }
 
-    return `
+      return `
       <div class="accordion-section glass-card collapsed" id="acc-sec-${idx}">
         <div class="accordion-header" data-target="acc-sec-${idx}" onclick="toggleSectionAccordion(this.dataset.target)">
           <h3 class="accordion-title">${escapeHtml(sec.heading || `Part ${idx + 1}`)}</h3>
@@ -882,22 +987,32 @@ function renderParsedExplanationToHtml(rawText) {
         </div>
       </div>
     `;
-  }).join('');
+    })
+    .join("");
 }
 
 function formatParagraphOrList(textBlock) {
-  const lines = textBlock.split('\n').map(l => l.trim()).filter(Boolean);
-  const isList = lines.every(l => l.startsWith('- ') || l.startsWith('* ') || /^\d+\.\s+/.test(l));
+  const lines = textBlock
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const isList = lines.every(
+    (l) => l.startsWith("- ") || l.startsWith("* ") || /^\d+\.\s+/.test(l),
+  );
 
   if (isList) {
-    const listItems = lines.map(line => {
-      const formatted = renderMarkdownText(line.replace(/^[-*]\s+|\d+\.\s+/, ''));
-      return `<li>${formatted}</li>`;
-    }).join('');
+    const listItems = lines
+      .map((line) => {
+        const formatted = renderMarkdownText(
+          line.replace(/^[-*]\s+|\d+\.\s+/, ""),
+        );
+        return `<li>${formatted}</li>`;
+      })
+      .join("");
     return `<ul class="content-list">${listItems}</ul>`;
   }
 
-  if (textBlock.startsWith('> ')) {
+  if (textBlock.startsWith("> ")) {
     return `<blockquote class="article-quote">${renderMarkdownText(textBlock.substring(2))}</blockquote>`;
   }
 
@@ -905,35 +1020,52 @@ function formatParagraphOrList(textBlock) {
 }
 
 function renderMarkdownText(text) {
-  if (!text) return '';
+  if (!text) return "";
   return escapeHtml(text)
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/__(.*?)__/g, '<u>$1</u>')
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/\n/g, '<br/>');
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.*?)\*/g, "<em>$1</em>")
+    .replace(/__(.*?)__/g, "<u>$1</u>")
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\n/g, "<br/>");
 }
 
 // ============================================
 // CLIENT-SIDE JAVASCRIPT
 // ============================================
-function getJavaScript(article, explanations, profiles, deepDives, userRating, user_id, sessionToken, isBookmarked, userCredits) {
-  const activeExp = explanations?.find(e => e.profile_id === 1) || explanations?.[0];
+function getJavaScript(
+  article,
+  explanations,
+  profiles,
+  deepDives,
+  userRating,
+  user_id,
+  sessionToken,
+  isBookmarked,
+  userCredits,
+) {
+  const activeExp =
+    explanations?.find((e) => e.profile_id === 1) || explanations?.[0];
 
-  const safeExplanationsJson = JSON.stringify(explanations || []).replace(/<\/script/gi, '<\\/script');
-  const safeProfilesJson = JSON.stringify(profiles || []).replace(/<\/script/gi, '<\\/script');
+  const safeExplanationsJson = JSON.stringify(explanations || []).replace(
+    /<\/script/gi,
+    "<\\/script",
+  );
+  const safeProfilesJson = JSON.stringify(profiles || []).replace(
+    /<\/script/gi,
+    "<\\/script",
+  );
 
   return `
 var currentCredits = ${userCredits || 0};
-var currentViewId = ${activeExp?.view_id || 'null'};
+var currentViewId = ${activeExp?.view_id || "null"};
 var currentProfileId = ${activeExp?.profile_id || 1};
 var currentArticleId = ${article.article_id};
-var currentArticleSlug = "${escapeJs(article.slug || '')}";
+var currentArticleSlug = "${escapeJs(article.slug || "")}";
 var isAuthenticated = ${!!user_id};
 var isBookmarked = ${isBookmarked};
 var hasUserRated = ${!!userRating};
-var userId = "${escapeJs(user_id || '')}";
-var sessionToken = "${escapeJs(sessionToken || '')}";
+var userId = "${escapeJs(user_id || "")}";
+var sessionToken = "${escapeJs(sessionToken || "")}";
 
 var explanationsData = ${safeExplanationsJson};
 var profilesData = ${safeProfilesJson};
@@ -1011,7 +1143,7 @@ window.copyCanonicalArticleLink = function() {
   var canonicalUrl = window.location.origin + '/article/' + (currentArticleSlug || currentArticleId);
   if (navigator.share) {
     navigator.share({
-      title: "${escapeJs(article.canonical_title || 'EasyRead Article')}",
+      title: "${escapeJs(article.canonical_title || "EasyRead Article")}",
       text: "Read this simplified explanation on EasyRead",
       url: canonicalUrl
     }).catch(function(){});
@@ -1556,18 +1688,22 @@ function calculateReadingTime(content) {
 }
 
 function escapeHtml(text) {
-  if (!text) return '';
+  if (!text) return "";
   return String(text)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 function escapeJs(text) {
-  if (!text) return '';
-  return String(text).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/'/g, "\\'").replace(/\n/g, '\\n');
+  if (!text) return "";
+  return String(text)
+    .replace(/\\/g, "\\\\")
+    .replace(/"/g, '\\"')
+    .replace(/'/g, "\\'")
+    .replace(/\n/g, "\\n");
 }
 
 function renderNotFoundPage(title, description) {
@@ -1604,7 +1740,10 @@ function renderNotFoundPage(title, description) {
 }
 
 function renderErrorPage(msg) {
-  return renderNotFoundPage('Something Went Wrong', msg || 'We encountered an error while assembling this article.');
+  return renderNotFoundPage(
+    "Something Went Wrong",
+    msg || "We encountered an error while assembling this article.",
+  );
 }
 
 // ============================================
@@ -2042,7 +2181,7 @@ code { background: var(--mode-bg-hover); padding: 2px 6px; border-radius: 6px; f
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: '10mb',
+      sizeLimit: "10mb",
     },
   },
 };
