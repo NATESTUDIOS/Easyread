@@ -101,12 +101,12 @@
             --card-bg-hover: rgba(26, 26, 32, 0.9) !important;
             --glass-border: 1px solid rgba(255, 255, 255, 0.09) !important;
             --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.05) !important;
-            --glass-shadow: 0 16px 40px rgba(0, 0, 0, 0.5) !important;
-            --mode-bg: rgba(255, 255, 255, 0.06) !important;
-            --mode-bg-hover: rgba(255, 255, 255, 0.11) !important;
-            --divider: rgba(255, 255, 255, 0.07) !important;
-            --shimmer-base: rgba(255, 255, 255, 0.04) !important;
-            --shimmer-highlight: rgba(255, 255, 255, 0.09) !important;
+            --glass-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+            --mode-bg: rgba(255, 255, 255, 0.06);
+            --mode-bg-hover: rgba(255, 255, 255, 0.11);
+            --divider: rgba(255, 255, 255, 0.07);
+            --shimmer-base: rgba(255, 255, 255, 0.04);
+            --shimmer-highlight: rgba(255, 255, 255, 0.09);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -122,14 +122,14 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 0 0 calc(70px + env(safe-area-inset-bottom)) 0;
+            padding: 0 0 calc(76px + env(safe-area-inset-bottom)) 0;
             color: var(--text-main);
             -webkit-font-smoothing: antialiased;
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         .app-container {
-            max-width: 460px;
+            max-width: 480px;
             width: 100%;
             display: flex;
             flex-direction: column;
@@ -428,7 +428,7 @@
         .skeleton-text-group { flex: 1; display: flex; flex-direction: column; gap: 6px; }
         .skeleton-line { height: 12px; width: 100%; }
 
-        /* ─── DIALOGS & COLLAPSIBLE PERSONA SELECTOR ─── */
+        /* ─── DIALOGS & COLLAPSIBLE PERSONA SELECTOR (FULL-WIDTH & UNTRUNCATED) ─── */
         .dialog-overlay {
             position: fixed;
             inset: 0;
@@ -451,7 +451,7 @@
             border-radius: 26px;
             padding: 24px 20px;
             width: 100%;
-            max-width: 420px;
+            max-width: 480px;
             box-shadow: var(--glass-shadow);
             transform: scale(0.95) translateY(10px);
             transition: transform 0.25s ease;
@@ -472,19 +472,20 @@
         .dialog-options {
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            max-height: 380px;
+            gap: 10px;
+            max-height: 70vh;
             overflow-y: auto;
             padding-right: 2px;
         }
 
-        /* Collapsible Persona Option Card */
+        /* Fully Expanded, Untruncated Persona Option Card */
         .persona-collapsible-item {
             background: var(--mode-bg);
             border: var(--glass-border-subtle);
-            border-radius: 16px;
+            border-radius: 18px;
             overflow: hidden;
             transition: all 0.2s ease;
+            width: 100%;
         }
         .persona-collapsible-item:hover { background: var(--mode-bg-hover); }
         .persona-collapsible-item.active {
@@ -496,21 +497,23 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 12px 14px;
+            padding: 14px 16px;
             cursor: pointer;
             user-select: none;
+            width: 100%;
         }
         .persona-item-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
         .persona-item-icon {
-            width: 28px; height: 28px; border-radius: 8px;
+            width: 32px; height: 32px; border-radius: 10px;
             background: var(--mode-bg-hover); display: flex;
             align-items: center; justify-content: center; color: var(--accent-color);
+            flex-shrink: 0;
         }
-        .persona-item-icon svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
-        .persona-item-title { font-size: 0.88rem; font-weight: 700; color: var(--text-main); }
+        .persona-item-icon svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
+        .persona-item-title { font-size: 0.92rem; font-weight: 700; color: var(--text-main); }
         .active-pill {
             font-size: 0.65rem; font-weight: 700; background: var(--accent-color);
-            color: #fff; padding: 2px 7px; border-radius: 8px; text-transform: uppercase;
+            color: #fff; padding: 2px 8px; border-radius: 8px; text-transform: uppercase;
         }
 
         .persona-chevron-btn {
@@ -519,16 +522,18 @@
             align-items: center; justify-content: center;
         }
         .persona-chevron-btn svg {
-            width: 14px; height: 14px; stroke: currentColor; fill: none;
-            stroke-width: 2.2; transition: transform 0.2s ease;
+            width: 16px; height: 16px; stroke: currentColor; fill: none;
+            stroke-width: 2.2; transition: transform 0.25s ease;
         }
         .persona-collapsible-item.collapsed .persona-chevron-btn svg { transform: rotate(-90deg); }
         
         .persona-item-desc {
-            padding: 0 14px 12px 52px;
-            font-size: 0.78rem;
+            padding: 0 16px 14px 16px;
+            font-size: 0.82rem;
             color: var(--text-secondary);
-            line-height: 1.45;
+            line-height: 1.5;
+            word-break: break-word;
+            width: 100%;
         }
         .persona-collapsible-item.collapsed .persona-item-desc { display: none; }
 
@@ -581,6 +586,17 @@
         .auth-toggle-link { text-align: center; font-size: 0.8rem; color: var(--accent-color); margin-top: 12px; cursor: pointer; font-weight: 600; }
         .auth-error-msg { color: var(--danger); font-size: 0.78rem; margin-top: 8px; display: none; text-align: center; }
 
+        /* ─── TOAST NOTIFICATION ─── */
+        .toast {
+            position: fixed; bottom: calc(80px + env(safe-area-inset-bottom)); left: 50%;
+            transform: translateX(-50%) translateY(30px); background: var(--card-bg);
+            backdrop-filter: var(--card-blur); border: var(--glass-border); border-radius: 14px;
+            padding: 10px 18px; color: var(--text-main); font-size: 0.82rem; font-weight: 600;
+            box-shadow: var(--glass-shadow); z-index: 9999; opacity: 0;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
         @media (max-width: 420px) {
             .content-area { padding: 0 1rem 1rem 1rem; }
             .profile-avatar { width: 54px; height: 54px; font-size: 20px; }
@@ -590,6 +606,9 @@
     </style>
 </head>
 <body>
+
+    <!-- Toast Notification Container -->
+    <div class="toast" id="toast"></div>
 
     <div class="app-container">
         
@@ -717,7 +736,7 @@
         </main>
     </div>
 
-    <!-- ─── PERSPECTIVE SELECTION MODAL (COLLAPSIBLE DESCRIPTIONS) ─── -->
+    <!-- ─── PERSPECTIVE SELECTION MODAL (FULL-WIDTH COLLAPSIBLE DESCRIPTIONS) ─── -->
     <div class="dialog-overlay" id="profileDialog">
         <div class="glass-dialog">
             <div class="dialog-header">
@@ -799,6 +818,15 @@
         function escapeHtml(text) {
             if (!text) return '';
             return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            if (!t) return;
+            t.textContent = msg;
+            t.classList.add('show');
+            clearTimeout(t._timeout);
+            t._timeout = setTimeout(() => t.classList.remove('show'), 2400);
         }
 
         function navigateHome() {
@@ -887,23 +915,21 @@
         function showPersonaShimmers() {
             const container = document.getElementById('profileOptionsContainer');
             container.innerHTML = `
-                <div class="skeleton" style="height: 50px; width: 100%; border-radius: 14px; margin-bottom: 8px;"></div>
-                <div class="skeleton" style="height: 50px; width: 100%; border-radius: 14px; margin-bottom: 8px;"></div>
-                <div class="skeleton" style="height: 50px; width: 100%; border-radius: 14px;"></div>
+                <div class="skeleton" style="height: 54px; width: 100%; border-radius: 16px; margin-bottom: 8px;"></div>
+                <div class="skeleton" style="height: 54px; width: 100%; border-radius: 16px; margin-bottom: 8px;"></div>
+                <div class="skeleton" style="height: 54px; width: 100%; border-radius: 16px;"></div>
             `;
         }
 
-        // ─── DYNAMIC PERSONAS WITH COLLAPSIBLE DESCRIPTIONS ───
+        // ─── DYNAMIC PERSONAS WITH FULL-WIDTH COLLAPSIBLE DESCRIPTIONS ───
         let preferredProfileId = localStorage.getItem('easyread-profile-id') || '1';
         let availableProfiles = [];
 
         async function loadProfilePerspectives() {
-            const container = document.getElementById('profileOptionsContainer');
             showPersonaShimmers();
 
             try {
                 let data = null;
-                // Try primary endpoint with fallback
                 try {
                     const res = await fetch(`${API_BASE_URL}/profile?action=list`);
                     if (res.ok) data = await res.json();
@@ -918,7 +944,6 @@
                 localStorage.setItem('easyread_cached_personas', JSON.stringify(availableProfiles));
                 renderPersonasModal();
             } catch (err) {
-                // Fallback to cache or standard personas
                 try {
                     availableProfiles = JSON.parse(localStorage.getItem('easyread_cached_personas') || '[]');
                 } catch {}
@@ -951,7 +976,7 @@
                                     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                                 </div>
                                 <span class="persona-item-title">${escapeHtml(p.name)}</span>
-                                ${isSelected ? '<span class="active-pill">Selected</span>' : ''}
+                                ${isSelected ? '<span class="active-pill">Active</span>' : ''}
                             </div>
                             <button type="button" class="persona-chevron-btn" onclick="event.stopPropagation(); togglePersonaDesc('p-item-${p.profile_id}')" title="Toggle description">
                                 <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
@@ -984,13 +1009,13 @@
             const headerBadgeText = document.getElementById('headerBadgeText');
             if (headerBadgeText) headerBadgeText.textContent = active.name;
 
-            // Sync UI active indicators
+            // Sync modal item active state
             document.querySelectorAll('#profileDialog .persona-collapsible-item').forEach(item => {
                 const id = item.id.replace('p-item-', '');
                 item.classList.toggle('active', id === preferredProfileId);
                 const pill = item.querySelector('.active-pill');
                 if (id === preferredProfileId) {
-                    if (!pill) item.querySelector('.persona-item-left').insertAdjacentHTML('beforeend', '<span class="active-pill">Selected</span>');
+                    if (!pill) item.querySelector('.persona-item-left').insertAdjacentHTML('beforeend', '<span class="active-pill">Active</span>');
                 } else if (pill) {
                     pill.remove();
                 }
@@ -1011,6 +1036,7 @@
         function selectProfile(profileId, profileName) {
             applyProfile(profileId);
             closeDialog('profileDialog');
+            showToast(`Selected: ${profileName}`);
         }
 
         // ─── AUTHENTICATION UI & HANDLING ───
@@ -1365,13 +1391,23 @@
         setupToggle('seeAllHistory', 'historyList');
         setupToggle('seeAllBookmarks', 'bookmarksList');
 
+        // ─── SHARE PROFILE WITH WEBSITE URL & FALLBACK ───
         function shareProfile() {
+            const shareUrl = 'https://easytoread.vercel.app';
+            const shareData = {
+                title: 'EasyRead — Knowledge, Simplified',
+                text: 'Explore tailored knowledge and simplified concepts on EasyRead: ' + shareUrl,
+                url: shareUrl
+            };
+
             if (navigator.share) {
-                navigator.share({
-                    title: 'EasyRead Profile',
-                    text: 'Explore tailored knowledge and simplified concepts on EasyRead.',
-                    url: window.location.origin
-                }).catch(() => {});
+                navigator.share(shareData).catch(() => {});
+            } else if (navigator.clipboard) {
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    showToast('Website link copied to clipboard!');
+                }).catch(() => {
+                    showToast('Failed to copy link');
+                });
             }
         }
 
