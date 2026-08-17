@@ -1,90 +1,116 @@
-// nyt-scraper-api.js
-const express = require('express');
-const axios = require('axios');
-const cheerio = require('cheerio');
+// api/nyt-scraper.js
+// NYT Scraper - Pure scraping API, no database
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+import { Router } from "express";
+import fetch from "node-fetch";
+import * as cheerio from "cheerio";
 
-// User-Agent to avoid blocks
-const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+const router = Router();
 
-// Config
-const CONFIG = {
-  homepage: 'https://www.nytimes.com/',
-  maxArticles: 10, // Limit to avoid rate limiting
-  timeout: 10000,
-  delayBetweenRequests: 1000 // 1 second delay
-};
+// ============================================
+// CONFIGURATION
+// ============================================
+
+const NYT_HOMEPAGE = 'https://www.nytimes.com/';
+const NYT_MAX_ARTICLES = parseInt(process.env.NYT_MAX_ARTICLES) || 10;
+const NYT_DELAY_BETWEEN_REQUESTS = parseInt(process.env.NYT_DELAY) || 1000;
+const NYT_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+const MAX_RETRIES = parseInt(process.env.MAX_RETRIES) || 3;
+
+// ============================================
+// LOGGING
+// ============================================
+
+function log(message, type = "info") {
+  const timestamp = new Date().toISOString();
+  const prefix = {
+    info: "📘",
+    success: "✅",
+    error: "❌",
+    warn: "⚠️",
+    fetch: "🌐",
+    extract: "📄",
+    nyt: "📰"
+  }[type] || "📘";
+  console.log(`${timestamp} ${prefix} ${message}`);
+}
+
+// ============================================
+// HELPERS
+// ============================================
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 /**
- * Delay helper
+ * Fetch HTML with proper headers
  */
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-/**
- * Fetch HTML with headers
- */
-const fetchHTML = async (url) => {
-  try {
-    const response = await axios.get(url, {
-      headers: {
-        'User-Agent': USER_AGENT,
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
-      },
-      timeout: CONFIG.timeout
-    });
-    return response.data;
-  } catch (error) {
-    console.error(`Error fetching ${url}:`, error.message);
-    return null;
+async function fetchHTML(url, timeout = 30000) {
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': NYT_USER_AGENT,
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
+        },
+        timeout: timeout
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      return await response.text();
+    } catch (error) {
+      log(`Fetch attempt ${attempt} failed: ${error.message}`, "warn");
+      if (attempt === MAX_RETRIES) {
+        log(`Failed to fetch ${url}: ${error.message}`, "error");
+        return null;
+      }
+      await sleep(2000 * attempt);
+    }
   }
-};
+  return null;
+}
 
 /**
- * Extract article links from homepage
+ * Extract article links from NYT homepage
  */
-const extractArticleLinks = (html) => {
+function extractNYTArticleLinks(html) {
   const $ = cheerio.load(html);
   const articles = [];
 
-  // Find all article containers
   $('div.story-wrapper, div[data-tpl="sli"]').each((i, element) => {
-    if (articles.length >= CONFIG.maxArticles) return false;
+    if (articles.length >= NYT_MAX_ARTICLES) return false;
 
     const $el = $(element);
     
-    // Find the main link
     const $link = $el.find('a[data-tpl="l"], a.tpl-lbl');
     const href = $link.attr('href');
     
-    // Skip if no href or not a valid article
-    if (!href || !href.includes('/2026/') || href.includes('/live/')) {
+    if (!href) return;
+    
+    // Skip non-article links
+    if (!href.includes('/2026/') && !href.includes('/live/')) {
       return;
     }
 
-    // Get headline
     const headline = $link.find('p.indicate-hover').text().trim() || 
                     $link.text().trim();
 
-    // Get summary
     const summary = $el.find('p.summary-class, .css-sarx3u p').text().trim();
 
-    // Get read time
     const readTime = $el.find('p[data-ttr]').text().trim() || 
                      $el.find('.css-e6rebf').text().trim();
 
-    // Get "LIVE" badge
     const isLive = $el.find('span.css-1cn1oj4:contains("LIVE")').length > 0;
 
-    // Get timestamp if available
     const timestamp = $el.find('time').attr('datetime') || '';
 
-    // Build full URL
     const fullUrl = href.startsWith('http') ? href : `https://www.nytimes.com${href}`;
 
-    // Skip duplicates
     if (articles.some(a => a.url === fullUrl)) return;
 
     articles.push({
@@ -99,29 +125,26 @@ const extractArticleLinks = (html) => {
   });
 
   return articles;
-};
+}
 
 /**
- * Extract article content
+ * Extract full article content
  */
-const extractArticleContent = (html, url) => {
+function extractArticleContent(html, url) {
   const $ = cheerio.load(html);
   
   // Remove unwanted elements
   $('script, style, noscript, iframe, .css-1r9ysjz, .css-ntag6f, [data-testid="StandardAd"]').remove();
 
-  // Get headline (multiple possible selectors)
   const headline = $('h1[data-testid="headline"], h1.css-1jxfp2t, h1.e1jsehar0').text().trim() || 
                    $('h1').first().text().trim();
 
-  // Get byline/author
   const byline = $('a[data-testid="byline"], span.css-1baulvz a').text().trim() || '';
 
-  // Get published date
   const publishedDate = $('time[data-testid="timestamp"]').attr('datetime') || 
                         $('time').first().attr('datetime') || '';
 
-  // Get article body
+  // Extract body paragraphs
   const bodySelectors = [
     'section[name="articleBody"] p',
     'div[data-testid="article-body"] p',
@@ -139,7 +162,7 @@ const extractArticleContent = (html, url) => {
     }
   }
 
-  // Fallback: get all paragraphs not in header/footer
+  // Fallback: get all paragraphs
   if (paragraphs.length === 0) {
     paragraphs = $('p').map((i, el) => {
       const text = $(el).text().trim();
@@ -150,101 +173,159 @@ const extractArticleContent = (html, url) => {
     }).get().filter(Boolean);
   }
 
-  // Get main image
   const imageUrl = $('figure picture img, figure img, .css-1qj0kt9 img, .css-1ovi921 img')
     .first()
     .attr('src') || '';
 
-  // Get image caption
   const imageCaption = $('figure figcaption, .css-1p5yz2j').text().trim() || '';
 
-  // Get word count estimate
-  const wordCount = paragraphs.join(' ').split(/\s+/).length;
+  const fullText = paragraphs.join(' ');
+  const wordCount = fullText.split(/\s+/).length;
 
   return {
-    headline,
+    headline: headline || "No headline found",
     byline,
     publishedDate,
-    paragraphs: paragraphs.slice(0, 50), // Limit to 50 paragraphs
+    fullText,
+    paragraphs: paragraphs.slice(0, 50),
     wordCount,
     imageUrl,
     imageCaption,
-    contentPreview: paragraphs.join(' ').slice(0, 500) + '...',
+    contentPreview: fullText.slice(0, 500) + '...',
     url
   };
-};
+}
+
+// ============================================
+// ROUTES
+// ============================================
 
 /**
- * Main API endpoint
+ * GET /api/nyt
+ * Get articles from NYT homepage
+ * 
+ * Query params:
+ * - depth: 0 = links only, 1 = partial (preview), 2 = full content (default: 1)
+ * - limit: max articles to fetch (default: 10)
  */
-app.get('/api/nyt', async (req, res) => {
+router.get("/", async (req, res) => {
+  const { depth = 1, limit = NYT_MAX_ARTICLES } = req.query;
+
+  const startTime = Date.now();
+  log(`📰 NYT scrape started (depth: ${depth}, limit: ${limit})`, "nyt");
+
   try {
     // 1. Fetch homepage
-    console.log('📰 Fetching NYT homepage...');
-    const homepageHtml = await fetchHTML(CONFIG.homepage);
+    log("🌐 Fetching NYT homepage...", "fetch");
+    const homepageHtml = await fetchHTML(NYT_HOMEPAGE);
     
     if (!homepageHtml) {
-      return res.status(500).json({ error: 'Failed to fetch homepage' });
+      return res.status(500).json({
+        success: false,
+        error: "Failed to fetch NYT homepage"
+      });
     }
 
     // 2. Extract article links
-    console.log('🔍 Extracting article links...');
-    const articles = extractArticleLinks(homepageHtml);
+    log("🔍 Extracting article links...", "extract");
+    const articleLinks = extractNYTArticleLinks(homepageHtml);
     
-    if (articles.length === 0) {
-      return res.status(404).json({ error: 'No articles found' });
+    if (articleLinks.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: "No articles found on NYT homepage"
+      });
     }
 
-    console.log(`✅ Found ${articles.length} articles`);
+    log(`✅ Found ${articleLinks.length} articles`, "success");
 
-    // 3. Fetch each article (with optional depth parameter)
-    const depth = parseInt(req.query.depth) || 0; // 0 = links only, 1 = partial, 2 = full content
-    const maxFetch = parseInt(req.query.limit) || CONFIG.maxArticles;
+    // 3. Limit articles
+    const maxFetch = Math.min(parseInt(limit) || NYT_MAX_ARTICLES, articleLinks.length);
+    const articlesToFetch = articleLinks.slice(0, maxFetch);
 
     let results = [];
     let fetchCount = 0;
+    let failedCount = 0;
 
-    for (const article of articles) {
-      if (fetchCount >= maxFetch) break;
-      if (depth === 0) {
-        // Just return the article metadata
-        results.push(article);
-      } else {
-        // Fetch article content
-        console.log(`📄 Fetching article ${fetchCount + 1}/${Math.min(articles.length, maxFetch)}: ${article.headline.slice(0, 40)}...`);
+    // 4. Fetch article content based on depth
+    if (parseInt(depth) === 0) {
+      // Links only
+      results = articlesToFetch;
+    } else {
+      // Fetch content
+      for (const article of articlesToFetch) {
+        fetchCount++;
+        log(`📄 Fetching article ${fetchCount}/${articlesToFetch.length}: ${article.headline.slice(0, 40)}...`, "fetch");
         
         const articleHtml = await fetchHTML(article.url);
         
         if (articleHtml) {
           const content = extractArticleContent(articleHtml, article.url);
-          results.push({
-            ...article,
-            content
-          });
+          
+          if (parseInt(depth) === 1) {
+            // Partial: include preview and metadata
+            results.push({
+              ...article,
+              content: {
+                headline: content.headline,
+                byline: content.byline,
+                publishedDate: content.publishedDate,
+                wordCount: content.wordCount,
+                contentPreview: content.contentPreview,
+                imageUrl: content.imageUrl,
+                imageCaption: content.imageCaption,
+                paragraphCount: content.paragraphs.length
+              }
+            });
+          } else {
+            // Full: include all content
+            results.push({
+              ...article,
+              content: {
+                headline: content.headline,
+                byline: content.byline,
+                publishedDate: content.publishedDate,
+                fullText: content.fullText,
+                paragraphs: content.paragraphs,
+                wordCount: content.wordCount,
+                imageUrl: content.imageUrl,
+                imageCaption: content.imageCaption
+              }
+            });
+          }
         } else {
+          failedCount++;
           results.push({
             ...article,
-            content: { error: 'Failed to fetch article content' }
+            error: "Failed to fetch article content"
           });
         }
         
-        fetchCount++;
-        await delay(CONFIG.delayBetweenRequests);
+        // Delay between requests to avoid rate limiting
+        if (fetchCount < articlesToFetch.length) {
+          await sleep(NYT_DELAY_BETWEEN_REQUESTS);
+        }
       }
     }
 
-    // 4. Send response
+    const elapsedTime = Date.now() - startTime;
+
+    // 5. Send response
     res.json({
       success: true,
       timestamp: new Date().toISOString(),
-      totalFound: articles.length,
+      elapsedTime: `${elapsedTime}ms`,
+      totalFound: articleLinks.length,
       totalFetched: results.length,
-      depth: depth === 0 ? 'links_only' : depth === 1 ? 'partial' : 'full',
+      totalFailed: failedCount,
+      depth: parseInt(depth) === 0 ? 'links_only' : parseInt(depth) === 1 ? 'partial' : 'full',
       articles: results
     });
 
+    log(`✅ Completed in ${elapsedTime}ms`, "success");
+
   } catch (error) {
-    console.error('❌ Error:', error);
+    log(`❌ Error: ${error.message}`, "error");
     res.status(500).json({
       success: false,
       error: error.message,
@@ -254,37 +335,117 @@ app.get('/api/nyt', async (req, res) => {
 });
 
 /**
+ * GET /api/nyt/links
+ * Get only article links (fastest)
+ */
+router.get("/links", async (req, res) => {
+  const { limit = NYT_MAX_ARTICLES } = req.query;
+
+  try {
+    const homepageHtml = await fetchHTML(NYT_HOMEPAGE);
+    
+    if (!homepageHtml) {
+      return res.status(500).json({
+        success: false,
+        error: "Failed to fetch NYT homepage"
+      });
+    }
+
+    const articleLinks = extractNYTArticleLinks(homepageHtml);
+    const maxFetch = Math.min(parseInt(limit) || NYT_MAX_ARTICLES, articleLinks.length);
+
+    res.json({
+      success: true,
+      timestamp: new Date().toISOString(),
+      totalFound: articleLinks.length,
+      totalReturned: maxFetch,
+      articles: articleLinks.slice(0, maxFetch)
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/nyt/article
+ * Fetch a single article by URL
+ * 
+ * Query params:
+ * - url: full NYT article URL (required)
+ */
+router.get("/article", async (req, res) => {
+  const { url } = req.query;
+
+  if (!url) {
+    return res.status(400).json({
+      success: false,
+      error: "URL parameter is required"
+    });
+  }
+
+  // Validate URL
+  try {
+    new URL(url);
+  } catch {
+    return res.status(400).json({
+      success: false,
+      error: "Invalid URL format"
+    });
+  }
+
+  try {
+    log(`📄 Fetching single article: ${url}`, "fetch");
+    const articleHtml = await fetchHTML(url);
+    
+    if (!articleHtml) {
+      return res.status(500).json({
+        success: false,
+        error: "Failed to fetch article"
+      });
+    }
+
+    const content = extractArticleContent(articleHtml, url);
+
+    res.json({
+      success: true,
+      timestamp: new Date().toISOString(),
+      article: {
+        url: url,
+        ...content
+      }
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/nyt/health
  * Health check endpoint
  */
-app.get('/health', (req, res) => {
+router.get("/health", (req, res) => {
   res.json({
-    status: 'healthy',
+    status: "healthy",
+    service: "NYT Scraper API",
     timestamp: new Date().toISOString(),
     config: {
-      maxArticles: CONFIG.maxArticles,
-      timeout: CONFIG.timeout,
-      delay: CONFIG.delayBetweenRequests
+      maxArticles: NYT_MAX_ARTICLES,
+      delay: NYT_DELAY_BETWEEN_REQUESTS,
+      maxRetries: MAX_RETRIES
     }
   });
 });
 
-/**
- * Start server
- */
-app.listen(PORT, () => {
-  console.log(`
-╔══════════════════════════════════════════╗
-║  📰 NYT Scraper API                      ║
-║  Running on http://localhost:${PORT}       ║
-║                                          ║
-║  Endpoints:                              ║
-║  - GET /api/nyt                         ║
-║    Query params:                        ║
-║    ?depth=0|1|2  (default: 0)           ║
-║    ?limit=5      (max articles)         ║
-║  - GET /health                          ║
-╚══════════════════════════════════════════╝
-  `);
-});
+// ============================================
+// EXPORT ROUTER
+// ============================================
 
-module.exports = app;
+export default router;
