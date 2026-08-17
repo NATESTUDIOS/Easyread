@@ -102,11 +102,11 @@
             --glass-border: 1px solid rgba(255, 255, 255, 0.09) !important;
             --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.05) !important;
             --glass-shadow: 0 16px 40px rgba(0, 0, 0, 0.5) !important;
-            --mode-bg: rgba(255, 255, 255, 0.06);
-            --mode-bg-hover: rgba(255, 255, 255, 0.11);
-            --divider: rgba(255, 255, 255, 0.07);
-            --shimmer-base: rgba(255, 255, 255, 0.04);
-            --shimmer-highlight: rgba(255, 255, 255, 0.09);
+            --mode-bg: rgba(255, 255, 255, 0.06) !important;
+            --mode-bg-hover: rgba(255, 255, 255, 0.11) !important;
+            --divider: rgba(255, 255, 255, 0.07) !important;
+            --shimmer-base: rgba(255, 255, 255, 0.04) !important;
+            --shimmer-highlight: rgba(255, 255, 255, 0.09) !important;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -696,7 +696,7 @@
                         </div>
                         <div class="settings-info">
                             <div class="settings-label">Default Perspective</div>
-                            <div class="settings-sub" id="currentProfileLabel">Loading...</div>
+                            <div class="settings-sub" id="currentProfileLabel">Everyday Life</div>
                         </div>
                         <div class="settings-arrow">›</div>
                     </div>
@@ -775,7 +775,7 @@
     </div>
 
     <script>
-        const API_BASE_URL = '/api';
+        const API_BASE_URL = window.location.origin.includes('localhost') ? '/api' : 'https://easytoread.vercel.app/api';
 
         const AVATAR_GRADIENTS = [
             'linear-gradient(135deg, #ff416c, #ff4b2b)',
@@ -887,13 +887,13 @@
         function showPersonaShimmers() {
             const container = document.getElementById('profileOptionsContainer');
             container.innerHTML = `
-                <div class="skeleton" style="height: 52px; width: 100%; border-radius: 16px; margin-bottom: 8px;"></div>
-                <div class="skeleton" style="height: 52px; width: 100%; border-radius: 16px; margin-bottom: 8px;"></div>
-                <div class="skeleton" style="height: 52px; width: 100%; border-radius: 16px;"></div>
+                <div class="skeleton" style="height: 50px; width: 100%; border-radius: 14px; margin-bottom: 8px;"></div>
+                <div class="skeleton" style="height: 50px; width: 100%; border-radius: 14px; margin-bottom: 8px;"></div>
+                <div class="skeleton" style="height: 50px; width: 100%; border-radius: 14px;"></div>
             `;
         }
 
-        // ─── 100% DYNAMIC PERSONAS WITH COLLAPSIBLE DESCRIPTIONS ───
+        // ─── DYNAMIC PERSONAS WITH COLLAPSIBLE DESCRIPTIONS ───
         let preferredProfileId = localStorage.getItem('easyread-profile-id') || '1';
         let availableProfiles = [];
 
@@ -903,47 +903,35 @@
 
             try {
                 let data = null;
-                // Query dynamic backend endpoints
+                // Try primary endpoint with fallback
                 try {
-                    const res = await fetch(`${API_BASE_URL}/profiles?action=list`);
+                    const res = await fetch(`${API_BASE_URL}/profile?action=list`);
                     if (res.ok) data = await res.json();
                 } catch {
-                    const res2 = await fetch(`${API_BASE_URL}/profile?action=list`);
+                    const res2 = await fetch(`${API_BASE_URL}/profiles?action=list`);
                     if (res2.ok) data = await res2.json();
                 }
 
-                if (!data) {
-                    const res3 = await fetch(`${API_BASE_URL}/profiles`);
-                    if (res3.ok) data = await res3.json();
-                }
-
                 availableProfiles = Array.isArray(data) ? data : (data?.profiles || []);
-                
-                if (!availableProfiles || availableProfiles.length === 0) {
-                    throw new Error('No perspectives available in database');
-                }
+                if (!availableProfiles.length) throw new Error('No personas');
 
-                // Cache dynamic records for offline resilience
                 localStorage.setItem('easyread_cached_personas', JSON.stringify(availableProfiles));
                 renderPersonasModal();
             } catch (err) {
-                console.warn('[Profile] Failed to fetch dynamic perspectives, checking cache:', err);
+                // Fallback to cache or standard personas
                 try {
                     availableProfiles = JSON.parse(localStorage.getItem('easyread_cached_personas') || '[]');
-                } catch { availableProfiles = []; }
+                } catch {}
 
-                if (availableProfiles.length > 0) {
-                    renderPersonasModal();
-                } else {
-                    container.innerHTML = `
-                        <div class="empty-placeholder" style="padding: 1.5rem 1rem;">
-                            <p style="color:var(--text-secondary); font-size:0.84rem; margin-bottom:10px;">Failed to load perspectives from server.</p>
-                            <button type="button" class="btn btn-primary" style="padding:6px 14px; font-size:0.75rem;" onclick="loadProfilePerspectives()">Retry</button>
-                        </div>
-                    `;
-                    const currentProfileLabel = document.getElementById('currentProfileLabel');
-                    if (currentProfileLabel) currentProfileLabel.textContent = 'Unavailable';
+                if (!availableProfiles.length) {
+                    availableProfiles = [
+                        { profile_id: 1, name: 'Everyday Life', description: 'Uses relatable real-world situations like cooking, shopping, and commuting to explain complex concepts intuitively.' },
+                        { profile_id: 2, name: 'Football', description: 'Explains concepts using match tactics, pitch formations, and team strategies.' },
+                        { profile_id: 3, name: 'Gaming', description: 'Uses RPG tropes, leveling up, boss fights, and game mechanics to make concepts fun.' },
+                        { profile_id: 6, name: 'Developer', description: 'Uses code, software architecture, APIs, and data structures to explain abstract ideas.' }
+                    ];
                 }
+                renderPersonasModal();
             }
         }
 
@@ -988,15 +976,15 @@
             preferredProfileId = String(profileId);
             localStorage.setItem('easyread-profile-id', preferredProfileId);
 
-            const active = availableProfiles.find(p => String(p.profile_id) === preferredProfileId) || availableProfiles[0];
+            const active = availableProfiles.find(p => String(p.profile_id) === preferredProfileId) || { name: 'Everyday Life' };
             
             const currentProfileLabel = document.getElementById('currentProfileLabel');
-            if (currentProfileLabel && active) currentProfileLabel.textContent = active.name;
+            if (currentProfileLabel) currentProfileLabel.textContent = active.name;
 
             const headerBadgeText = document.getElementById('headerBadgeText');
-            if (headerBadgeText && active) headerBadgeText.textContent = active.name;
+            if (headerBadgeText) headerBadgeText.textContent = active.name;
 
-            // Sync active visual indicators
+            // Sync UI active indicators
             document.querySelectorAll('#profileDialog .persona-collapsible-item').forEach(item => {
                 const id = item.id.replace('p-item-', '');
                 item.classList.toggle('active', id === preferredProfileId);
@@ -1209,7 +1197,7 @@
                 // 3. Fetch Saved Bookmarks (with endpoint fallback)
                 let bookmarksData = [];
                 try {
-                    const bmRes = await fetch(`${API_BASE_URL}/articles?action=bookmarks&user_id=${encodeURIComponent(userId)}`, {
+                    const bmRes = await fetch(`${API_BASE_URL}/view?action=bookmarks&user_id=${encodeURIComponent(userId)}`, {
                         headers: { 'x-user-id': userId, 'x-session-token': sessionToken || '' }
                     });
                     if (bmRes.ok) {
@@ -1218,7 +1206,7 @@
                     }
                 } catch {
                     try {
-                        const bmRes2 = await fetch(`${API_BASE_URL}/view?action=bookmarks&user_id=${encodeURIComponent(userId)}`, {
+                        const bmRes2 = await fetch(`${API_BASE_URL}/articles?action=bookmarks&user_id=${encodeURIComponent(userId)}`, {
                             headers: { 'x-user-id': userId, 'x-session-token': sessionToken || '' }
                         });
                         if (bmRes2.ok) {
@@ -1262,7 +1250,7 @@
                 const domain = article.source_domain || 'EasyRead';
                 
                 list.innerHTML += `
-                    <div class="mini-card" onclick="openArticle('${escapeHtml(article.slug || '')}', '${articleId}')">
+                    <div class="mini-card" onclick="openArticle('${article.slug || ''}', '${articleId}')">
                         <div class="mini-icon">
                             <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                         </div>
@@ -1300,7 +1288,7 @@
                 const domain = article.source_domain || 'EasyRead';
                 
                 list.innerHTML += `
-                    <div class="saved-card" onclick="openArticle('${escapeHtml(article.slug || '')}', '${articleId}')">
+                    <div class="saved-card" onclick="openArticle('${article.slug || ''}', '${articleId}')">
                         <div class="saved-dot" style="background: ${getDeterministicGradient(article.canonical_title || article.title || 'Saved')}">
                             <svg viewBox="0 0 24 24" style="stroke:#fff;"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
                         </div>
