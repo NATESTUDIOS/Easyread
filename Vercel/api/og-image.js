@@ -1,5 +1,5 @@
 // api/og-image.js
-// EasyRead OG Image Generator - Matches the app's card design
+// EasyRead OG Image - Clean, Minimal, GitHub-style
 
 export const config = {
   runtime: 'edge',
@@ -10,20 +10,18 @@ export default async function handler(req) {
     const { searchParams } = new URL(req.url);
     
     const title = searchParams.get('title') || 'Understanding Made Easy';
-    const description = searchParams.get('description') || 'Explained in a way only you understand';
+    const description = searchParams.get('description') || '';
     const domain = searchParams.get('domain') || 'easytoread.vercel.app';
-    const category = searchParams.get('category') || 'Learning';
+    const category = searchParams.get('category') || 'Article';
     const readTime = searchParams.get('readTime') || '5 min read';
-    const views = searchParams.get('views') || '1.2k';
     const theme = searchParams.get('theme') || 'dark';
     
-    const svg = generateCardStyleOG({
-      title: title.substring(0, 80),
-      description: description.substring(0, 100),
+    const svg = generateGitHubStyleOG({
+      title: title.substring(0, 70),
+      description: description.substring(0, 80),
       domain,
       category,
       readTime,
-      views,
       theme
     });
     
@@ -39,166 +37,140 @@ export default async function handler(req) {
   }
 }
 
-function generateCardStyleOG({ title, description, domain, category, readTime, views, theme }) {
+function generateGitHubStyleOG({ title, description, domain, category, readTime, theme }) {
   const isDark = theme !== 'light';
   
-  // Beautiful card-like gradient backgrounds
-  const gradients = [
-    ['#1a1a2e', '#16213e', '#0f3460'], // Deep blue
-    ['#2c1a1a', '#1a1a2e', '#16213e'], // Red-purple
-    ['#1b2838', '#101820', '#0f3460'], // Ocean
-    ['#1e3a2a', '#0f2017', '#16213e'], // Forest
-    ['#2d1b2e', '#170d18', '#1a1a2e'], // Purple
-    ['#2a2015', '#140f0a', '#16213e'], // Warm
-  ];
-  
-  // Pick gradient based on title hash
-  const hash = title.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const gradient = gradients[hash % gradients.length];
-  
+  // GitHub-style colors - clean, minimal
   const colors = {
-    text: '#ffffff',
-    textSecondary: 'rgba(255,255,255,0.75)',
-    textMuted: 'rgba(255,255,255,0.5)',
+    bg: isDark ? '#0d1117' : '#ffffff',
+    cardBg: isDark ? '#161b22' : '#f6f8fa',
+    border: isDark ? '#30363d' : '#d0d7de',
+    text: isDark ? '#c9d1d9' : '#24292f',
+    textSecondary: isDark ? '#8b949e' : '#57606a',
     accent: '#f59847',
-    accentLight: 'rgba(245,152,71,0.15)',
-    border: 'rgba(255,255,255,0.08)',
-    borderSubtle: 'rgba(255,255,255,0.04)',
-    tagBg: 'rgba(255,255,255,0.06)',
-    tagText: 'rgba(255,255,255,0.7)',
+    accent2: '#ffd700',
+    blue: '#58a6ff',
+    green: '#3fb950',
   };
   
-  const titleLines = wrapText(title, 30);
+  const titleLines = wrapText(title, 35);
   
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="cardBg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:${gradient[0]}"/>
-      <stop offset="50%" style="stop-color:${gradient[1]}"/>
-      <stop offset="100%" style="stop-color:${gradient[2]}"/>
-    </linearGradient>
-    
-    <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" style="stop-color:#f59847"/>
       <stop offset="100%" style="stop-color:#ffd700"/>
     </linearGradient>
-    
-    <radialGradient id="glowTop" cx="50%" cy="0%" r="60%">
-      <stop offset="0%" style="stop-color:#f59847;stop-opacity:0.08"/>
-      <stop offset="100%" style="stop-color:#f59847;stop-opacity:0"/>
-    </radialGradient>
-    
-    <radialGradient id="glowBottom" cx="50%" cy="100%" r="50%">
-      <stop offset="0%" style="stop-color:#ff6b6b;stop-opacity:0.06"/>
-      <stop offset="100%" style="stop-color:#ff6b6b;stop-opacity:0"/>
-    </radialGradient>
-    
-    <filter id="cardShadow">
-      <feDropShadow dx="0" dy="8" stdDeviation="24" flood-opacity="0.3"/>
-    </filter>
-    
-    <filter id="textShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.2"/>
-    </filter>
   </defs>
   
-  <!-- Background -->
-  <rect width="1200" height="630" fill="${gradient[0]}"/>
-  <rect width="1200" height="630" fill="url(#cardBg)"/>
-  <rect width="1200" height="630" fill="url(#glowTop)"/>
-  <rect width="1200" height="630" fill="url(#glowBottom)"/>
+  <!-- Main Background -->
+  <rect width="1200" height="630" fill="${colors.bg}"/>
   
-  <!-- Subtle pattern overlay -->
-  <g opacity="0.02">
-    ${generatePattern()}
-  </g>
+  <!-- Subtle border -->
+  <rect x="1" y="1" width="1198" height="628" rx="12" fill="none" stroke="${colors.border}" stroke-width="1"/>
   
-  <!-- Main Card Container -->
-  <g filter="url(#cardShadow)">
-    <rect x="60" y="40" width="1080" height="550" rx="28" fill="rgba(255,255,255,0.03)" stroke="${colors.border}" stroke-width="1"/>
-    <rect x="60" y="40" width="1080" height="550" rx="28" fill="none" stroke="rgba(255,255,255,0.02)" stroke-width="8"/>
-  </g>
+  <!-- ===== HEADER BAR ===== -->
+  <!-- Top bar background -->
+  <rect x="0" y="0" width="1200" height="70" fill="${isDark ? '#010409' : '#f6f8fa'}" opacity="0.8"/>
+  <line x1="0" y1="70" x2="1200" y2="70" stroke="${colors.border}" stroke-width="1"/>
   
-  <!-- ===== HEADER INSIDE CARD ===== -->
-  <g transform="translate(100, 80)">
-    <!-- Avatar/Icon -->
-    <rect width="48" height="48" rx="14" fill="url(#brandGrad)"/>
-    <svg x="12" y="12" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- EasyRead Logo -->
+  <g transform="translate(40, 18)">
+    <!-- Book icon -->
+    <rect width="34" height="34" rx="9" fill="url(#brandGrad)"/>
+    <svg x="7" y="7" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
       <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
     </svg>
     
-    <!-- Brand Info -->
-    <text x="64" y="24" font-family="'Segoe UI', Arial, sans-serif" font-size="22" font-weight="bold" fill="#ffffff">
-      Easy<span fill="#f59847">Read</span>
+    <!-- EasyRead text -->
+    <text x="46" y="23" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="700" fill="${colors.text}">
+      Easy<span fill="${colors.accent}">Read</span>
     </text>
-    <text x="64" y="42" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="${colors.textMuted}" letter-spacing="1">
-      YOUR FRIEND WHO MAKES YOU UNDERSTAND
-    </text>
-    
-    <!-- Category Badge -->
-    <g transform="translate(880, 8)">
-      <rect width="${Math.min(category.length * 10 + 40, 200)}" height="32" rx="16" fill="${colors.accentLight}" stroke="rgba(245,152,71,0.3)" stroke-width="1"/>
-      <circle cx="16" cy="16" r="4" fill="#f59847"/>
-      <text x="28" y="21" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="600" fill="#f59847" letter-spacing="0.5">
-        ${category.toUpperCase()}
-      </text>
-    </g>
   </g>
   
-  <!-- ===== TITLE SECTION ===== -->
-  <g transform="translate(100, 180)">
+  <!-- Nav items -->
+  <g transform="translate(250, 26)" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="600">
+    <text x="0" y="0" fill="${colors.text}">Articles</text>
+    <text x="80" y="0" fill="${colors.textSecondary}">Categories</text>
+    <text x="175" y="0" fill="${colors.textSecondary}">About</text>
+  </g>
+  
+  <!-- Search bar style -->
+  <g transform="translate(880, 20)">
+    <rect width="180" height="30" rx="6" fill="${colors.cardBg}" stroke="${colors.border}" stroke-width="1"/>
+    <circle cx="15" cy="15" r="5" fill="none" stroke="${colors.textSecondary}" stroke-width="1.5"/>
+    <line x1="19" y1="19" x2="24" y2="24" stroke="${colors.textSecondary}" stroke-width="1.5"/>
+    <text x="32" y="20" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="${colors.textSecondary}">Search</text>
+  </g>
+  
+  <!-- ===== CATEGORY BADGE ===== -->
+  <g transform="translate(60, 120)">
+    <rect width="${Math.min(category.length * 9 + 45, 180)}" height="32" rx="16" fill="${isDark ? 'rgba(245,152,71,0.1)' : 'rgba(245,152,71,0.08)'}" stroke="rgba(245,152,71,0.3)" stroke-width="1"/>
+    <circle cx="16" cy="16" r="4" fill="${colors.accent}"/>
+    <text x="28" y="21" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="600" fill="${colors.accent}">
+      ${category.toUpperCase()}
+    </text>
+  </g>
+  
+  <!-- ===== TITLE ===== -->
+  <g transform="translate(60, 190)">
     ${titleLines.map((line, i) => `
-      <text x="0" y="${i * 58}" font-family="'Segoe UI', Arial, sans-serif" font-size="46" font-weight="bold" fill="${colors.text}" filter="url(#textShadow)">
+      <text x="0" y="${i * 54}" font-family="'Segoe UI', Arial, sans-serif" font-size="42" font-weight="700" fill="${colors.text}">
         ${escapeXml(line)}
       </text>
     `).join('')}
   </g>
   
   <!-- ===== DESCRIPTION ===== -->
-  <g transform="translate(100, ${180 + titleLines.length * 58 + 15})">
-    <text font-family="'Segoe UI', Arial, sans-serif" font-size="18" fill="${colors.textSecondary}" line-height="1.5">
+  ${description ? `
+  <g transform="translate(60, ${190 + titleLines.length * 54 + 20})">
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="17" fill="${colors.textSecondary}">
       ${escapeXml(description)}
     </text>
   </g>
+  ` : ''}
   
-  <!-- ===== TAGS ROW ===== -->
-  <g transform="translate(100, 440)">
-    <rect width="120" height="28" rx="14" fill="${colors.tagBg}" stroke="${colors.borderSubtle}" stroke-width="1"/>
-    <text x="60" y="19" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="${colors.tagText}" text-anchor="middle">${readTime}</text>
+  <!-- ===== STATS ROW (GitHub-style) ===== -->
+  <g transform="translate(60, 500)">
+    <!-- Reading time -->
+    <g>
+      <circle cx="10" cy="-10" r="8" fill="none" stroke="${colors.textSecondary}" stroke-width="1.5"/>
+      <polyline points="10,-14 10,-10 13,-7" fill="none" stroke="${colors.textSecondary}" stroke-width="1.5"/>
+      <text x="26" y="-5" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="${colors.textSecondary}">
+        ${readTime}
+      </text>
+    </g>
     
-    <rect x="132" width="100" height="28" rx="14" fill="${colors.tagBg}" stroke="${colors.borderSubtle}" stroke-width="1"/>
-    <text x="182" y="19" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="${colors.tagText}" text-anchor="middle">${views} views</text>
+    <!-- Source -->
+    <g transform="translate(160, 0)">
+      <circle cx="10" cy="-10" r="8" fill="none" stroke="${colors.textSecondary}" stroke-width="1.5"/>
+      <text x="26" y="-5" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="${colors.textSecondary}">
+        ${escapeXml(domain)}
+      </text>
+    </g>
     
-    <rect x="244" width="140" height="28" rx="14" fill="${colors.tagBg}" stroke="${colors.borderSubtle}" stroke-width="1"/>
-    <text x="314" y="19" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="${colors.tagText}" text-anchor="middle">Multiple Perspectives</text>
+    <!-- Perspectives -->
+    <g transform="translate(450, 0)">
+      <circle cx="10" cy="-10" r="8" fill="none" stroke="${colors.green}" stroke-width="1.5"/>
+      <text x="26" y="-5" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="${colors.green}">
+        5 Perspectives
+      </text>
+    </g>
   </g>
   
-  <!-- ===== BOTTOM BAR ===== -->
-  <g transform="translate(100, 530)">
-    <line x1="0" y1="-15" x2="1000" y2="-15" stroke="${colors.border}" stroke-width="1"/>
-    
-    <!-- Avatar stack -->
-    <circle cx="16" cy="0" r="14" fill="#e83e8c" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
-    <text x="16" y="5" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">ER</text>
-    
-    <circle cx="42" cy="0" r="14" fill="#0d6efd" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
-    <text x="42" y="5" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">AI</text>
-    
-    <circle cx="68" cy="0" r="14" fill="#20c997" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
-    <text x="68" y="5" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">⚡</text>
-    
-    <!-- Domain -->
-    <text x="100" y="5" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="${colors.textMuted}">
-      ${escapeXml(domain)}
+  <!-- ===== FOOTER ===== -->
+  <line x1="0" y1="565" x2="1200" y2="565" stroke="${colors.border}" stroke-width="1"/>
+  
+  <g transform="translate(60, 600)">
+    <text font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="${colors.textSecondary}">
+      easytoread.vercel.app
     </text>
     
-    <!-- Open button style -->
-    <g transform="translate(920, -18)">
-      <rect width="80" height="36" rx="12" fill="url(#brandGrad)"/>
-      <text x="40" y="24" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">Read</text>
-    </g>
+    <text x="1080" font-family="'Segoe UI', Arial, sans-serif" font-size="13" fill="${colors.textSecondary}" text-anchor="end">
+      Your friend who makes you understand anything
+    </text>
   </g>
 </svg>`;
 }
@@ -218,18 +190,7 @@ function wrapText(text, maxChars) {
   }
   
   if (currentLine) lines.push(currentLine);
-  return lines.slice(0, 2); // Max 2 lines for title
-}
-
-function generatePattern() {
-  let circles = '';
-  for (let i = 0; i < 60; i++) {
-    const x = (i * 47) % 1200;
-    const y = (i * 73) % 630;
-    const r = 20 + (i * 11) % 60;
-    circles += `<circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="#ffffff" stroke-width="0.5"/>`;
-  }
-  return circles;
+  return lines.slice(0, 2);
 }
 
 function escapeXml(text) {
