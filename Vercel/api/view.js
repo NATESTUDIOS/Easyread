@@ -808,36 +808,30 @@ function renderParsedExplanationToHtml(rawText) {
     if (!trimmed) return '';
 
     if (trimmed.startsWith('### ')) {
-      return `<h3 class="subheading-h3">${escapeHtml(trimmed.replace(/^###\s+/, ''))}</h3>`;
+      return `<h3 class="subheading-h3">${escapeHtml(trimmed.substring(4))}</h3>`;
     }
     if (trimmed.startsWith('## ')) {
-      return `<h2 class="subheading">${escapeHtml(trimmed.replace(/^##\s+/, ''))}</h2>`;
+      return `<h2 class="subheading">${escapeHtml(trimmed.substring(3))}</h2>`;
     }
     if (trimmed.startsWith('# ')) {
-      return `<h2 class="subheading">${escapeHtml(trimmed.replace(/^#\s+/, ''))}</h2>`;
+      return `<h2 class="subheading">${escapeHtml(trimmed.substring(2))}</h2>`;
     }
-
     if (trimmed.startsWith('> ')) {
-      return `<blockquote class="article-quote">${renderMarkdownText(trimmed.replace(/^>\s*/, ''))}</blockquote>`;
+      return `<blockquote class="article-quote">${renderMarkdownText(trimmed.substring(2))}</blockquote>`;
     }
 
-    return formatParagraphOrList(trimmed);
+    const lines = trimmed.split('\n').map(l => l.trim()).filter(Boolean);
+    const isList = lines.every(l => l.startsWith('- ') || l.startsWith('* '));
+
+    if (isList) {
+      const listItems = lines.map(line => {
+        return `<li>${renderMarkdownText(line.replace(/^[-*]\s*/, ''))}</li>`;
+      }).join('');
+      return `<ul class="content-list">${listItems}</ul>`;
+    }
+
+    return `<p>${renderMarkdownText(trimmed)}</p>`;
   }).join('');
-}
-
-function formatParagraphOrList(textBlock) {
-  const lines = textBlock.split('\n').map(l => l.trim()).filter(Boolean);
-  const isList = lines.every(l => l.startsWith('- ') || l.startsWith('* ') || /^\d+\.\s+/.test(l));
-
-  if (isList) {
-    const listItems = lines.map(line => {
-      const formatted = renderMarkdownText(line.replace(/^[-*]\s+|\d+\.\s+/, ''));
-      return `<li>${formatted}</li>`;
-    }).join('');
-    return `<ul class="content-list">${listItems}</ul>`;
-  }
-
-  return `<p>${renderMarkdownText(textBlock)}</p>`;
 }
 
 function renderMarkdownText(text) {
@@ -846,7 +840,6 @@ function renderMarkdownText(text) {
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
     .replace(/__(.*?)__/g, '<u>$1</u>')
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
     .replace(/\n/g, '<br/>');
 }
 
@@ -1323,30 +1316,30 @@ function renderClientExplanationHtml(rawText) {
     text = text.substring(1, text.length - 1).trim();
   }
 
-  var blocks = text.split(/\n\s*\n/);
+  var blocks = text.split(/\\n\\s*\\n/);
   return blocks.map(function(block) {
     var trimmed = block.trim();
     if (!trimmed) return '';
 
-    if (trimmed.startsWith('### ')) {
-      return '<h3 class="subheading-h3">' + escapeHtml(trimmed.replace(/^###\s+/, '')) + '</h3>';
+    if (trimmed.indexOf('### ') === 0) {
+      return '<h3 class="subheading-h3">' + escapeHtml(trimmed.substring(4)) + '</h3>';
     }
-    if (trimmed.startsWith('## ')) {
-      return '<h2 class="subheading">' + escapeHtml(trimmed.replace(/^##\s+/, '')) + '</h2>';
+    if (trimmed.indexOf('## ') === 0) {
+      return '<h2 class="subheading">' + escapeHtml(trimmed.substring(3)) + '</h2>';
     }
-    if (trimmed.startsWith('# ')) {
-      return '<h2 class="subheading">' + escapeHtml(trimmed.replace(/^#\s+/, '')) + '</h2>';
+    if (trimmed.indexOf('# ') === 0) {
+      return '<h2 class="subheading">' + escapeHtml(trimmed.substring(2)) + '</h2>';
     }
-    if (trimmed.startsWith('> ')) {
-      return '<blockquote class="article-quote">' + formatMarkdownClient(trimmed.replace(/^>\s*/, '')) + '</blockquote>';
+    if (trimmed.indexOf('> ') === 0) {
+      return '<blockquote class="article-quote">' + formatMarkdownClient(trimmed.substring(2)) + '</blockquote>';
     }
 
-    var lines = trimmed.split('\n').map(function(l) { return l.trim(); }).filter(Boolean);
-    var isList = lines.every(function(l) { return l.startsWith('- ') || l.startsWith('* ') || /^\d+\.\s+/.test(l); });
+    var lines = trimmed.split('\\n').map(function(l) { return l.trim(); }).filter(Boolean);
+    var isList = lines.every(function(l) { return l.indexOf('- ') === 0 || l.indexOf('* ') === 0; });
 
     if (isList) {
       var listItems = lines.map(function(line) {
-        return '<li>' + formatMarkdownClient(line.replace(/^[-*]\s+|\d+\.\s+/, '')) + '</li>';
+        return '<li>' + formatMarkdownClient(line.replace(/^[-*]\\s*/, '')) + '</li>';
       }).join('');
       return '<ul class="content-list">' + listItems + '</ul>';
     }
@@ -1358,11 +1351,10 @@ function renderClientExplanationHtml(rawText) {
 function formatMarkdownClient(text) {
   if (!text) return '';
   return escapeHtml(text)
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>')
+    .replace(/\\*(.*?)\\*/g, '<em>$1</em>')
     .replace(/__(.*?)__/g, '<u>$1</u>')
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/\n/g, '<br/>');
+    .replace(/\\n/g, '<br/>');
 }
 
 function escapeHtml(t) {
@@ -1644,7 +1636,6 @@ body {
   padding: 12px 16px; border-radius: 0 12px 12px 0; margin: 1.25rem 0;
   font-style: italic; color: var(--text-main);
 }
-code { background: var(--mode-bg-hover); padding: 2px 6px; border-radius: 6px; font-family: monospace; font-size: 0.9em; }
 
 /* ─── LIVE GENERATION TIMER CARD ─── */
 .generation-timer-card { padding: 24px 20px; text-align: center; margin: 1.2rem 0; border: 1px solid var(--accent-glow); }
