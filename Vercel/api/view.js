@@ -499,7 +499,7 @@ function buildArticleHTML({
     </div>
   </div>
 
-  <!-- Persona Selection Modal (When > 4 profiles exist) -->
+  <!-- Persona Selection Modal -->
   <div class="modal-overlay" id="personasModal">
     <div class="glass-modal personas-modal-card">
       <button type="button" class="modal-close-btn" onclick="closePersonasModal()">✕</button>
@@ -792,7 +792,7 @@ function buildSummaryHTML(article, defaultExplanation) {
 }
 
 // ============================================
-// CLEAN MARKDOWN & ARTICLE PARSER
+// CLEAN ACCORDION & ARTICLE PARSER
 // ============================================
 function renderParsedExplanationToHtml(rawText) {
   if (!rawText) return '<p>No explanation content available.</p>';
@@ -803,35 +803,78 @@ function renderParsedExplanationToHtml(rawText) {
   }
 
   const blocks = text.split(/\n\s*\n/);
-  return blocks.map(block => {
+  const sections = [];
+  let currentSection = { heading: null, content: [] };
+
+  blocks.forEach((block) => {
     const trimmed = block.trim();
-    if (!trimmed) return '';
+    if (!trimmed) return;
 
-    if (trimmed.startsWith('### ')) {
-      return `<h3 class="subheading-h3">${escapeHtml(trimmed.substring(4))}</h3>`;
+    const isHeading = trimmed.startsWith('## ') || trimmed.startsWith('# ') || trimmed.startsWith('### ');
+
+    if (isHeading) {
+      if (currentSection.content.length > 0 || currentSection.heading) {
+        sections.push(currentSection);
+      }
+      currentSection = {
+        heading: trimmed.replace(/^#+\s*/, ''),
+        content: []
+      };
+    } else {
+      currentSection.content.push(trimmed);
     }
-    if (trimmed.startsWith('## ')) {
-      return `<h2 class="subheading">${escapeHtml(trimmed.substring(3))}</h2>`;
-    }
-    if (trimmed.startsWith('# ')) {
-      return `<h2 class="subheading">${escapeHtml(trimmed.substring(2))}</h2>`;
-    }
-    if (trimmed.startsWith('> ')) {
-      return `<blockquote class="article-quote">${renderMarkdownText(trimmed.substring(2))}</blockquote>`;
+  });
+
+  if (currentSection.content.length > 0 || currentSection.heading) {
+    sections.push(currentSection);
+  }
+
+  return sections.map((sec, idx) => {
+    const isFirst = idx === 0;
+    const bodyHtml = sec.content.map(c => formatParagraphOrList(c)).join('');
+
+    if (isFirst) {
+      return `
+        <div class="explanation-section first-section">
+          ${sec.heading ? `<h2 class="subheading">${escapeHtml(sec.heading)}</h2>` : ''}
+          <div class="section-body">${bodyHtml}</div>
+        </div>
+      `;
     }
 
-    const lines = trimmed.split('\n').map(l => l.trim()).filter(Boolean);
-    const isList = lines.every(l => l.startsWith('- ') || l.startsWith('* '));
-
-    if (isList) {
-      const listItems = lines.map(line => {
-        return `<li>${renderMarkdownText(line.replace(/^[-*]\s*/, ''))}</li>`;
-      }).join('');
-      return `<ul class="content-list">${listItems}</ul>`;
-    }
-
-    return `<p>${renderMarkdownText(trimmed)}</p>`;
+    return `
+      <div class="accordion-section glass-card collapsed" id="acc-sec-${idx}">
+        <div class="accordion-header" data-target="acc-sec-${idx}" onclick="toggleSectionAccordion(this.dataset.target)">
+          <h3 class="accordion-title">${escapeHtml(sec.heading || `Part ${idx + 1}`)}</h3>
+          <span class="accordion-chevron">
+            <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </div>
+        <div class="accordion-body">
+          ${bodyHtml}
+        </div>
+      </div>
+    `;
   }).join('');
+}
+
+function formatParagraphOrList(textBlock) {
+  const lines = textBlock.split('\n').map(l => l.trim()).filter(Boolean);
+  const isList = lines.every(l => l.startsWith('- ') || l.startsWith('* ') || /^\d+\.\s+/.test(l));
+
+  if (isList) {
+    const listItems = lines.map(line => {
+      const formatted = renderMarkdownText(line.replace(/^[-*]\s+|\d+\.\s+/, ''));
+      return `<li>${formatted}</li>`;
+    }).join('');
+    return `<ul class="content-list">${listItems}</ul>`;
+  }
+
+  if (textBlock.startsWith('> ')) {
+    return `<blockquote class="article-quote">${renderMarkdownText(textBlock.substring(2))}</blockquote>`;
+  }
+
+  return `<p>${renderMarkdownText(textBlock)}</p>`;
 }
 
 function renderMarkdownText(text) {
@@ -840,6 +883,7 @@ function renderMarkdownText(text) {
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
     .replace(/__(.*?)__/g, '<u>$1</u>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
     .replace(/\n/g, '<br/>');
 }
 
@@ -894,14 +938,14 @@ function syncClientState() {
       if (display) display.textContent = currentCredits.toFixed(1);
     }
 
-    // 1. Record reading history on client load
+    // Record reading history on client
     fetch('/api/articles?action=track-view', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-user-id': userId },
       body: JSON.stringify({ article_id: currentArticleId, user_id: userId })
     }).catch(function(){});
 
-    // 2. Sync live bookmark status
+    // Sync live bookmark status
     fetch('/api/view?action=bookmark-status&article_id=' + currentArticleId, {
       headers: { 'x-user-id': userId }
     })
@@ -916,6 +960,11 @@ function syncClientState() {
 }
 
 syncClientState();
+
+window.toggleSectionAccordion = function(id) {
+  var sec = document.getElementById(id);
+  if (sec) sec.classList.toggle('collapsed');
+};
 
 window.toggleDeepDiveAccordion = function(id) {
   var sec = document.getElementById(id);
@@ -971,7 +1020,7 @@ window.closePersonasModal = function() {
 window.selectPersonaFromModal = function(profileId) {
   closePersonasModal();
   var targetPill = document.querySelector('.persona-pill[data-profile-id="' + profileId + '"]');
-  switchProfile(profileId, targetPill);
+  switchProfile(parseInt(profileId), targetPill);
 };
 
 // ─── RATING ENGINE & AUTO POPUP ───
@@ -1141,7 +1190,7 @@ GenerationTimer.prototype.updateUI = function() {
   }
 };
 
-// ─── SWITCH PERSPECTIVES ───
+// ─── SWITCH PERSPECTIVES (DYNAMIC CLIENT RENDER) ───
 window.switchProfile = function(profileId, btnElem) {
   document.querySelectorAll('.persona-pill').forEach(function(p) { p.classList.remove('active'); });
   if (btnElem) {
@@ -1165,13 +1214,18 @@ window.switchProfile = function(profileId, btnElem) {
   var textElem = document.getElementById('articleText');
   var timerLoader = document.getElementById('contentTimerLoader');
 
-  if (textElem) textElem.style.display = 'none';
   if (timerLoader) timerLoader.style.display = 'none';
 
-  if (explanation) {
+  if (explanation && explanation.content) {
     currentViewId = explanation.view_id;
     textElem.innerHTML = renderClientExplanationHtml(explanation.content);
     textElem.style.display = 'block';
+
+    // Update Key Takeaway box dynamically if summary is available
+    var summaryBox = document.querySelector('.summary-text');
+    if (summaryBox && explanation.summary) {
+      summaryBox.innerHTML = formatMarkdownClient(explanation.summary);
+    }
   } else {
     textElem.innerHTML = 
       '<div class="no-explanation-box glass-card">' +
@@ -1186,6 +1240,7 @@ window.switchProfile = function(profileId, btnElem) {
   }
 };
 
+// ─── LIVE GENERATE & INSTANT DISPLAY (NO RELOAD BUG) ───
 window.generateExplanation = async function(profileId) {
   if (!isAuthenticated) {
     showLoginModal();
@@ -1208,9 +1263,46 @@ window.generateExplanation = async function(profileId) {
     });
     var data = await res.json();
     timer.stop();
+
     if (data.success) {
-      showToast('Explanation ready!');
-      setTimeout(function() { window.location.reload(); }, 450);
+      if (timerLoader) timerLoader.style.display = 'none';
+
+      // Extract generated payload
+      var newExp = data.explanation || {
+        view_id: data.view_id || (data.explanation && data.explanation.view_id) || Date.now(),
+        profile_id: profileId,
+        content: data.content || (data.explanation && data.explanation.content) || '',
+        summary: data.summary || (data.explanation && data.explanation.summary) || '',
+        title: data.title || ''
+      };
+
+      // Store in memory
+      var existingIndex = -1;
+      for (var i = 0; i < explanationsData.length; i++) {
+        if (explanationsData[i].profile_id === profileId) {
+          existingIndex = i;
+          break;
+        }
+      }
+      if (existingIndex >= 0) {
+        explanationsData[existingIndex] = newExp;
+      } else {
+        explanationsData.push(newExp);
+      }
+
+      currentViewId = newExp.view_id;
+
+      // Render directly into the DOM
+      textElem.innerHTML = renderClientExplanationHtml(newExp.content);
+      textElem.style.display = 'block';
+
+      if (newExp.summary) {
+        var summaryBox = document.querySelector('.summary-text');
+        if (summaryBox) summaryBox.innerHTML = formatMarkdownClient(newExp.summary);
+      }
+
+      var profObj = profilesData.find(function(p) { return p.profile_id === profileId; });
+      showToast('✨ ' + (profObj ? profObj.name : 'Custom') + ' perspective ready!');
     } else {
       if (timerLoader) timerLoader.style.display = 'none';
       if (textElem) textElem.style.display = 'block';
@@ -1308,7 +1400,7 @@ window.submitInlineDeepDive = async function(e) {
   }
 };
 
-// ─── CLIENT-SIDE ARTICLE FORMATTER ───
+// ─── CLIENT-SIDE ARTICLE FORMATTER & ACCORDION PARSER ───
 function renderClientExplanationHtml(rawText) {
   if (!rawText) return '<p>No content available.</p>';
   var text = rawText.trim();
@@ -1317,35 +1409,77 @@ function renderClientExplanationHtml(rawText) {
   }
 
   var blocks = text.split(/\\n\\s*\\n/);
-  return blocks.map(function(block) {
+  var sections = [];
+  var currentSection = { heading: null, content: [] };
+
+  blocks.forEach(function(block) {
     var trimmed = block.trim();
-    if (!trimmed) return '';
+    if (!trimmed) return;
 
-    if (trimmed.indexOf('### ') === 0) {
-      return '<h3 class="subheading-h3">' + escapeHtml(trimmed.substring(4)) + '</h3>';
+    var isHeading = trimmed.indexOf('## ') === 0 || trimmed.indexOf('# ') === 0 || trimmed.indexOf('### ') === 0;
+
+    if (isHeading) {
+      if (currentSection.content.length > 0 || currentSection.heading) {
+        sections.push(currentSection);
+      }
+      currentSection = {
+        heading: trimmed.replace(/^#+\\s*/, ''),
+        content: []
+      };
+    } else {
+      currentSection.content.push(trimmed);
     }
-    if (trimmed.indexOf('## ') === 0) {
-      return '<h2 class="subheading">' + escapeHtml(trimmed.substring(3)) + '</h2>';
-    }
-    if (trimmed.indexOf('# ') === 0) {
-      return '<h2 class="subheading">' + escapeHtml(trimmed.substring(2)) + '</h2>';
-    }
-    if (trimmed.indexOf('> ') === 0) {
-      return '<blockquote class="article-quote">' + formatMarkdownClient(trimmed.substring(2)) + '</blockquote>';
+  });
+
+  if (currentSection.content.length > 0 || currentSection.heading) {
+    sections.push(currentSection);
+  }
+
+  return sections.map(function(sec, idx) {
+    var isFirst = idx === 0;
+    var bodyHtml = sec.content.map(function(c) { return formatParagraphOrListClient(c); }).join('');
+
+    if (isFirst) {
+      return (
+        '<div class="explanation-section first-section">' +
+          (sec.heading ? '<h2 class="subheading">' + escapeHtml(sec.heading) + '</h2>' : '') +
+          '<div class="section-body">' + bodyHtml + '</div>' +
+        '</div>'
+      );
     }
 
-    var lines = trimmed.split('\\n').map(function(l) { return l.trim(); }).filter(Boolean);
-    var isList = lines.every(function(l) { return l.indexOf('- ') === 0 || l.indexOf('* ') === 0; });
-
-    if (isList) {
-      var listItems = lines.map(function(line) {
-        return '<li>' + formatMarkdownClient(line.replace(/^[-*]\\s*/, '')) + '</li>';
-      }).join('');
-      return '<ul class="content-list">' + listItems + '</ul>';
-    }
-
-    return '<p>' + formatMarkdownClient(trimmed) + '</p>';
+    return (
+      '<div class="accordion-section glass-card collapsed" id="acc-sec-' + idx + '">' +
+        '<div class="accordion-header" data-target="acc-sec-' + idx + '" onclick="toggleSectionAccordion(this.dataset.target)">' +
+          '<h3 class="accordion-title">' + escapeHtml(sec.heading || ('Part ' + (idx + 1))) + '</h3>' +
+          '<span class="accordion-chevron">' +
+            '<svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>' +
+          '</span>' +
+        '</div>' +
+        '<div class="accordion-body">' +
+          bodyHtml +
+        '</div>' +
+      '</div>'
+    );
   }).join('');
+}
+
+function formatParagraphOrListClient(textBlock) {
+  var lines = textBlock.split('\\n').map(function(l) { return l.trim(); }).filter(Boolean);
+  var isList = lines.every(function(l) { return l.indexOf('- ') === 0 || l.indexOf('* ') === 0; });
+
+  if (isList) {
+    var listItems = lines.map(function(line) {
+      return '<li>' + formatMarkdownClient(line.replace(/^[-*]\\s*/, '')) + '</li>';
+    }).join('');
+    return '<ul class="content-list">' + listItems + '</ul>';
+  }
+
+  if (textBlock.indexOf('> ') === 0) {
+    return '<blockquote class="article-quote">' + formatMarkdownClient(textBlock.substring(2)) + '</blockquote>';
+  }
+
+  return '<p>' + formatMarkdownClient(textBlock) + '</p>';
 }
 
 function formatMarkdownClient(text) {
@@ -1354,6 +1488,7 @@ function formatMarkdownClient(text) {
     .replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>')
     .replace(/\\*(.*?)\\*/g, '<em>$1</em>')
     .replace(/__(.*?)__/g, '<u>$1</u>')
+    .replace(/\\x60([^\\x60]+)\\x60/g, '<code>$1</code>')
     .replace(/\\n/g, '<br/>');
 }
 
@@ -1624,11 +1759,10 @@ body {
 }
 .guest-signin-btn:hover { background: var(--accent-hover); }
 
-/* ─── ARTICLE TYPOGRAPHY ─── */
+/* ─── ARTICLE TYPOGRAPHY & ACCORDIONS ─── */
 .rich-article-text { font-size: 1rem; line-height: 1.75; color: var(--text-secondary); }
 .rich-article-text p { margin-bottom: 1.25rem; }
 .subheading { font-size: 1.35rem; font-weight: 800; color: var(--text-main); margin-top: 1.6rem; margin-bottom: 0.8rem; letter-spacing: -0.02em; }
-.subheading-h3 { font-size: 1.12rem; font-weight: 700; color: var(--text-main); margin-top: 1.3rem; margin-bottom: 0.6rem; }
 .content-list { padding-left: 1.4rem; margin-bottom: 1.25rem; color: var(--text-secondary); line-height: 1.7; }
 .content-list li { margin-bottom: 0.45rem; }
 .article-quote {
@@ -1636,6 +1770,28 @@ body {
   padding: 12px 16px; border-radius: 0 12px 12px 0; margin: 1.25rem 0;
   font-style: italic; color: var(--text-main);
 }
+code { background: var(--mode-bg-hover); padding: 2px 6px; border-radius: 6px; font-family: monospace; font-size: 0.9em; }
+
+.accordion-section {
+  margin-bottom: 12px; overflow: hidden;
+  border: var(--glass-border); border-radius: 18px;
+  background: var(--card-bg); backdrop-filter: var(--card-blur);
+  -webkit-backdrop-filter: var(--card-blur);
+  box-shadow: var(--glass-shadow); transition: border-color 0.2s;
+}
+.accordion-section:hover { border-color: rgba(245, 152, 71, 0.3); }
+.accordion-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; cursor: pointer; user-select: none;
+}
+.accordion-title { font-size: 0.98rem; font-weight: 700; color: var(--text-main); line-height: 1.35; flex: 1; }
+.accordion-chevron { display: flex; align-items: center; justify-content: center; margin-left: 10px; }
+.accordion-chevron svg { width: 16px; height: 16px; stroke: var(--text-muted); fill: none; stroke-width: 2; transition: transform 0.25s ease; }
+.accordion-section:not(.collapsed) .accordion-chevron svg { transform: rotate(180deg); stroke: var(--accent-color); }
+.accordion-section.collapsed .accordion-chevron svg { transform: rotate(0deg); }
+
+.accordion-body { padding: 0 18px 16px 18px; font-size: 0.95rem; line-height: 1.7; color: var(--text-secondary); }
+.accordion-section.collapsed .accordion-body { display: none; }
 
 /* ─── LIVE GENERATION TIMER CARD ─── */
 .generation-timer-card { padding: 24px 20px; text-align: center; margin: 1.2rem 0; border: 1px solid var(--accent-glow); }
@@ -1682,7 +1838,6 @@ body {
 .dd-title-row { display: flex; align-items: center; gap: 10px; }
 .dd-q-icon svg { width: 18px; height: 18px; stroke: var(--accent-color); fill: none; stroke-width: 2; flex-shrink: 0; }
 .dd-title-row h4 { font-size: 0.92rem; font-weight: 700; color: var(--text-main); }
-.accordion-chevron svg { width: 16px; height: 16px; stroke: var(--text-muted); fill: none; stroke-width: 2; transition: transform 0.25s ease; }
 .deep-dive-accordion.collapsed .accordion-chevron svg { transform: rotate(-90deg); }
 .dd-body { padding: 0 18px 16px 46px; }
 .deep-dive-accordion.collapsed .dd-body { display: none; }
@@ -1757,7 +1912,7 @@ body {
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-/* ─── GLASS MODALS (STRICT display: none WHEN INACTIVE) ─── */
+/* ─── GLASS MODALS ─── */
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,0.65);
   backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
