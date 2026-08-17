@@ -92,7 +92,7 @@ app.use("/api/processor", processorRouter);
 app.use("/api/scraper", scraperRouter);
 
 
-app.use("/", nytRouter);
+app.use("./api/nyt", nytRouter);
 
 // ============================================
 // HEALTH CHECK
