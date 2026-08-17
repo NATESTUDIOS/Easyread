@@ -1,5 +1,5 @@
 // api/og-image.js
-// EasyRead OG Image - Premium Glass Design with Rich Gradients
+// EasyRead OG Image Generator - Premium Glassmorphism Social Card Engine
 
 export const config = {
   runtime: 'edge',
@@ -8,259 +8,301 @@ export const config = {
 export default async function handler(req) {
   try {
     const { searchParams } = new URL(req.url);
-    
-    const title = searchParams.get('title') || 'Understanding Made Easy';
-    const description = searchParams.get('description') || 'Explained in a way only you understand';
+
+    const title = searchParams.get('title') || 'How Marine Propellers Work: Understanding the Wageningen B-Series Model';
+    const description = searchParams.get('description') || searchParams.get('summary') || 'A marine propeller is a screw that pushes water backward to move a ship forward — simple concept, brutal physics.';
     const domain = searchParams.get('domain') || 'easytoread.vercel.app';
-    const category = searchParams.get('category') || 'Learning';
-    const readTime = searchParams.get('readTime') || '5 min read';
-    const views = searchParams.get('views') || '1.2k';
+    const category = searchParams.get('category') || 'Science & Tech';
+    const readTime = searchParams.get('readTime') || '6 min read';
+    const views = searchParams.get('views') || '1.4k';
+    const perspectives = searchParams.get('perspectives') || '6';
     const theme = searchParams.get('theme') || 'dark';
-    
+
     const svg = generatePremiumOG({
-      title: title.substring(0, 80),
-      description: description.substring(0, 100),
+      title,
+      description,
       domain,
       category,
       readTime,
       views,
-      theme
+      perspectives,
+      theme,
     });
-    
+
     return new Response(svg, {
       headers: {
-        'Content-Type': 'image/svg+xml',
-        'Cache-Control': 'public, max-age=3600, s-maxage=86400',
+        'Content-Type': 'image/svg+xml; charset=utf-8',
+        'Cache-Control': 'public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400',
       },
     });
-    
   } catch (error) {
-    return new Response('Failed to generate', { status: 500 });
+    return new Response('Failed to generate Open Graph image', { status: 500 });
   }
 }
 
-function generatePremiumOG({ title, description, domain, category, readTime, views, theme }) {
-  const isDark = theme !== 'light';
-  
-  // Rich gradient palettes
-  const gradients = [
-    { bg: ['#0f0c29', '#302b63', '#24243e'], accent: '#f59847', accent2: '#ffd700' },
-    { bg: ['#1a1a2e', '#16213e', '#0f3460'], accent: '#4ecdc4', accent2: '#45b7d1' },
-    { bg: ['#2c1a1a', '#1a1a2e', '#16213e'], accent: '#ff6b6b', accent2: '#f59847' },
-    { bg: ['#1b2838', '#101820', '#0f3460'], accent: '#5ee7df', accent2: '#b490ca' },
-    { bg: ['#1e3a2a', '#0f2017', '#16213e'], accent: '#7ee8a2', accent2: '#4ecdc4' },
-    { bg: ['#2d1b2e', '#170d18', '#1a1a2e'], accent: '#e0aaff', accent2: '#f59847' },
+function generatePremiumOG({ title, description, domain, category, readTime, views, perspectives, theme }) {
+  // Deterministic dynamic gradient palettes
+  const PALETTES = [
+    { bg: ['#0c0b10', '#18141f', '#09080d'], accent: '#f59847', accent2: '#ffd166', glow: 'rgba(245,152,71,0.22)' }, // Amber Flame (Brand)
+    { bg: ['#080e1a', '#101d36', '#060a14'], accent: '#38bdf8', accent2: '#818cf8', glow: 'rgba(56,189,248,0.22)' }, // Oceanic Sapphire
+    { bg: ['#06130e', '#0d281e', '#040d0a'], accent: '#10b981', accent2: '#6ee7b7', glow: 'rgba(16,185,129,0.22)' }, // Emerald Horizon
+    { bg: ['#140816', '#2b1030', '#0a040b'], accent: '#e879f9', accent2: '#f43f5e', glow: 'rgba(232,121,249,0.22)' }, // Cyber Violet
+    { bg: ['#160b08', '#2e140d', '#0c0503'], accent: '#ff6b6b', accent2: '#f59847', glow: 'rgba(255,107,107,0.22)' }, // Twilight Crimson
+    { bg: ['#081419', '#102a36', '#050c10'], accent: '#2dd4bf', accent2: '#38bdf8', glow: 'rgba(45,212,191,0.22)' }, // Cosmic Cyan
   ];
-  
-  const hash = title.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const grad = gradients[hash % gradients.length];
-  
-  const titleLines = wrapText(title, 28);
-  
+
+  let hash = 0;
+  for (let i = 0; i < title.length; i++) {
+    hash = title.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const pal = PALETTES[Math.abs(hash) % PALETTES.length];
+
+  const titleLines = wrapText(title, 34, 3);
+  const descLines = wrapText(description, 68, 2);
+
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- Rich background gradient -->
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:${grad.bg[0]}"/>
-      <stop offset="50%" style="stop-color:${grad.bg[1]}"/>
-      <stop offset="100%" style="stop-color:${grad.bg[2]}"/>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&amp;family=JetBrains+Mono:wght@600;700&amp;display=swap');
+      
+      .font-sans { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+      .font-mono { font-family: 'JetBrains Mono', monospace; }
+      
+      .title-text {
+        font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+        font-weight: 800;
+        letter-spacing: -0.035em;
+        line-height: 1.15;
+      }
+      .brand-title {
+        font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+      }
+    </style>
+
+    <!-- Canvas Background Gradient -->
+    <linearGradient id="canvasBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="${pal.bg[0]}"/>
+      <stop offset="50%" stop-color="${pal.bg[1]}"/>
+      <stop offset="100%" stop-color="${pal.bg[2]}"/>
     </linearGradient>
-    
-    <!-- Accent gradient -->
-    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:${grad.accent}"/>
-      <stop offset="100%" style="stop-color:${grad.accent2}"/>
+
+    <!-- Brand Accent Gradient -->
+    <linearGradient id="brandAccentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="${pal.accent}"/>
+      <stop offset="100%" stop-color="${pal.accent2}"/>
     </linearGradient>
-    
-    <!-- Glass card gradient -->
-    <linearGradient id="glassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:rgba(255,255,255,0.08)"/>
-      <stop offset="100%" style="stop-color:rgba(255,255,255,0.02)"/>
+
+    <!-- Primary Glass Card Fill -->
+    <linearGradient id="glassCardFill" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgba(255, 255, 255, 0.07)"/>
+      <stop offset="100%" stop-color="rgba(255, 255, 255, 0.02)"/>
     </linearGradient>
-    
-    <!-- Glow effects -->
-    <radialGradient id="glow1" cx="10%" cy="90%" r="40%">
-      <stop offset="0%" style="stop-color:${grad.accent};stop-opacity:0.15"/>
-      <stop offset="100%" style="stop-color:${grad.accent};stop-opacity:0"/>
+
+    <!-- Pill Glass Fill -->
+    <linearGradient id="pillGlass" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgba(255, 255, 255, 0.08)"/>
+      <stop offset="100%" stop-color="rgba(255, 255, 255, 0.03)"/>
+    </linearGradient>
+
+    <!-- Ambient Glow 1 -->
+    <radialGradient id="ambientGlow1" cx="20%" cy="15%" r="65%">
+      <stop offset="0%" stop-color="${pal.accent}" stop-opacity="0.30"/>
+      <stop offset="60%" stop-color="${pal.accent}" stop-opacity="0.04"/>
+      <stop offset="100%" stop-color="${pal.bg[0]}" stop-opacity="0"/>
     </radialGradient>
-    
-    <radialGradient id="glow2" cx="90%" cy="10%" r="35%">
-      <stop offset="0%" style="stop-color:${grad.accent2};stop-opacity:0.12"/>
-      <stop offset="100%" style="stop-color:${grad.accent2};stop-opacity:0"/>
+
+    <!-- Ambient Glow 2 -->
+    <radialGradient id="ambientGlow2" cx="85%" cy="85%" r="55%">
+      <stop offset="0%" stop-color="${pal.accent2}" stop-opacity="0.25"/>
+      <stop offset="60%" stop-color="${pal.accent2}" stop-opacity="0.03"/>
+      <stop offset="100%" stop-color="${pal.bg[2]}" stop-opacity="0"/>
     </radialGradient>
-    
-    <radialGradient id="glow3" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.03"/>
-      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0"/>
-    </radialGradient>
-    
-    <!-- Shadows -->
-    <filter id="softShadow">
-      <feDropShadow dx="0" dy="4" stdDeviation="16" flood-color="#000000" flood-opacity="0.3"/>
+
+    <!-- Drop Shadows -->
+    <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dx="0" dy="20" stdDeviation="30" flood-color="#000000" flood-opacity="0.65"/>
     </filter>
     
-    <filter id="textShadow">
-      <feDropShadow dx="0" dy="1" stdDeviation="3" flood-color="#000000" flood-opacity="0.2"/>
+    <filter id="badgeGlow">
+      <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="${pal.accent}" flood-opacity="0.4"/>
     </filter>
-    
-    <filter id="glassBlur">
-      <feGaussianBlur stdDeviation="2"/>
+
+    <filter id="textGlow">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000000" flood-opacity="0.5"/>
     </filter>
   </defs>
-  
-  <!-- Background layers -->
-  <rect width="1200" height="630" fill="url(#bgGrad)"/>
-  <rect width="1200" height="630" fill="url(#glow1)"/>
-  <rect width="1200" height="630" fill="url(#glow2)"/>
-  <rect width="1200" height="630" fill="url(#glow3)"/>
-  
-  <!-- Decorative gradient orbs -->
-  <circle cx="100" cy="530" r="180" fill="${grad.accent}" opacity="0.08"/>
-  <circle cx="1100" cy="100" r="150" fill="${grad.accent2}" opacity="0.06"/>
-  <circle cx="600" cy="315" r="250" fill="none" stroke="${grad.accent}" stroke-width="1" opacity="0.05"/>
-  
-  <!-- Subtle grid pattern -->
-  <g opacity="0.02">
-    ${generateGrid()}
+
+  <!-- Base Ambient Canvas -->
+  <rect width="1200" height="630" fill="url(#canvasBg)"/>
+  <rect width="1200" height="630" fill="url(#ambientGlow1)"/>
+  <rect width="1200" height="630" fill="url(#ambientGlow2)"/>
+
+  <!-- Decorative Orbit Rings -->
+  <g opacity="0.08" stroke="#ffffff" fill="none">
+    <circle cx="1120" cy="120" r="260" stroke-width="1.5" stroke-dasharray="4 8"/>
+    <circle cx="1120" cy="120" r="180" stroke-width="1"/>
+    <circle cx="100" cy="550" r="220" stroke-width="1.5" stroke-dasharray="6 6"/>
   </g>
-  
-  <!-- Main Glass Card -->
-  <g filter="url(#softShadow)">
-    <rect x="50" y="35" width="1100" height="560" rx="32" fill="url(#glassGrad)" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>
-    
-    <!-- Inner highlight -->
-    <rect x="52" y="37" width="1096" height="556" rx="30" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+
+  <!-- Ambient Light Orbs -->
+  <circle cx="1080" cy="140" r="120" fill="${pal.accent2}" opacity="0.12" filter="url(#cardShadow)"/>
+  <circle cx="140" cy="520" r="140" fill="${pal.accent}" opacity="0.10" filter="url(#cardShadow)"/>
+
+  <!-- MAIN FROSTED GLASS CARD -->
+  <g filter="url(#cardShadow)">
+    <rect x="50" y="40" width="1100" height="550" rx="28" fill="url(#glassCardFill)" stroke="rgba(255, 255, 255, 0.12)" stroke-width="1.5"/>
+    <!-- Inset Top Light Highlight -->
+    <rect x="52" y="42" width="1096" height="546" rx="26" fill="none" stroke="rgba(255, 255, 255, 0.05)" stroke-width="1"/>
   </g>
-  
-  <!-- ===== HEADER ===== -->
-  <g transform="translate(90, 80)">
-    <!-- Logo -->
-    <g filter="url(#softShadow)">
-      <rect width="52" height="52" rx="16" fill="url(#accentGrad)"/>
-      <svg x="13" y="13" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+
+  <!-- ═══════════ TOP HEADER ═══════════ -->
+  <g transform="translate(95, 82)">
+    <!-- Logo Emblem -->
+    <g filter="url(#badgeGlow)">
+      <rect width="48" height="48" rx="15" fill="url(#brandAccentGrad)"/>
+      <svg x="11" y="11" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
         <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-        <path d="M9.5 7h5M9.5 11h5" stroke-width="1.5"/>
+        <line x1="9" y1="7" x2="16" y2="7"/>
+        <line x1="9" y1="11" x2="14" y2="11"/>
       </svg>
     </g>
-    
-    <!-- Brand Name -->
-    <text x="68" y="30" font-family="'Plus Jakarta Sans', 'Segoe UI', Arial, sans-serif" font-size="24" font-weight="800" fill="#ffffff">
-      Easy<span fill="${grad.accent}">Read</span>
+
+    <!-- Brand Typography -->
+    <text x="64" y="28" class="brand-title" font-size="25" fill="#ffffff">
+      Easy<tspan fill="${pal.accent}">Read</tspan>
     </text>
-    
-    <!-- Tagline -->
-    <text x="68" y="48" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="rgba(255,255,255,0.45)" letter-spacing="1.2">
-      YOUR FRIEND WHO MAKES YOU UNDERSTAND
+    <text x="64" y="44" class="font-mono" font-size="10" font-weight="700" fill="rgba(255,255,255,0.45)" letter-spacing="1.5">
+      KNOWLEDGE, SIMPLIFIED
     </text>
+
+    <!-- Category Pill Badge -->
+    <g transform="translate(770, 4)">
+      <rect width="${Math.min(category.length * 11 + 46, 240)}" height="38" rx="19" fill="url(#pillGlass)" stroke="${pal.accent}" stroke-opacity="0.4" stroke-width="1.2"/>
+      <circle cx="18" cy="19" r="4" fill="${pal.accent}" filter="url(#badgeGlow)"/>
+      <text x="30" y="24" class="font-sans" font-size="12" font-weight="700" fill="${pal.accent}" letter-spacing="0.8">
+        ${escapeXml(category.toUpperCase())}
+      </text>
+    </g>
   </g>
-  
-  <!-- Category Badge -->
-  <g transform="translate(90, 155)">
-    <rect width="${Math.min(category.length * 11 + 50, 220)}" height="36" rx="18" fill="rgba(255,255,255,0.05)" stroke="${grad.accent}" stroke-opacity="0.3" stroke-width="1.5"/>
-    <circle cx="18" cy="18" r="4" fill="${grad.accent}"/>
-    <text x="30" y="23" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="600" fill="${grad.accent}" letter-spacing="0.8">
-      ${category.toUpperCase()}
-    </text>
-  </g>
-  
-  <!-- ===== TITLE ===== -->
-  <g transform="translate(90, 230)">
+
+  <!-- ═══════════ MAIN HEADLINE (TITLE) ═══════════ -->
+  <g transform="translate(95, 200)" filter="url(#textGlow)">
     ${titleLines.map((line, i) => `
-      <text x="0" y="${i * 60}" font-family="'Plus Jakarta Sans', 'Segoe UI', Arial, sans-serif" font-size="50" font-weight="800" fill="#ffffff" filter="url(#textShadow)">
+      <text x="0" y="${i * 54}" class="title-text" font-size="44" fill="#ffffff">
         ${escapeXml(line)}
       </text>
     `).join('')}
   </g>
-  
-  <!-- ===== DESCRIPTION ===== -->
-  <g transform="translate(90, ${230 + titleLines.length * 60 + 20})">
-    <!-- Accent line -->
-    <rect x="0" y="-5" width="3" height="50" rx="1.5" fill="url(#accentGrad)"/>
+
+  <!-- ═══════════ DESCRIPTION / TAKEAWAY ═══════════ -->
+  <g transform="translate(95, ${200 + titleLines.length * 54 + 18})">
+    <!-- Left Neon Accent Bar -->
+    <rect x="0" y="2" width="3.5" height="${Math.max(34, descLines.length * 24)}" rx="2" fill="url(#brandAccentGrad)"/>
     
-    <text x="20" y="10" font-family="'Segoe UI', Arial, sans-serif" font-size="17" fill="rgba(255,255,255,0.7)" line-height="1.4">
-      ${escapeXml(description)}
-    </text>
+    ${descLines.map((line, i) => `
+      <text x="18" y="${i * 24 + 18}" class="font-sans" font-size="16.5" font-weight="500" fill="rgba(255,255,255,0.68)" letter-spacing="-0.01em">
+        ${escapeXml(line)}
+      </text>
+    `).join('')}
   </g>
-  
-  <!-- ===== STATS PILLS ===== -->
-  <g transform="translate(90, 465)">
-    <!-- Read time pill -->
-    <rect width="110" height="30" rx="15" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
-    <svg x="12" y="8" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${grad.accent}" stroke-width="2">
-      <circle cx="12" cy="12" r="10"/>
-      <polyline points="12 6 12 12 16 14"/>
-    </svg>
-    <text x="32" y="19" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.6)">${readTime}</text>
-    
-    <!-- Views pill -->
-    <rect x="122" width="100" height="30" rx="15" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
-    <svg x="12" y="8" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${grad.accent}" stroke-width="2">
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-      <circle cx="12" cy="12" r="3"/>
-    </svg>
-    <text x="32" y="19" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.6)">${views}</text>
-    
-    <!-- Perspectives pill -->
-    <rect x="234" width="150" height="30" rx="15" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
-    <svg x="12" y="8" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${grad.accent2}" stroke-width="2">
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-      <circle cx="9" cy="7" r="4"/>
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-    </svg>
-    <text x="32" y="19" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.6)">5 Perspectives</text>
+
+  <!-- ═══════════ STATS & METRICS PILLS ═══════════ -->
+  <g transform="translate(95, 475)">
+    <!-- Reading Time Pill -->
+    <g>
+      <rect width="118" height="34" rx="17" fill="url(#pillGlass)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <svg x="12" y="9" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${pal.accent}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <polyline points="12 6 12 12 16 14"/>
+      </svg>
+      <text x="34" y="22" class="font-sans" font-size="12" font-weight="700" fill="rgba(255,255,255,0.85)">${escapeXml(readTime)}</text>
+    </g>
+
+    <!-- Views Pill -->
+    <g transform="translate(128, 0)">
+      <rect width="105" height="34" rx="17" fill="url(#pillGlass)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <svg x="12" y="9" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${pal.accent}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+      <text x="34" y="22" class="font-sans" font-size="12" font-weight="700" fill="rgba(255,255,255,0.85)">${escapeXml(views)} views</text>
+    </g>
+
+    <!-- Perspectives Pill -->
+    <g transform="translate(243, 0)">
+      <rect width="160" height="34" rx="17" fill="url(#pillGlass)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <svg x="12" y="9" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${pal.accent2}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+      </svg>
+      <text x="34" y="22" class="font-sans" font-size="12" font-weight="700" fill="${pal.accent2}">${escapeXml(perspectives)} Perspectives</text>
+    </g>
+
+    <!-- Verified Badge -->
+    <g transform="translate(413, 0)">
+      <rect width="112" height="34" rx="17" fill="rgba(16, 185, 129, 0.12)" stroke="rgba(16, 185, 129, 0.3)" stroke-width="1"/>
+      <svg x="12" y="9" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+      <text x="34" y="22" class="font-sans" font-size="12" font-weight="700" fill="#10b981">Verified</text>
+    </g>
   </g>
-  
-  <!-- ===== FOOTER ===== -->
-  <g transform="translate(90, 540)">
-    <line x1="0" y1="-10" x2="1020" y2="-10" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+
+  <!-- ═══════════ FOOTER DOCK ═══════════ -->
+  <g transform="translate(95, 545)">
+    <line x1="0" y1="0" x2="1010" y2="0" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
     
-    <!-- Domain -->
-    <text x="0" y="5" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="rgba(255,255,255,0.5)">
+    <!-- Domain Tag -->
+    <text x="0" y="22" class="font-mono" font-size="13" font-weight="600" fill="rgba(255,255,255,0.45)">
       ${escapeXml(domain)}
     </text>
     
-    <!-- Read button -->
-    <g transform="translate(930, -25)">
-      <rect width="90" height="40" rx="20" fill="url(#accentGrad)" filter="url(#softShadow)"/>
-      <text x="45" y="26" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="700" fill="#ffffff" text-anchor="middle">Read →</text>
+    <!-- Read CTA Button -->
+    <g transform="translate(860, 4)">
+      <rect width="150" height="36" rx="18" fill="url(#brandAccentGrad)" filter="url(#badgeGlow)"/>
+      <text x="75" y="23" class="font-sans" font-size="13.5" font-weight="800" fill="#ffffff" text-anchor="middle" letter-spacing="-0.01em">
+        Read Article →
+      </text>
     </g>
   </g>
 </svg>`;
 }
 
-function wrapText(text, maxChars) {
-  const words = text.split(' ');
+function wrapText(text, maxChars, maxLines = 3) {
+  if (!text) return [];
+  const clean = text.replace(/[*_#`]/g, '').trim();
+  const words = clean.split(/\s+/);
   const lines = [];
   let currentLine = '';
-  
+
   for (const word of words) {
     if ((currentLine + ' ' + word).trim().length <= maxChars) {
       currentLine = (currentLine + ' ' + word).trim();
     } else {
       if (currentLine) lines.push(currentLine);
       currentLine = word;
+      if (lines.length >= maxLines - 1) break;
     }
   }
-  
-  if (currentLine) lines.push(currentLine);
-  return lines.slice(0, 2);
-}
 
-function generateGrid() {
-  let lines = '';
-  for (let x = 0; x < 1200; x += 40) {
-    lines += `<line x1="${x}" y1="0" x2="${x}" y2="630" stroke="#ffffff" stroke-width="0.3"/>`;
+  if (currentLine && lines.length < maxLines) {
+    lines.push(currentLine);
   }
-  for (let y = 0; y < 630; y += 40) {
-    lines += `<line x1="0" y1="${y}" x2="1200" y2="${y}" stroke="#ffffff" stroke-width="0.3"/>`;
+
+  // Ellipsize last line if truncated
+  if (lines.length === maxLines && words.length > lines.join(' ').split(/\s+/).length) {
+    lines[maxLines - 1] = lines[maxLines - 1].substring(0, maxChars - 3) + '...';
   }
+
   return lines;
 }
 
 function escapeXml(text) {
-  return text
+  if (!text) return '';
+  return String(text)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
