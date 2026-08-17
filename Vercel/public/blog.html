@@ -752,7 +752,7 @@
             heroShimmer.style.display = 'flex';
 
             try {
-                const response = await fetch(`${API_BASE_URL}/articles?action=list&limit=50`);
+                const response = await fetch(`${API_BASE_URL}/article?action=list&limit=50`);
                 if (!response.ok) throw new Error(`HTTP error ${response.status}`);
                 const data = await response.json();
 
@@ -877,7 +877,7 @@
             container.style.display = 'none';
 
             try {
-                const response = await fetch(`${API_BASE_URL}/articles?action=search&search=${encodeURIComponent(query)}&limit=30`);
+                const response = await fetch(`${API_BASE_URL}/article?action=search&search=${encodeURIComponent(query)}&limit=30`);
                 if (!response.ok) throw new Error(`HTTP error ${response.status}`);
                 const data = await response.json();
 
