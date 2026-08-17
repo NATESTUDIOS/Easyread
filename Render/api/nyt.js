@@ -1,5 +1,5 @@
 // api/nyt-scraper.js
-// NYT Scraper - Pure scraping API, no database
+// NYT Scraper - Enhanced with time sorting and response metadata
 
 import { Router } from "express";
 import fetch from "node-fetch";
@@ -57,11 +57,11 @@ async function fetchHTML(url, timeout = 30000) {
         },
         timeout: timeout
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       return await response.text();
     } catch (error) {
       log(`Fetch attempt ${attempt} failed: ${error.message}`, "warn");
@@ -86,12 +86,12 @@ function extractNYTArticleLinks(html) {
     if (articles.length >= NYT_MAX_ARTICLES) return false;
 
     const $el = $(element);
-    
+
     const $link = $el.find('a[data-tpl="l"], a.tpl-lbl');
     const href = $link.attr('href');
-    
+
     if (!href) return;
-    
+
     // Skip non-article links
     if (!href.includes('/2026/') && !href.includes('/live/')) {
       return;
@@ -113,16 +113,31 @@ function extractNYTArticleLinks(html) {
 
     if (articles.some(a => a.url === fullUrl)) return;
 
+    // Parse read time to minutes
+    let readTimeMinutes = 0;
+    if (readTime) {
+      const match = readTime.match(/(\d+)/);
+      if (match) {
+        readTimeMinutes = parseInt(match[1]);
+      }
+    }
+
     articles.push({
       url: fullUrl,
       headline,
       summary,
       readTime,
+      readTimeMinutes,
       isLive,
       timestamp,
-      publishedDate: timestamp ? new Date(timestamp).toISOString() : null
+      publishedDate: timestamp ? new Date(timestamp).toISOString() : null,
+      // Add sortable date
+      sortDate: timestamp ? new Date(timestamp).getTime() : 0
     });
   });
+
+  // Sort by date (newest first)
+  articles.sort((a, b) => b.sortDate - a.sortDate);
 
   return articles;
 }
@@ -132,7 +147,7 @@ function extractNYTArticleLinks(html) {
  */
 function extractArticleContent(html, url) {
   const $ = cheerio.load(html);
-  
+
   // Remove unwanted elements
   $('script, style, noscript, iframe, .css-1r9ysjz, .css-ntag6f, [data-testid="StandardAd"]').remove();
 
@@ -182,6 +197,9 @@ function extractArticleContent(html, url) {
   const fullText = paragraphs.join(' ');
   const wordCount = fullText.split(/\s+/).length;
 
+  // Calculate reading time (average 200 words per minute)
+  const estimatedReadTime = Math.max(1, Math.round(wordCount / 200));
+
   return {
     headline: headline || "No headline found",
     byline,
@@ -189,6 +207,7 @@ function extractArticleContent(html, url) {
     fullText,
     paragraphs: paragraphs.slice(0, 50),
     wordCount,
+    estimatedReadTime,
     imageUrl,
     imageCaption,
     contentPreview: fullText.slice(0, 500) + '...',
@@ -202,97 +221,130 @@ function extractArticleContent(html, url) {
 
 /**
  * GET /api/nyt
- * Get articles from NYT homepage
+ * Get articles from NYT homepage with enhanced response
  * 
  * Query params:
  * - depth: 0 = links only, 1 = partial (preview), 2 = full content (default: 1)
  * - limit: max articles to fetch (default: 10)
+ * - sort: 'newest', 'oldest', 'readtime' (default: 'newest')
+ * - include: 'summary', 'preview', 'full' (default: 'summary')
  */
 router.get("/", async (req, res) => {
-  const { depth = 1, limit = NYT_MAX_ARTICLES } = req.query;
+  const { 
+    depth = 1, 
+    limit = NYT_MAX_ARTICLES,
+    sort = 'newest',
+    include = 'summary'
+  } = req.query;
 
   const startTime = Date.now();
-  log(`📰 NYT scrape started (depth: ${depth}, limit: ${limit})`, "nyt");
+  const requestId = Math.random().toString(36).substring(7);
+  
+  log(`📰 NYT scrape started (depth: ${depth}, limit: ${limit}, sort: ${sort})`, "nyt");
 
   try {
     // 1. Fetch homepage
     log("🌐 Fetching NYT homepage...", "fetch");
     const homepageHtml = await fetchHTML(NYT_HOMEPAGE);
-    
+
     if (!homepageHtml) {
       return res.status(500).json({
         success: false,
-        error: "Failed to fetch NYT homepage"
+        error: "Failed to fetch NYT homepage",
+        requestId
       });
     }
 
     // 2. Extract article links
     log("🔍 Extracting article links...", "extract");
-    const articleLinks = extractNYTArticleLinks(homepageHtml);
-    
+    let articleLinks = extractNYTArticleLinks(homepageHtml);
+
     if (articleLinks.length === 0) {
       return res.status(404).json({
         success: false,
-        error: "No articles found on NYT homepage"
+        error: "No articles found on NYT homepage",
+        requestId
       });
     }
 
-    log(`✅ Found ${articleLinks.length} articles`, "success");
+    // 3. Sort articles
+    const sortMap = {
+      'newest': (a, b) => b.sortDate - a.sortDate,
+      'oldest': (a, b) => a.sortDate - b.sortDate,
+      'readtime': (a, b) => b.readTimeMinutes - a.readTimeMinutes,
+      'title': (a, b) => a.headline.localeCompare(b.headline)
+    };
 
-    // 3. Limit articles
+    const sortFn = sortMap[sort] || sortMap['newest'];
+    articleLinks = articleLinks.sort(sortFn);
+
+    log(`✅ Found ${articleLinks.length} articles, sorted by ${sort}`, "success");
+
+    // 4. Limit articles
     const maxFetch = Math.min(parseInt(limit) || NYT_MAX_ARTICLES, articleLinks.length);
     const articlesToFetch = articleLinks.slice(0, maxFetch);
 
     let results = [];
     let fetchCount = 0;
     let failedCount = 0;
+    let totalWordCount = 0;
+    let totalReadTime = 0;
+    let liveCount = 0;
 
-    // 4. Fetch article content based on depth
+    // 5. Fetch article content based on depth
     if (parseInt(depth) === 0) {
       // Links only
       results = articlesToFetch;
+      
+      // Calculate stats from links
+      liveCount = articlesToFetch.filter(a => a.isLive).length;
+      totalReadTime = articlesToFetch.reduce((sum, a) => sum + a.readTimeMinutes, 0);
     } else {
       // Fetch content
       for (const article of articlesToFetch) {
         fetchCount++;
         log(`📄 Fetching article ${fetchCount}/${articlesToFetch.length}: ${article.headline.slice(0, 40)}...`, "fetch");
-        
+
         const articleHtml = await fetchHTML(article.url);
-        
+
         if (articleHtml) {
           const content = extractArticleContent(articleHtml, article.url);
           
-          if (parseInt(depth) === 1) {
-            // Partial: include preview and metadata
-            results.push({
-              ...article,
-              content: {
-                headline: content.headline,
-                byline: content.byline,
-                publishedDate: content.publishedDate,
-                wordCount: content.wordCount,
-                contentPreview: content.contentPreview,
-                imageUrl: content.imageUrl,
-                imageCaption: content.imageCaption,
-                paragraphCount: content.paragraphs.length
-              }
-            });
-          } else {
-            // Full: include all content
-            results.push({
-              ...article,
-              content: {
-                headline: content.headline,
-                byline: content.byline,
-                publishedDate: content.publishedDate,
-                fullText: content.fullText,
-                paragraphs: content.paragraphs,
-                wordCount: content.wordCount,
-                imageUrl: content.imageUrl,
-                imageCaption: content.imageCaption
-              }
-            });
+          // Update stats
+          totalWordCount += content.wordCount || 0;
+          totalReadTime += content.estimatedReadTime || 0;
+          if (article.isLive) liveCount++;
+
+          // Build response based on include parameter
+          let articleData = {
+            ...article,
+            content: {}
+          };
+
+          if (include === 'summary' || include === 'preview' || include === 'full') {
+            articleData.content = {
+              headline: content.headline,
+              byline: content.byline,
+              publishedDate: content.publishedDate,
+              wordCount: content.wordCount,
+              estimatedReadTime: content.estimatedReadTime
+            };
+
+            if (include === 'preview' || include === 'full') {
+              articleData.content.contentPreview = content.contentPreview;
+              articleData.content.imageUrl = content.imageUrl;
+              articleData.content.imageCaption = content.imageCaption;
+              articleData.content.paragraphCount = content.paragraphs.length;
+            }
+
+            if (include === 'full') {
+              articleData.content.fullText = content.fullText;
+              articleData.content.paragraphs = content.paragraphs;
+            }
           }
+
+          results.push(articleData);
+
         } else {
           failedCount++;
           results.push({
@@ -300,7 +352,7 @@ router.get("/", async (req, res) => {
             error: "Failed to fetch article content"
           });
         }
-        
+
         // Delay between requests to avoid rate limiting
         if (fetchCount < articlesToFetch.length) {
           await sleep(NYT_DELAY_BETWEEN_REQUESTS);
@@ -310,24 +362,43 @@ router.get("/", async (req, res) => {
 
     const elapsedTime = Date.now() - startTime;
 
-    // 5. Send response
-    res.json({
+    // 6. Build enhanced response
+    const response = {
       success: true,
+      requestId,
       timestamp: new Date().toISOString(),
-      elapsedTime: `${elapsedTime}ms`,
-      totalFound: articleLinks.length,
-      totalFetched: results.length,
-      totalFailed: failedCount,
-      depth: parseInt(depth) === 0 ? 'links_only' : parseInt(depth) === 1 ? 'partial' : 'full',
+      elapsed: {
+        ms: elapsedTime,
+        seconds: (elapsedTime / 1000).toFixed(2)
+      },
+      summary: {
+        totalFound: articleLinks.length,
+        totalFetched: results.length,
+        totalFailed: failedCount,
+        liveArticles: liveCount,
+        totalWordCount: totalWordCount,
+        totalReadTimeMinutes: totalReadTime,
+        averageReadTimeMinutes: results.length > 0 ? Math.round(totalReadTime / results.length) : 0
+      },
+      config: {
+        depth: parseInt(depth) === 0 ? 'links_only' : parseInt(depth) === 1 ? 'partial' : 'full',
+        include: include,
+        sort: sort,
+        limit: maxFetch,
+        delay: NYT_DELAY_BETWEEN_REQUESTS
+      },
       articles: results
-    });
+    };
 
     log(`✅ Completed in ${elapsedTime}ms`, "success");
+
+    res.json(response);
 
   } catch (error) {
     log(`❌ Error: ${error.message}`, "error");
     res.status(500).json({
       success: false,
+      requestId,
       error: error.message,
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
@@ -339,11 +410,12 @@ router.get("/", async (req, res) => {
  * Get only article links (fastest)
  */
 router.get("/links", async (req, res) => {
-  const { limit = NYT_MAX_ARTICLES } = req.query;
+  const { limit = NYT_MAX_ARTICLES, sort = 'newest' } = req.query;
+  const startTime = Date.now();
 
   try {
     const homepageHtml = await fetchHTML(NYT_HOMEPAGE);
-    
+
     if (!homepageHtml) {
       return res.status(500).json({
         success: false,
@@ -351,15 +423,34 @@ router.get("/links", async (req, res) => {
       });
     }
 
-    const articleLinks = extractNYTArticleLinks(homepageHtml);
+    let articleLinks = extractNYTArticleLinks(homepageHtml);
+    
+    // Sort
+    const sortMap = {
+      'newest': (a, b) => b.sortDate - a.sortDate,
+      'oldest': (a, b) => a.sortDate - b.sortDate,
+      'readtime': (a, b) => b.readTimeMinutes - a.readTimeMinutes
+    };
+    
+    const sortFn = sortMap[sort] || sortMap['newest'];
+    articleLinks = articleLinks.sort(sortFn);
+
     const maxFetch = Math.min(parseInt(limit) || NYT_MAX_ARTICLES, articleLinks.length);
+    const articles = articleLinks.slice(0, maxFetch);
+
+    const elapsedTime = Date.now() - startTime;
 
     res.json({
       success: true,
       timestamp: new Date().toISOString(),
+      elapsed: {
+        ms: elapsedTime,
+        seconds: (elapsedTime / 1000).toFixed(2)
+      },
       totalFound: articleLinks.length,
       totalReturned: maxFetch,
-      articles: articleLinks.slice(0, maxFetch)
+      sort: sort,
+      articles: articles
     });
 
   } catch (error) {
@@ -376,9 +467,10 @@ router.get("/links", async (req, res) => {
  * 
  * Query params:
  * - url: full NYT article URL (required)
+ * - include: 'summary', 'preview', 'full' (default: 'preview')
  */
 router.get("/article", async (req, res) => {
-  const { url } = req.query;
+  const { url, include = 'preview' } = req.query;
 
   if (!url) {
     return res.status(400).json({
@@ -397,10 +489,12 @@ router.get("/article", async (req, res) => {
     });
   }
 
+  const startTime = Date.now();
+
   try {
     log(`📄 Fetching single article: ${url}`, "fetch");
     const articleHtml = await fetchHTML(url);
-    
+
     if (!articleHtml) {
       return res.status(500).json({
         success: false,
@@ -409,14 +503,50 @@ router.get("/article", async (req, res) => {
     }
 
     const content = extractArticleContent(articleHtml, url);
+    const elapsedTime = Date.now() - startTime;
+
+    // Build response based on include parameter
+    let articleData = {
+      url: url,
+      ...content
+    };
+
+    if (include === 'summary') {
+      // Only include metadata
+      articleData = {
+        url: url,
+        headline: content.headline,
+        byline: content.byline,
+        publishedDate: content.publishedDate,
+        wordCount: content.wordCount,
+        estimatedReadTime: content.estimatedReadTime
+      };
+    } else if (include === 'preview') {
+      // Include preview
+      articleData = {
+        url: url,
+        headline: content.headline,
+        byline: content.byline,
+        publishedDate: content.publishedDate,
+        wordCount: content.wordCount,
+        estimatedReadTime: content.estimatedReadTime,
+        contentPreview: content.contentPreview,
+        imageUrl: content.imageUrl,
+        imageCaption: content.imageCaption,
+        paragraphCount: content.paragraphs.length
+      };
+    }
+    // 'full' includes everything
 
     res.json({
       success: true,
       timestamp: new Date().toISOString(),
-      article: {
-        url: url,
-        ...content
-      }
+      elapsed: {
+        ms: elapsedTime,
+        seconds: (elapsedTime / 1000).toFixed(2)
+      },
+      include: include,
+      article: articleData
     });
 
   } catch (error) {
@@ -435,11 +565,17 @@ router.get("/health", (req, res) => {
   res.json({
     status: "healthy",
     service: "NYT Scraper API",
+    version: "2.0.0",
     timestamp: new Date().toISOString(),
     config: {
       maxArticles: NYT_MAX_ARTICLES,
       delay: NYT_DELAY_BETWEEN_REQUESTS,
       maxRetries: MAX_RETRIES
+    },
+    features: {
+      sorting: ['newest', 'oldest', 'readtime', 'title'],
+      depth: ['links_only', 'partial', 'full'],
+      include: ['summary', 'preview', 'full']
     }
   });
 });
