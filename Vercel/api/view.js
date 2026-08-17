@@ -479,6 +479,16 @@ async function handleDeepDive(req, res) {
 }
 
 // ============================================
+// TEXT TRUNCATION HELPER
+// ============================================
+function truncateText(text, maxLength = 155) {
+  if (!text) return '';
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength - 3).trim() + '...';
+}
+
+
+// ============================================
 // HTML BUILDER
 // ============================================
 function buildArticleHTML({
@@ -514,68 +524,126 @@ function buildArticleHTML({
   const visibleProfiles = profiles.slice(0, VISIBLE_PROFILE_COUNT);
   const overflowProfiles = profiles.slice(VISIBLE_PROFILE_COUNT);
 
-  return `<!DOCTYPE html>
+  return `<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  
-  <title>${escapeHtml(title)} — EasyRead</title>
-  <meta name="description" content="${escapeHtml(cleanSummary || 'Read a simplified explanation tailored for intuitive understanding.')}">
-  <meta name="keywords" content="${(article.categories || ['reading', 'learning', 'education', 'AI']).join(', ')}">
-  <meta name="author" content="EasyRead">
-  <meta name="robots" content="index, follow">
-  <link rel="canonical" href="${canonicalUrl}">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"
+    />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
-  <!-- ─── OPEN GRAPH / SOCIAL (Dynamic) ─── -->
-  <meta property="og:type" content="article">
-  <meta property="og:url" content="${canonicalUrl}">
-  <meta property="og:title" content="${escapeHtml(title)} — EasyRead">
-  <meta property="og:description" content="${escapeHtml(cleanSummary || 'Read simplified, clear explanations tailored to your perspective.')}">
-  <meta property="og:image" content="${SITE_URL}/api/og-image?title=${encodeURIComponent(title)}&description=${encodeURIComponent(cleanSummary || article.summary || '')}&domain=${encodeURIComponent(article.source_domain || 'easytoread.vercel.app')}&category=${encodeURIComponent((article.categories || ['General'])[0])}&readTime=${readingTime}&views=${article.view_count || 0}&perspectives=${explanations?.length || 0}">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta property="og:site_name" content="EasyRead">
-  <meta property="og:locale" content="en_US">
+    <title>${escapeHtml(title)} — EasyRead</title>
 
-  <!-- ─── TWITTER (Dynamic) ─── -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="${escapeHtml(title)} — EasyRead">
-  <meta name="twitter:description" content="${escapeHtml(cleanSummary || 'Read simplified, clear explanations tailored to your perspective.')}">
-  <meta name="twitter:image" content="${SITE_URL}/api/og-image?title=${encodeURIComponent(title)}&description=${encodeURIComponent(cleanSummary || article.summary || '')}&domain=${encodeURIComponent(article.source_domain || 'easytoread.vercel.app')}&category=${encodeURIComponent((article.categories || ['General'])[0])}&readTime=${readingTime}&views=${article.view_count || 0}&perspectives=${explanations?.length || 0}">
+    <!-- ─── META DESCRIPTION (SEO - 150-160 chars max) ─── -->
+    <meta
+      name="description"
+      content="${escapeHtml(truncateText(cleanSummary || 'Read a simplified explanation tailored for intuitive understanding.', 155))}"
+    />
+    <meta
+      name="keywords"
+      content="${(article.categories || ['reading', 'learning', 'education', 'AI']).join(', ')}"
+    />
+    <meta name="author" content="EasyRead" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="${canonicalUrl}" />
 
-  <!-- ─── APPLE / IOS ─── -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="EasyRead">
-  <link rel="apple-touch-icon" href="/icons/icon-192.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png">
-  <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152.png">
-  <link rel="apple-touch-icon" sizes="120x120" href="/icons/icon-120.png">
+    <!-- ─── OPEN GRAPH / SOCIAL (Dynamic) ─── -->
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="${canonicalUrl}" />
+    <meta
+      property="og:title"
+      content="${escapeHtml(truncateText(title, 60))} — EasyRead"
+    />
+    <meta
+      property="og:description"
+      content="${escapeHtml(truncateText(cleanSummary || 'Read simplified, clear explanations tailored to your perspective.', 120))}"
+    />
+    <meta
+      property="og:image"
+      content="${SITE_URL}/api/og-image?title=${encodeURIComponent(truncateText(title, 50))}&description=${encodeURIComponent(truncateText(cleanSummary || article.summary || '', 80))}&domain=${encodeURIComponent(article.source_domain || 'easytoread.vercel.app')}&category=${encodeURIComponent((article.categories || ['General'])[0])}&readTime=${readingTime}&views=${article.view_count || 0}&perspectives=${explanations?.length || 0}"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="EasyRead" />
+    <meta property="og:locale" content="en_US" />
 
-  <!-- ─── ANDROID / CHROME ─── -->
-  <link rel="manifest" href="/manifest.json">
-  <meta name="mobile-web-app-capable" content="yes">
+    <!-- ─── TWITTER (Dynamic - 200 chars max) ─── -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="${escapeHtml(truncateText(title, 60))} — EasyRead"
+    />
+    <meta
+      name="twitter:description"
+      content="${escapeHtml(truncateText(cleanSummary || 'Read simplified, clear explanations tailored to your perspective.', 180))}"
+    />
+    <meta
+      name="twitter:image"
+      content="${SITE_URL}/api/og-image?title=${encodeURIComponent(truncateText(title, 50))}&description=${encodeURIComponent(truncateText(cleanSummary || article.summary || '', 80))}&domain=${encodeURIComponent(article.source_domain || 'easytoread.vercel.app')}&category=${encodeURIComponent((article.categories || ['General'])[0])}&readTime=${readingTime}&views=${article.view_count || 0}&perspectives=${explanations?.length || 0}"
+    />
 
-  <!-- ─── FAVICON ─── -->
-  <link rel="icon" type="image/png" sizes="32x32" href="/icons/og-image.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/icons/og-image.png">
-  <link rel="shortcut icon" href="/favicon.ico">
+    <!-- ─── APPLE / IOS ─── -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="EasyRead" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152.png" />
+    <link rel="apple-touch-icon" sizes="120x120" href="/icons/icon-120.png" />
 
-  <!-- ─── THEME COLORS ─── -->
-  <meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)">
-  <meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)">
+    <!-- ─── ANDROID / CHROME ─── -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <!-- ─── ANDROID / CHROME ─── -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <!-- ─── FAVICON ─── -->
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="/icons/og-image.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="/icons/og-image.png"
+    />
+    <link rel="shortcut icon" href="/favicon.ico" />
 
-  <!-- ─── FONTS ─── -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <!-- ─── THEME COLORS ─── -->
+    <meta
+      name="theme-color"
+      content="#09090b"
+      media="(prefers-color-scheme: dark)"
+    />
+    <meta
+      name="theme-color"
+      content="#f6f7f9"
+      media="(prefers-color-scheme: light)"
+    />
 
-  <style>${getCSSStyles()}</style>
-</head>
-<body>
-  
+    <!-- ─── FONTS ─── -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      ${getCSSStyles()}
+    </style>
+  </head>
+  <body></body>
+</html>
+
 
   <!-- Reading Progress Bar -->
   <div class="progress-bar" id="progressBar"></div>
