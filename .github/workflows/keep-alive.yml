@@ -1,24 +1,47 @@
-name: Keep Supabase Alive
+name: Keep API Alive
 
+# ─────────────────────────────────────────────
+# ⚙️  CONFIG — edit these values
+# ─────────────────────────────────────────────
+# Schedule (cron format, UTC):
+#   ┌─ minute (0-59)
+#   │ ┌─ hour (0-23)
+#   │ │ ┌─ day of month (1-31)
+#   │ │ │ ┌─ month (1-12)
+#   │ │ │ │ ┌─ day of week (0-6, Sun=0)
+#   │ │ │ │ │
+#   │ │ │ │ │
+#   * * * * *
+#
+# Examples:
+#   '0 6 */2 * *'   → every 2 days at 06:00 UTC
+#   '0 */6 * * *'   → every 6 hours
+#   '0 9 * * 1-5'   → weekdays at 09:00 UTC
+# ─────────────────────────────────────────────
 on:
   schedule:
-    - cron: '0 6 */2 * *'
+    - cron: '0 6 */2 * *'   # 👈 CHANGE SCHEDULE HERE
   workflow_dispatch:
+
+env:
+  API_NAME: "My API"
+  API_URL: "https://example.com/api/health"
+  API_KEY: "your-api-key-here"
+  EXPECTED_STATUS: "200"
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Supabase Database
+      - name: Ping API Endpoint
         run: |
-          echo "Pinging Supabase to prevent auto-pause..."
+          echo "Pinging $API_NAME to prevent auto-pause..."
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            "${{ secrets.SUPABASE_URL }}/rest/v1/profiles?select=id&limit=1" \
-            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}")
+            "$API_URL" \
+            -H "Authorization: Bearer $API_KEY")
           echo "Response status: $STATUS"
-          if [ "$STATUS" = "200" ] || [ "$STATUS" = "206" ]; then
-            echo "✅ Supabase is alive and responding"
+          if [ "$STATUS" = "$EXPECTED_STATUS" ] || [ "$STATUS" = "206" ]; then
+            echo "✅ $API_NAME is alive and responding"
           else
             echo "⚠️ Unexpected status: $STATUS"
             exit 1
