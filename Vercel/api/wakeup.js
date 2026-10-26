@@ -1,6 +1,6 @@
 // api/wakeup.js
 // EasyRead Wakeup — keeps Supabase awake and pokes hardcoded services.
-// Triggered by GitHub Action. Auth: x-wake-key header.
+// Triggered by GitHub Action. Auth: x-wake-key header (hardcoded).
 //
 // Vercel Hobby note: function timeout is 10s. Any target whose timeoutMs
 // exceeds 8000 is auto-skipped on Vercel to avoid mid-flight kills.
@@ -9,6 +9,11 @@
 // database writes as activity; reads are not reliably counted.
 
 import { supabase } from '../utils/supabase.js';
+
+// ============================================
+// WAKE KEY (hardcoded)
+// ============================================
+const WAKE_KEY = 'EASYREAD-WAKEUP';
 
 // ============================================
 // HARDCODED SERVICES TO POKE ON WAKE
@@ -27,24 +32,6 @@ const WAKE_TARGETS = [
 ];
 
 // ============================================
-// AUTH
-// ============================================
-const WAKE_KEY = process.env.EASYREAD_WAKE_KEY;
-const IS_PROD = process.env.NODE_ENV === 'production' || !!process.env.VERCEL;
-
-if (!WAKE_KEY && IS_PROD) {
-  console.error(
-    '❌ EASYREAD_WAKE_KEY missing in production — all requests will 401'
-  );
-}
-
-// Production: strict (key must be set, no fallback).
-// Development: fallback to 'EASYREAD-WAKEUP' for convenience.
-const EFFECTIVE_KEY = IS_PROD
-  ? WAKE_KEY
-  : WAKE_KEY || 'EASYREAD-WAKEUP';
-
-// ============================================
 // HANDLER
 // ============================================
 export default async function handler(req, res) {
@@ -54,15 +41,8 @@ export default async function handler(req, res) {
     return res.status(405).json({ success: false, error: 'Method not allowed' });
   }
 
-  // If prod key is missing, refuse all requests rather than accepting fallback.
-  if (!EFFECTIVE_KEY) {
-    return res
-      .status(500)
-      .json({ success: false, error: 'Server misconfigured: missing wake key' });
-  }
-
   const provided = String(req.headers['x-wake-key'] || '');
-  if (!provided || provided !== EFFECTIVE_KEY) {
+  if (!provided || provided !== WAKE_KEY) {
     return res.status(401).json({ success: false, error: 'Unauthorized' });
   }
 
@@ -91,7 +71,6 @@ export default async function handler(req, res) {
 // ============================================
 // PING SUPABASE (WRITE, NOT READ)
 // An upsert to system_config counts as database activity.
-// A SELECT may not reliably reset the inactivity timer.
 // ============================================
 async function pingSupabase() {
   const t0 = Date.now();
@@ -141,7 +120,6 @@ async function runTarget(target) {
       signal: AbortSignal.timeout(budget),
     });
 
-    // Parse JSON if possible, else ignore — we only care about status.
     await response.json().catch(() => ({}));
 
     return {
