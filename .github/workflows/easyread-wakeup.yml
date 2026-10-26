@@ -1,0 +1,78 @@
+# .github/workflows/easyread-wakeup.yml
+name: EasyRead Wakeup
+
+# ============================================
+# INTERVAL FLAGS — set which cadences are ACTIVE
+# Disabled cadences still fire (cron can't be conditionally removed
+# from YAML) but the gate step makes them a no-op.
+# ============================================
+env:
+  ENABLE_4H:  false   # every 4 hours
+  ENABLE_8H:  false   # every 8 hours
+  ENABLE_12H: true    # every 12 hours
+  ENABLE_1D:  true    # once a day at 03:00 UTC
+
+  WAKE_URL: https://easytoread.vercel.app/api/wakeup
+
+on:
+  schedule:
+    - cron: '0 */4 * * *'    # 00:00, 04:00, 08:00, 12:00, 16:00, 20:00 UTC
+    - cron: '0 */8 * * *'    # 00:00, 08:00, 16:00 UTC
+    - cron: '0 */12 * * *'   # 00:00, 12:00 UTC
+    - cron: '0 3 * * *'      # 03:00 UTC daily
+  workflow_dispatch:
+
+jobs:
+  wakeup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Decide whether to run
+        id: gate
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          CRON="${{ github.event.schedule }}"
+
+          case "$CRON" in
+            "0 */4 * * *")
+              echo "run=${{ env.ENABLE_4H }}"  >> "$GITHUB_OUTPUT" ;;
+            "0 */8 * * *")
+              echo "run=${{ env.ENABLE_8H }}"  >> "$GITHUB_OUTPUT" ;;
+            "0 */12 * * *")
+              echo "run=${{ env.ENABLE_12H }}" >> "$GITHUB_OUTPUT" ;;
+            "0 3 * * *")
+              echo "run=${{ env.ENABLE_1D }}"  >> "$GITHUB_OUTPUT" ;;
+            *)
+              echo "run=false" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+      - name: Skip (interval disabled)
+        if: steps.gate.outputs.run != 'true'
+        run: echo "Interval disabled via env flag — skipping."
+
+      - name: Ping EasyRead
+        if: steps.gate.outputs.run == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          response=$(curl -sS -w "\n%{http_code}" \
+            -X POST "$WAKE_URL" \
+            -H "x-wake-key: EASYREAD-WAKEUP" \
+            -H "Content-Type: application/json" \
+            --max-time 60)
+
+          body=$(echo "$response" | head -n -1)
+          code=$(echo "$response" | tail -n 1)
+
+          echo "HTTP $code"
+          echo "$body"
+
+          if [ "$code" != "200" ]; then
+            echo "::error::Wakeup returned HTTP $code"
+            exit 1
+          fi
